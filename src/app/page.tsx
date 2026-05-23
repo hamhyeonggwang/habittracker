@@ -42,7 +42,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-[#f8faf8] pb-24">
+    <main className="min-h-screen bg-[#f8faf8]" style={{ paddingBottom: 'calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 0.5rem)' }}>
       <div className="max-w-lg mx-auto px-4">
         {pages[page]}
       </div>

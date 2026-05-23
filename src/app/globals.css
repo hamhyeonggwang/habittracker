@@ -22,6 +22,9 @@
   --text-muted: #8a9a82;
   --border: #d8e4d8;
   --border-light: #eaf2ea;
+
+  /* 하단 네비 높이 — 모달·본문 여백에 공통 사용 */
+  --bottom-nav-height: 4.75rem;
 }
 
 * { box-sizing: border-box; }
@@ -142,10 +145,12 @@ h1, h2, .font-headline {
 .bottom-nav {
   position: fixed;
   bottom: 0; left: 0; right: 0;
+  min-height: var(--bottom-nav-height);
   background: rgba(255,255,255,0.97);
   backdrop-filter: blur(16px);
   border-top: 1px solid var(--border);
   z-index: 50;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* ─── 페이지 전환 ─── */
@@ -178,24 +183,27 @@ h1, h2, .font-headline {
   transition: width 0.8s ease-out;
 }
 
-/* ─── 모달 ─── */
+/* ─── 모달 (하단 네비 위에 표시) ─── */
 .modal-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.45);
-  z-index: 50;
+  z-index: 60;
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
 }
 .modal-sheet {
   background: white;
   border-radius: 20px 20px 0 0;
   width: 100%;
   max-width: 480px;
-  max-height: 85vh;
+  max-height: min(85vh, calc(100dvh - var(--bottom-nav-height) - env(safe-area-inset-bottom, 0px) - 1.5rem));
   overflow-y: auto;
-  padding: 20px 20px 32px;
+  padding: 20px 20px 24px;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ─── 태그 ─── */
