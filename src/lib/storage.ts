@@ -182,6 +182,9 @@ export const habitLogStore = {
       setItems(KEYS.HABIT_LOGS, [...all, { id: newId(), habitId, date, completed: true }]);
     }
   },
+  deleteByHabitId: (habitId: string) => {
+    setItems(KEYS.HABIT_LOGS, habitLogStore.getAll().filter(l => l.habitId !== habitId));
+  },
 };
 
 export const taskStore = {

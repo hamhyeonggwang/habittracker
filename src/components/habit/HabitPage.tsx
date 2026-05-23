@@ -1,6 +1,6 @@
 'use client';
 import { useState, useMemo, useCallback } from 'react';
-import { Plus, X, Check, Sparkles } from 'lucide-react';
+import { Plus, X, Check, Sparkles, Pencil, Trash2 } from 'lucide-react';
 import { habitStore, habitLogStore, newId } from '@/lib/storage';
 import { Habit } from '@/types';
 import { Button, EmptyState, ProgressBar } from '@/components/ui';
@@ -13,24 +13,48 @@ import { HABIT_LABELS, getRateMessage, getStreakMessage } from '@/lib/strengthLa
 const ICONS = ['🏃','📚','🧘','💰','🤝','✍️','💧','🥗','🎯','💪','🎸','🌅'];
 const COLORS = ['#4a7c59','#2c4a7c','#7c4a2c','#4a2c7c','#7c2c4a','#2c7c4a','#5a8c42','#3a6a9c'];
 
-function AddHabitModal({ onClose, onAdd }: { onClose: () => void; onAdd: () => void }) {
-  const [name, setName] = useState('');
-  const [icon, setIcon] = useState('🎯');
-  const [color, setColor] = useState('#4a7c59');
-  const [targetDays, setTargetDays] = useState(7);
+function HabitActionButtons({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+  return (
+    <div className="flex items-center gap-0.5 flex-shrink-0">
+      <button type="button" onClick={onEdit} aria-label="습관 수정"
+        className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-black/5"
+        style={{ color: 'var(--text-muted)' }}>
+        <Pencil size={14} />
+      </button>
+      <button type="button" onClick={onDelete} aria-label="습관 삭제"
+        className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-red-50"
+        style={{ color: 'var(--text-muted)' }}>
+        <Trash2 size={14} />
+      </button>
+    </div>
+  );
+}
+
+function HabitFormModal({ habit, onClose, onSave }: { habit?: Habit; onClose: () => void; onSave: () => void }) {
+  const isEdit = !!habit;
+  const [name, setName] = useState(habit?.name ?? '');
+  const [icon, setIcon] = useState(habit?.icon ?? '🎯');
+  const [color, setColor] = useState(habit?.color ?? '#4a7c59');
+  const [targetDays, setTargetDays] = useState(habit?.targetDaysPerWeek ?? 7);
 
   const handleSubmit = () => {
     if (!name.trim()) return;
-    habitStore.add({ id: newId(), name: name.trim(), icon, color, targetDaysPerWeek: targetDays, createdAt: TODAY, isArchived: false });
-    onAdd(); onClose();
+    if (isEdit && habit) {
+      habitStore.update(habit.id, { name: name.trim(), icon, color, targetDaysPerWeek: targetDays });
+    } else {
+      habitStore.add({ id: newId(), name: name.trim(), icon, color, targetDaysPerWeek: targetDays, createdAt: TODAY, isArchived: false });
+    }
+    onSave(); onClose();
   };
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-sheet" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold" style={{ fontFamily: 'Noto Serif KR, serif', color: 'var(--text-primary)' }}>새 습관 추가</h3>
-          <button onClick={onClose}><X size={18} style={{ color: 'var(--text-muted)' }} /></button>
+          <h3 className="font-bold" style={{ fontFamily: 'Noto Serif KR, serif', color: 'var(--text-primary)' }}>
+            {isEdit ? '습관 수정' : '새 습관 추가'}
+          </h3>
+          <button type="button" onClick={onClose}><X size={18} style={{ color: 'var(--text-muted)' }} /></button>
         </div>
         <div className="space-y-4">
           <div>
@@ -66,7 +90,7 @@ function AddHabitModal({ onClose, onAdd }: { onClose: () => void; onAdd: () => v
             <input type="range" min={1} max={7} value={targetDays} onChange={e => setTargetDays(+e.target.value)}
               className="w-full" style={{ accentColor: 'var(--sage)' }} />
           </div>
-          <Button onClick={handleSubmit} className="w-full" size="lg">추가하기</Button>
+          <Button onClick={handleSubmit} className="w-full" size="lg">{isEdit ? '저장하기' : '추가하기'}</Button>
         </div>
       </div>
     </div>
@@ -77,6 +101,7 @@ export default function HabitPage() {
   const [habits, setHabits] = useState<Habit[]>(() => habitStore.getAll().filter(h => !h.isArchived));
   const [logs, setLogs] = useState(() => habitLogStore.getAll());
   const [showAdd, setShowAdd] = useState(false);
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [view, setView] = useState<'today' | 'month'>('month');
   const [currentMonth] = useState(new Date());
 
@@ -86,6 +111,13 @@ export default function HabitPage() {
   }, []);
 
   const toggle = (habitId: string, date: string) => { habitLogStore.toggle(habitId, date); refresh(); };
+
+  const removeHabit = (habit: Habit) => {
+    if (!confirm(`"${habit.name}" 습관을 삭제할까요?\n참여 기록도 함께 삭제됩니다.`)) return;
+    habitLogStore.deleteByHabitId(habit.id);
+    habitStore.delete(habit.id);
+    refresh();
+  };
 
   const isCompleted = (habitId: string, date: string) =>
     logs.find(l => l.habitId === habitId && l.date === date)?.completed ?? false;
@@ -203,17 +235,23 @@ export default function HabitPage() {
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => toggle(habit.id, TODAY)}
-                    className="w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200"
-                    style={{
-                      background: done ? habit.color : 'var(--sage-pale)',
-                      border: `2px solid ${done ? habit.color : 'var(--border)'}`,
-                      transform: done ? 'scale(1.05)' : 'scale(1)',
-                    }}>
-                    {done
-                      ? <Check size={18} color="white" strokeWidth={3} />
-                      : <span className="text-lg">{habit.icon}</span>}
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <HabitActionButtons
+                      onEdit={() => setEditingHabit(habit)}
+                      onDelete={() => removeHabit(habit)}
+                    />
+                    <button type="button" onClick={() => toggle(habit.id, TODAY)}
+                      className="w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200"
+                      style={{
+                        background: done ? habit.color : 'var(--sage-pale)',
+                        border: `2px solid ${done ? habit.color : 'var(--border)'}`,
+                        transform: done ? 'scale(1.05)' : 'scale(1)',
+                      }}>
+                      {done
+                        ? <Check size={18} color="white" strokeWidth={3} />
+                        : <span className="text-lg">{habit.icon}</span>}
+                    </button>
+                  </div>
                 </div>
                 {done && (
                   <div className="mt-2.5 pt-2 border-t" style={{ borderColor: 'var(--border-light)' }}>
@@ -238,15 +276,27 @@ export default function HabitPage() {
             const monthLabel = format(currentMonth, 'M월', { locale: ko });
             return (
               <div key={habit.id} className="card overflow-hidden">
-                <div className="sheet-header-navy flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">{habit.icon}</span>
-                    <span>{habit.name}</span>
-                    <span style={{ opacity: 0.7 }}>— {monthLabel}</span>
+                <div className="sheet-header-navy flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className="text-base flex-shrink-0">{habit.icon}</span>
+                    <span className="truncate">{habit.name}</span>
+                    <span className="flex-shrink-0" style={{ opacity: 0.7 }}>— {monthLabel}</span>
                   </div>
-                  <span className="text-[11px] font-bold" style={{ background: 'rgba(255,255,255,0.2)', padding: '1px 8px', borderRadius: 12 }}>
-                    {HABIT_LABELS.monthlyRate}
-                  </span>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button type="button" onClick={() => setEditingHabit(habit)} aria-label="습관 수정"
+                      className="w-7 h-7 rounded-md flex items-center justify-center"
+                      style={{ background: 'rgba(255,255,255,0.15)', color: 'white' }}>
+                      <Pencil size={13} />
+                    </button>
+                    <button type="button" onClick={() => removeHabit(habit)} aria-label="습관 삭제"
+                      className="w-7 h-7 rounded-md flex items-center justify-center"
+                      style={{ background: 'rgba(255,255,255,0.15)', color: 'white' }}>
+                      <Trash2 size={13} />
+                    </button>
+                    <span className="text-[11px] font-bold" style={{ background: 'rgba(255,255,255,0.2)', padding: '1px 8px', borderRadius: 12 }}>
+                      {HABIT_LABELS.monthlyRate}
+                    </span>
+                  </div>
                 </div>
                 <div className="px-3 pt-2 pb-3">
                   {/* 요일 헤더 */}
@@ -316,7 +366,14 @@ export default function HabitPage() {
       )}
 
       <div className="h-4" />
-      {showAdd && <AddHabitModal onClose={() => setShowAdd(false)} onAdd={refresh} />}
+      {showAdd && <HabitFormModal onClose={() => setShowAdd(false)} onSave={refresh} />}
+      {editingHabit && (
+        <HabitFormModal
+          habit={editingHabit}
+          onClose={() => setEditingHabit(null)}
+          onSave={refresh}
+        />
+      )}
     </div>
   );
 }
