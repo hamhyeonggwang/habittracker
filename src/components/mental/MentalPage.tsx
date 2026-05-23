@@ -1,6 +1,6 @@
 'use client';
 import { useState, useMemo } from 'react';
-import { mentalStore } from '@/lib/storage';
+import { mentalStore, newId } from '@/lib/storage';
 import { MentalStateLog, MoodScore } from '@/types';
 import { ScoreSelector, Button } from '@/components/ui';
 import { TODAY, getLast7Days, formatDate } from '@/lib/utils';
@@ -28,7 +28,7 @@ export default function MentalPage() {
 
   const handleSave = () => {
     mentalStore.save({
-      id: existing?.id ?? crypto.randomUUID(),
+      id: existing?.id ?? newId(),
       date: TODAY, mood: values.mood, energy: values.energy,
       stress: values.stress, sleepQuality: values.sleepQuality, note,
     });

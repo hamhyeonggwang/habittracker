@@ -1,7 +1,7 @@
 'use client';
 import { useState, useMemo, useCallback } from 'react';
 import { Plus, Check, Trash2, X, ChevronDown } from 'lucide-react';
-import { taskStore } from '@/lib/storage';
+import { newId, taskStore } from '@/lib/storage';
 import { Task, Priority, TimeSlot } from '@/types';
 import { Button, EmptyState } from '@/components/ui';
 import { TODAY, cn } from '@/lib/utils';
@@ -24,7 +24,7 @@ function AddModal({ onClose, onAdd }: { onClose: () => void; onAdd: () => void }
 
   const submit = () => {
     if (!title.trim()) return;
-    taskStore.add({ id: crypto.randomUUID(), title: title.trim(), priority, timeSlot, date: TODAY, completed: false, createdAt: TODAY });
+    taskStore.add({ id: newId(), title: title.trim(), priority, timeSlot, date: TODAY, completed: false, createdAt: TODAY });
     onAdd(); onClose();
   };
 

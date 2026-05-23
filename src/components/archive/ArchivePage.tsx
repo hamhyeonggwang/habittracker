@@ -1,7 +1,7 @@
 'use client';
 import { useState, useMemo, useCallback } from 'react';
 import { Plus, Search, X, Tag } from 'lucide-react';
-import { archiveStore } from '@/lib/storage';
+import { archiveStore, newId } from '@/lib/storage';
 import { ArchiveItem, ArchiveCategory } from '@/types';
 import { Button, EmptyState } from '@/components/ui';
 import { CATEGORY_LABELS, formatDate } from '@/lib/utils';
@@ -30,7 +30,7 @@ function AddModal({ onClose, onAdd }: { onClose: () => void; onAdd: () => void }
   const submit = () => {
     if (!title.trim()) return;
     const now = new Date().toISOString();
-    archiveStore.add({ id: crypto.randomUUID(), title: title.trim(), content: content.trim(), category, tags, createdAt: now, updatedAt: now });
+    archiveStore.add({ id: newId(), title: title.trim(), content: content.trim(), category, tags, createdAt: now, updatedAt: now });
     onAdd(); onClose();
   };
 

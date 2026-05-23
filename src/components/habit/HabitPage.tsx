@@ -1,7 +1,7 @@
 'use client';
 import { useState, useMemo, useCallback } from 'react';
 import { Plus, X, Check, Sparkles } from 'lucide-react';
-import { habitStore, habitLogStore } from '@/lib/storage';
+import { habitStore, habitLogStore, newId } from '@/lib/storage';
 import { Habit } from '@/types';
 import { Button, EmptyState, ProgressBar } from '@/components/ui';
 import { TODAY, formatDateShort, cn } from '@/lib/utils';
@@ -21,7 +21,7 @@ function AddHabitModal({ onClose, onAdd }: { onClose: () => void; onAdd: () => v
 
   const handleSubmit = () => {
     if (!name.trim()) return;
-    habitStore.add({ id: crypto.randomUUID(), name: name.trim(), icon, color, targetDaysPerWeek: targetDays, createdAt: TODAY, isArchived: false });
+    habitStore.add({ id: newId(), name: name.trim(), icon, color, targetDaysPerWeek: targetDays, createdAt: TODAY, isArchived: false });
     onAdd(); onClose();
   };
 
