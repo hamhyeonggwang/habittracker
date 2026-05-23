@@ -41,23 +41,3 @@ export const CATEGORY_LABELS: Record<string, string> = {
   idea: '💡 아이디어',
   etc: '📌 기타',
 };
-
-export const PRIORITY_LABELS: Record<string, string> = {
-  low: '낮음',
-  medium: '보통',
-  high: '높음',
-};
-
-export const TIMESLOT_LABELS: Record<string, string> = {
-  morning: '오전',
-  afternoon: '오후',
-  evening: '저녁',
-};
-
-export const SCORE_LABELS: Record<number, string> = {
-  1: '매우 나쁨',
-  2: '나쁨',
-  3: '보통',
-  4: '좋음',
-  5: '매우 좋음',
-};

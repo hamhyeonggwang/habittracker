@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { mentalStore, newId } from '@/lib/storage';
 import { MentalStateLog, MoodScore } from '@/types';
 import { ScoreSelector, Button } from '@/components/ui';
@@ -13,41 +13,57 @@ import { MENTAL_LABELS } from '@/lib/strengthLanguage';
 const METRICS = [
   { key: 'mood' as const, label: '기분', icon: '😊' },
   { key: 'energy' as const, label: '에너지', icon: '⚡' },
-  { key: 'stress' as const, label: '스트레스', icon: '🌊' },   // ← 😤 → 🌊 (파도=자연스러운 감정)
+  { key: 'stress' as const, label: '스트레스', icon: '🌊' },
   { key: 'sleepQuality' as const, label: '수면', icon: '🌙' },
 ];
 
 export default function MentalPage() {
-  const existing = mentalStore.getByDate(TODAY);
+  const [existing, setExisting] = useState<MentalStateLog | null>(null);
+  const [allLogs, setAllLogs] = useState<MentalStateLog[]>([]);
   const [values, setValues] = useState<Record<string, MoodScore>>({
-    mood: existing?.mood ?? 3, energy: existing?.energy ?? 3,
-    stress: existing?.stress ?? 3, sleepQuality: existing?.sleepQuality ?? 3,
+    mood: 3, energy: 3, stress: 3, sleepQuality: 3,
   });
-  const [note, setNote] = useState(existing?.note ?? '');
+  const [note, setNote] = useState('');
   const [saved, setSaved] = useState(false);
 
-  const handleSave = () => {
-    mentalStore.save({
+  const loadData = useCallback(async () => {
+    const [todayLog, logs] = await Promise.all([
+      mentalStore.getByDate(TODAY),
+      mentalStore.getAll(),
+    ]);
+    setExisting(todayLog);
+    setAllLogs(logs);
+    if (todayLog) {
+      setValues({ mood: todayLog.mood, energy: todayLog.energy, stress: todayLog.stress, sleepQuality: todayLog.sleepQuality });
+      setNote(todayLog.note);
+    }
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const handleSave = async () => {
+    await mentalStore.save({
       id: existing?.id ?? newId(),
       date: TODAY, mood: values.mood, energy: values.energy,
       stress: values.stress, sleepQuality: values.sleepQuality, note,
     });
-    setSaved(true); setTimeout(() => setSaved(false), 2000);
+    setSaved(true);
+    await loadData();
+    setTimeout(() => setSaved(false), 2000);
   };
 
   const avg = Math.round((Object.values(values).reduce((a, b) => a + b, 0) / 4) * 10) / 10;
   const radarData = METRICS.map(m => ({ metric: m.label, value: values[m.key], fullMark: 5 }));
 
   const weeklyData = useMemo(() => getLast7Days().map(date => {
-    const log = mentalStore.getByDate(date);
+    const log = allLogs.find(l => l.date === date);
     return {
       label: format(new Date(date), 'EEE', { locale: ko }),
       기분: log?.mood ?? 0, 에너지: log?.energy ?? 0,
       스트레스: log?.stress ?? 0, 수면: log?.sleepQuality ?? 0,
     };
-  }), [saved]);
+  }), [allLogs]);
 
-  // 강점 기반: 점수에 따른 격려 메시지
   const getScoreMessage = (score: number) => MENTAL_LABELS.scores[score as keyof typeof MENTAL_LABELS.scores] ?? '평온한 하루';
   const getMoodEmoji = (s: number) => (['','😞','😕','😐','😊','😄'][s] ?? '😐');
 
@@ -60,7 +76,7 @@ export default function MentalPage() {
         <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>{formatDate(TODAY)}</p>
       </div>
 
-      {/* ── 에너지 지도 (← "오늘의 상태") ── */}
+      {/* ── 에너지 지도 ── */}
       <div className="card overflow-hidden">
         <div className="sheet-header">{MENTAL_LABELS.radarTitle}</div>
         <div className="p-4 flex items-center justify-between">
@@ -70,7 +86,6 @@ export default function MentalPage() {
               <span className="text-3xl font-bold" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>{avg}</span>
               <span className="text-sm mb-0.5" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>/5</span>
             </div>
-            {/* 강점 기반 메시지 */}
             <p className="text-[12px] mt-1 font-semibold" style={{ color: 'var(--sage)', fontFamily: 'Noto Sans KR, sans-serif' }}>
               {getScoreMessage(Math.round(avg))}
             </p>
@@ -88,7 +103,7 @@ export default function MentalPage() {
         </div>
       </div>
 
-      {/* ── 에너지 레벨 입력 (← "점수 입력") ── */}
+      {/* ── 에너지 레벨 입력 ── */}
       <div className="card overflow-hidden">
         <div className="sheet-header-navy">{MENTAL_LABELS.inputTitle}</div>
         <div className="p-3 space-y-4">
@@ -99,7 +114,6 @@ export default function MentalPage() {
                   <span className="text-base">{m.icon}</span>
                   <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>{m.label}</span>
                 </div>
-                {/* 강점 기반 레이블 */}
                 <span className="text-[11px] font-medium" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
                   {getScoreMessage(values[m.key])}
                 </span>
@@ -114,7 +128,7 @@ export default function MentalPage() {
         </div>
       </div>
 
-      {/* ── 오늘의 발견 (← "오늘의 한 줄 기록") ── */}
+      {/* ── 오늘의 발견 ── */}
       <div className="card overflow-hidden">
         <div className="sheet-header">{MENTAL_LABELS.noteTitle}</div>
         <div className="p-3">
@@ -134,7 +148,7 @@ export default function MentalPage() {
         </div>
       </div>
 
-      {/* ── 에너지 흐름 (← "7일 트렌드") ── */}
+      {/* ── 에너지 흐름 ── */}
       <div className="card overflow-hidden">
         <div className="sheet-header">{MENTAL_LABELS.trendTitle}</div>
         <div className="p-3 h-44">

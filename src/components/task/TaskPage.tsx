@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Plus, Check, Trash2, X, ChevronDown } from 'lucide-react';
 import { newId, taskStore } from '@/lib/storage';
 import { Task, Priority, TimeSlot } from '@/types';
@@ -7,25 +7,17 @@ import { Button, EmptyState } from '@/components/ui';
 import { TODAY, cn } from '@/lib/utils';
 import { TASK_LABELS, getRateMessage } from '@/lib/strengthLanguage';
 
-// 강점 기반 우선순위 레이블
-const PRIORITY_LABELS: Record<Priority, string> = {
-  high: '핵심',    // ← "높음"
-  medium: '일반',  // ← "보통"
-  low: '여유',     // ← "낮음"
-};
 const PRIORITY_ORDER: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
-const TIMESLOT_LABELS: Record<TimeSlot, string> = { morning: '오전', afternoon: '오후', evening: '저녁' };
-const TIMESLOT_ICONS: Record<TimeSlot, string> = { morning: '🌅', afternoon: '☀️', evening: '🌙' };
 
-function AddModal({ onClose, onAdd }: { onClose: () => void; onAdd: () => void }) {
+function AddModal({ onClose, onAdd }: { onClose: () => void; onAdd: () => Promise<void> }) {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
   const [timeSlot, setTimeSlot] = useState<TimeSlot>('morning');
 
-  const submit = () => {
+  const submit = async () => {
     if (!title.trim()) return;
-    taskStore.add({ id: newId(), title: title.trim(), priority, timeSlot, date: TODAY, completed: false, createdAt: TODAY });
-    onAdd(); onClose();
+    await taskStore.add({ id: newId(), title: title.trim(), priority, timeSlot, date: TODAY, completed: false, createdAt: TODAY });
+    await onAdd(); onClose();
   };
 
   return (
@@ -54,7 +46,7 @@ function AddModal({ onClose, onAdd }: { onClose: () => void; onAdd: () => void }
                     color: priority === p ? 'var(--sage)' : 'var(--text-muted)',
                     borderColor: priority === p ? 'var(--sage)' : 'var(--border)',
                   }}>
-                  {PRIORITY_LABELS[p]}
+                  {TASK_LABELS.priorities[p]}
                 </button>
               ))}
             </div>
@@ -71,7 +63,7 @@ function AddModal({ onClose, onAdd }: { onClose: () => void; onAdd: () => void }
                     color: timeSlot === t ? 'var(--sage)' : 'var(--text-muted)',
                     borderColor: timeSlot === t ? 'var(--sage)' : 'var(--border)',
                   }}>
-                  {TIMESLOT_ICONS[t]} {TIMESLOT_LABELS[t]}
+                  {TASK_LABELS.timeslotIcons[t]} {TASK_LABELS.timeslots[t]}
                 </button>
               ))}
             </div>
@@ -84,19 +76,21 @@ function AddModal({ onClose, onAdd }: { onClose: () => void; onAdd: () => void }
 }
 
 export default function TaskPage() {
-  const [tasks, setTasks] = useState<Task[]>(() => taskStore.getByDate(TODAY));
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [memos, setMemos] = useState<Record<string, string>>({});
 
-  const refresh = useCallback(() => setTasks(taskStore.getByDate(TODAY)), []);
-  const toggle = (id: string) => {
+  const refresh = useCallback(async () => setTasks(await taskStore.getByDate(TODAY)), []);
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const toggle = async (id: string) => {
     const t = tasks.find(t => t.id === id);
-    if (t) { taskStore.update(id, { completed: !t.completed }); refresh(); }
+    if (t) { await taskStore.update(id, { completed: !t.completed }); await refresh(); }
   };
-  const remove = (id: string) => { taskStore.delete(id); refresh(); };
-  const saveMemo = (id: string) => {
-    taskStore.update(id, { incompleteReason: memos[id] });
+  const remove = async (id: string) => { await taskStore.delete(id); await refresh(); };
+  const saveMemo = async (id: string) => {
+    await taskStore.update(id, { incompleteReason: memos[id] });
     setExpandedId(null);
   };
 
@@ -167,9 +161,9 @@ export default function TaskPage() {
           return (
             <div key={slot}>
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-base">{TIMESLOT_ICONS[slot]}</span>
+                <span className="text-base">{TASK_LABELS.timeslotIcons[slot]}</span>
                 <span className="text-[12px] font-bold" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
-                  {TIMESLOT_LABELS[slot]}
+                  {TASK_LABELS.timeslots[slot]}
                 </span>
                 <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
                 <span className="text-[11px]" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
@@ -189,8 +183,8 @@ export default function TaskPage() {
                   </thead>
                   <tbody>
                     {slotTasks.map(task => (
-                      <>
-                        <tr key={task.id} style={{ opacity: task.completed ? 0.55 : 1 }}>
+                      <React.Fragment key={task.id}>
+                        <tr style={{ opacity: task.completed ? 0.55 : 1 }}>
                           <td>
                             <button onClick={() => toggle(task.id)}
                               className="w-5 h-5 rounded flex items-center justify-center transition-all"
@@ -213,7 +207,7 @@ export default function TaskPage() {
                                 background: task.priority === 'high' ? 'var(--sage-light)' : task.priority === 'medium' ? 'var(--navy-light)' : 'var(--border-light)',
                                 color: task.priority === 'high' ? 'var(--sage)' : task.priority === 'medium' ? 'var(--navy)' : 'var(--text-muted)',
                               }}>
-                              {PRIORITY_LABELS[task.priority]}
+                              {TASK_LABELS.priorities[task.priority]}
                             </span>
                           </td>
                           <td>
@@ -234,9 +228,8 @@ export default function TaskPage() {
                           </td>
                         </tr>
 
-                        {/* 상황 메모 (← "미완료 사유") */}
                         {expandedId === task.id && (
-                          <tr key={`${task.id}-memo`}>
+                          <tr>
                             <td colSpan={4} className="py-2 px-2" style={{ background: 'var(--sage-pale)' }}>
                               <p className="text-[10px] mb-1.5 font-semibold" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
                                 {TASK_LABELS.reasonLabel}
@@ -253,7 +246,7 @@ export default function TaskPage() {
                             </td>
                           </tr>
                         )}
-                      </>
+                      </React.Fragment>
                     ))}
                   </tbody>
                 </table>

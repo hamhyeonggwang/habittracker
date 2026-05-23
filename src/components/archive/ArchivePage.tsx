@@ -1,6 +1,6 @@
 'use client';
-import { useState, useMemo, useCallback } from 'react';
-import { Plus, Search, X, Tag } from 'lucide-react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { Plus, Search, X, Tag, Pencil, Trash2 } from 'lucide-react';
 import { archiveStore, newId } from '@/lib/storage';
 import { ArchiveItem, ArchiveCategory } from '@/types';
 import { Button, EmptyState } from '@/components/ui';
@@ -16,22 +16,27 @@ const CAT_COLORS: Record<ArchiveCategory, { bg: string; text: string; border: st
   etc:      { bg: '#f9fafb', text: '#4b5563', border: '#e5e7eb' },
 };
 
-function AddModal({ onClose, onAdd }: { onClose: () => void; onAdd: () => void }) {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [category, setCategory] = useState<ArchiveCategory>('idea');
+function ArchiveModal({ item, onClose, onSave }: { item?: ArchiveItem; onClose: () => void; onSave: () => Promise<void> }) {
+  const isEdit = !!item;
+  const [title, setTitle] = useState(item?.title ?? '');
+  const [content, setContent] = useState(item?.content ?? '');
+  const [category, setCategory] = useState<ArchiveCategory>(item?.category ?? 'idea');
   const [tagInput, setTagInput] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
+  const [tags, setTags] = useState<string[]>(item?.tags ?? []);
 
   const addTag = () => {
     const t = tagInput.trim();
     if (t && !tags.includes(t)) { setTags([...tags, t]); setTagInput(''); }
   };
-  const submit = () => {
+  const submit = async () => {
     if (!title.trim()) return;
     const now = new Date().toISOString();
-    archiveStore.add({ id: newId(), title: title.trim(), content: content.trim(), category, tags, createdAt: now, updatedAt: now });
-    onAdd(); onClose();
+    if (isEdit && item) {
+      await archiveStore.update(item.id, { title: title.trim(), content: content.trim(), category, tags, updatedAt: now });
+    } else {
+      await archiveStore.add({ id: newId(), title: title.trim(), content: content.trim(), category, tags, createdAt: now, updatedAt: now });
+    }
+    await onSave(); onClose();
   };
 
   return (
@@ -39,7 +44,7 @@ function AddModal({ onClose, onAdd }: { onClose: () => void; onAdd: () => void }
       <div className="modal-sheet" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold" style={{ fontFamily: 'Noto Serif KR, serif', color: 'var(--text-primary)' }}>
-            {ARCHIVE_LABELS.modalTitle}
+            {isEdit ? '기록 수정' : ARCHIVE_LABELS.modalTitle}
           </h3>
           <button onClick={onClose}><X size={18} style={{ color: 'var(--text-muted)' }} /></button>
         </div>
@@ -99,7 +104,7 @@ function AddModal({ onClose, onAdd }: { onClose: () => void; onAdd: () => void }
               </div>
             )}
           </div>
-          <Button onClick={submit} className="w-full" size="lg">저장하기 ✨</Button>
+          <Button onClick={submit} className="w-full" size="lg">{isEdit ? '수정 저장' : '저장하기 ✨'}</Button>
         </div>
       </div>
     </div>
@@ -107,14 +112,23 @@ function AddModal({ onClose, onAdd }: { onClose: () => void; onAdd: () => void }
 }
 
 export default function ArchivePage() {
-  const [items, setItems] = useState<ArchiveItem[]>(() =>
-    archiveStore.getAll().sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+  const [items, setItems] = useState<ArchiveItem[]>([]);
   const [query, setQuery] = useState('');
   const [activeCat, setActiveCat] = useState<ArchiveCategory | 'all'>('all');
   const [showAdd, setShowAdd] = useState(false);
+  const [editingItem, setEditingItem] = useState<ArchiveItem | null>(null);
 
-  const refresh = useCallback(() =>
-    setItems(archiveStore.getAll().sort((a, b) => b.createdAt.localeCompare(a.createdAt))), []);
+  const refresh = useCallback(async () => {
+    const data = await archiveStore.getAll();
+    setItems(data.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+  }, []);
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('이 기록을 삭제할까요?')) return;
+    await archiveStore.delete(id);
+    await refresh();
+  };
 
   const filtered = useMemo(() => {
     let r = items;
@@ -231,6 +245,18 @@ export default function ArchivePage() {
                     ))}
                   </div>
                 )}
+                <div className="flex gap-3 mt-2.5 pt-2 border-t" style={{ borderColor: 'var(--border-light)' }}>
+                  <button onClick={() => setEditingItem(item)}
+                    className="flex items-center gap-1 text-[10px] font-semibold transition-colors hover:opacity-70"
+                    style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
+                    <Pencil size={10} /> 수정
+                  </button>
+                  <button onClick={() => handleDelete(item.id)}
+                    className="flex items-center gap-1 text-[10px] font-semibold transition-colors hover:opacity-70"
+                    style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
+                    <Trash2 size={10} /> 삭제
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -238,7 +264,8 @@ export default function ArchivePage() {
       )}
 
       <div className="h-4" />
-      {showAdd && <AddModal onClose={() => setShowAdd(false)} onAdd={refresh} />}
+      {showAdd && <ArchiveModal onClose={() => setShowAdd(false)} onSave={refresh} />}
+      {editingItem && <ArchiveModal item={editingItem} onClose={() => setEditingItem(null)} onSave={refresh} />}
     </div>
   );
 }

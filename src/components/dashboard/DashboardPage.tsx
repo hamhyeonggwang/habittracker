@@ -1,5 +1,5 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   habitStore, habitLogStore, taskStore, mentalStore, archiveStore,
   identityStatementStore, goalStore, quarterStore, monthPlanStore, financeStore,
@@ -82,19 +82,24 @@ function DeleteBtn({ onClick }: { onClick: () => void }) {
 
 // ── IDENTITY 탭 ──────────────────────────────────────────────
 function IdentityTab() {
-  const [statements, setStatements] = useState<IdentityStatement[]>(() => identityStatementStore.getAll());
-  const [goals, setGoals] = useState<Goal[]>(() => goalStore.getAll());
+  const [statements, setStatements] = useState<IdentityStatement[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [editing, setEditing] = useState(false);
   const [draftS, setDraftS] = useState<IdentityStatement[]>([]);
   const [draftG, setDraftG] = useState<Goal[]>([]);
 
+  useEffect(() => {
+    Promise.all([identityStatementStore.getAll(), goalStore.getAll()]).then(([s, g]) => {
+      setStatements(s); setGoals(g);
+    });
+  }, []);
+
   const startEdit = () => { setDraftS([...statements]); setDraftG([...goals]); setEditing(true); };
   const cancel = () => setEditing(false);
-  const save = () => {
+  const save = async () => {
     const s = draftS.filter(d => d.keyword.trim() || d.statement.trim());
     const g = draftG.filter(d => d.field.trim() || d.goal.trim());
-    identityStatementStore.save(s);
-    goalStore.save(g);
+    await Promise.all([identityStatementStore.save(s), goalStore.save(g)]);
     setStatements(s); setGoals(g); setEditing(false);
   };
 
@@ -217,17 +222,22 @@ function IdentityTab() {
 
 // ── ROADMAP 탭 ──────────────────────────────────────────────
 function RoadmapTab() {
-  const [quarters, setQuarters] = useState<Quarter[]>(() => quarterStore.getAll());
-  const [monthPlans, setMonthPlans] = useState<MonthPlan[]>(() => monthPlanStore.getAll());
+  const [quarters, setQuarters] = useState<Quarter[]>([]);
+  const [monthPlans, setMonthPlans] = useState<MonthPlan[]>([]);
   const [editing, setEditing] = useState(false);
   const [draftQ, setDraftQ] = useState<Quarter[]>([]);
   const [draftM, setDraftM] = useState<MonthPlan[]>([]);
 
+  useEffect(() => {
+    Promise.all([quarterStore.getAll(), monthPlanStore.getAll()]).then(([q, m]) => {
+      setQuarters(q); setMonthPlans(m);
+    });
+  }, []);
+
   const startEdit = () => { setDraftQ([...quarters]); setDraftM([...monthPlans]); setEditing(true); };
   const cancel = () => setEditing(false);
-  const save = () => {
-    quarterStore.save(draftQ);
-    monthPlanStore.save(draftM);
+  const save = async () => {
+    await Promise.all([quarterStore.save(draftQ), monthPlanStore.save(draftM)]);
     setQuarters([...draftQ]); setMonthPlans([...draftM]); setEditing(false);
   };
 
@@ -309,13 +319,15 @@ function RoadmapTab() {
 
 // ── FINANCE 탭 ──────────────────────────────────────────────
 function FinanceTab() {
-  const [items, setItems] = useState<FinanceItem[]>(() => financeStore.getAll());
+  const [items, setItems] = useState<FinanceItem[]>([]);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<FinanceItem[]>([]);
 
+  useEffect(() => { financeStore.getAll().then(setItems); }, []);
+
   const startEdit = () => { setDraft([...items]); setEditing(true); };
   const cancel = () => setEditing(false);
-  const save = () => { financeStore.save(draft); setItems([...draft]); setEditing(false); };
+  const save = async () => { await financeStore.save(draft); setItems([...draft]); setEditing(false); };
 
   const disp = editing ? draft : items;
   const income   = disp.filter(i => i.category === 'income');
@@ -439,52 +451,73 @@ function FinanceTab() {
 }
 
 // ── MAIN DASHBOARD ──────────────────────────────────────────
+const EMPTY_DATA = {
+  taskRate: 0, habitRate: 0, mentalScore: null as number | null,
+  completedHabits: 0, habits: [] as import('@/types').Habit[], momentum: 0,
+  growthHabit: '', growthRate: 0,
+  monthlyData: [] as { label: string; rate: number }[],
+  streak: 0, recentArchive: [] as import('@/types').ArchiveItem[],
+  completedTasks: [] as import('@/types').Task[], todayTasks: [] as import('@/types').Task[],
+};
+
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<'identity' | 'roadmap' | 'finance'>('identity');
+  const [data, setData] = useState(EMPTY_DATA);
 
-  const data = useMemo(() => {
-    const todayTasks = taskStore.getByDate(TODAY);
+  const loadData = useCallback(async () => {
+    const [todayTasks, habits, allLogs, todayMental, allArchive] = await Promise.all([
+      taskStore.getByDate(TODAY),
+      habitStore.getAll(),
+      habitLogStore.getAll(),
+      mentalStore.getByDate(TODAY),
+      archiveStore.getAll(),
+    ]);
+
     const completedTasks = todayTasks.filter(t => t.completed);
     const taskRate = todayTasks.length ? (completedTasks.length / todayTasks.length) * 100 : 0;
-
-    const habits = habitStore.getAll().filter(h => !h.isArchived);
-    const todayLogs = habitLogStore.getByDate(TODAY);
+    const activeHabits = habits.filter(h => !h.isArchived);
+    const todayLogs = allLogs.filter(l => l.date === TODAY);
     const completedHabits = todayLogs.filter(l => l.completed).length;
-    const habitRate = habits.length ? (completedHabits / habits.length) * 100 : 0;
-
-    const todayMental = mentalStore.getByDate(TODAY);
+    const habitRate = activeHabits.length ? (completedHabits / activeHabits.length) * 100 : 0;
     const mentalScore = todayMental
       ? Math.round((todayMental.mood + todayMental.energy + todayMental.stress + todayMental.sleepQuality) / 4 * 10) / 10
       : null;
-
     const momentum = Math.round((habitRate + taskRate + (mentalScore ? mentalScore * 20 : 0)) / 3);
 
     const last7 = Array.from({ length: 7 }, (_, i) => format(subDays(new Date(), i), 'yyyy-MM-dd'));
     let growthHabit = '';
     let growthRate = 101;
-    habits.forEach(h => {
-      const done = last7.filter(d => habitLogStore.getByDate(d).some(l => l.habitId === h.id && l.completed)).length;
+    activeHabits.forEach(h => {
+      const done = last7.filter(d => allLogs.some(l => l.habitId === h.id && l.date === d && l.completed)).length;
       const rate = (done / 7) * 100;
       if (rate < growthRate) { growthRate = rate; growthHabit = h.name; }
     });
 
     const monthlyData = Array.from({ length: 7 }, (_, i) => {
-      const m = new Date(); m.setMonth(m.getMonth() - (6 - i));
-      return { label: `${m.getMonth() + 1}월`, rate: Math.floor(Math.random() * 60 + 20) };
+      const d = new Date();
+      d.setDate(1);
+      d.setMonth(d.getMonth() - (6 - i));
+      const monthPrefix = format(d, 'yyyy-MM');
+      const daysInMo = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+      const monthCompleted = allLogs.filter(l => l.date.startsWith(monthPrefix) && l.completed).length;
+      const totalPossible = activeHabits.length * daysInMo;
+      const rate = totalPossible > 0 ? Math.round((monthCompleted / totalPossible) * 100) : 0;
+      return { label: `${d.getMonth() + 1}월`, rate };
     });
 
     let streak = 0;
     for (let i = 0; i < 30; i++) {
       const d = format(subDays(new Date(), i), 'yyyy-MM-dd');
-      if (habitLogStore.getByDate(d).some(l => l.completed)) streak++;
+      if (allLogs.some(l => l.date === d && l.completed)) streak++;
       else break;
     }
 
-    const recentArchive = archiveStore.getAll()
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 2);
+    const recentArchive = allArchive.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 2);
 
-    return { taskRate, habitRate, mentalScore, completedHabits, habits, momentum, growthHabit, growthRate, monthlyData, streak, recentArchive, completedTasks, todayTasks };
+    setData({ taskRate, habitRate, mentalScore, completedHabits, habits: activeHabits, momentum, growthHabit, growthRate, monthlyData, streak, recentArchive, completedTasks, todayTasks });
   }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const TABS = [
     { id: 'identity', label: 'IDENTITY' },

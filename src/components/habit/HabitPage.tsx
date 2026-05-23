@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Plus, X, Check, Sparkles, Pencil, Trash2 } from 'lucide-react';
 import { habitStore, habitLogStore, newId } from '@/lib/storage';
 import { Habit, RoleTag, RoutineSlot, PerformanceScore } from '@/types';
@@ -50,16 +50,16 @@ function HabitActionButtons({ onEdit, onDelete }: { onEdit: () => void; onDelete
 }
 
 // ── Performance 입력 미니 UI ──────────────────────────────
-function PerformanceInput({ habitId, date, onSave }: {
-  habitId: string; date: string; onSave: () => void;
+function PerformanceInput({ habitId, date, logs, onSave }: {
+  habitId: string; date: string; logs: import('@/types').HabitLog[]; onSave: () => Promise<void>;
 }) {
-  const log = habitLogStore.getAll().find(l => l.habitId === habitId && l.date === date);
+  const log = logs.find(l => l.habitId === habitId && l.date === date);
   const [energy, setEnergy] = useState<PerformanceScore>(log?.energyAfter ?? 3);
   const [satisfaction, setSatisfaction] = useState<PerformanceScore>(log?.satisfactionAfter ?? 3);
 
-  const handleSave = () => {
-    habitLogStore.updatePerformance(habitId, date, energy, satisfaction);
-    onSave();
+  const handleSave = async () => {
+    await habitLogStore.updatePerformance(habitId, date, energy, satisfaction);
+    await onSave();
   };
 
   const ScoreRow = ({ label, value, onChange }: {
@@ -101,7 +101,7 @@ function PerformanceInput({ habitId, date, onSave }: {
 }
 
 // ── 습관 추가/수정 폼 모달 ────────────────────────────────
-function HabitFormModal({ habit, onClose, onSave }: { habit?: Habit; onClose: () => void; onSave: () => void }) {
+function HabitFormModal({ habit, onClose, onSave }: { habit?: Habit; onClose: () => void; onSave: () => Promise<void> }) {
   const isEdit = !!habit;
   const [name, setName] = useState(habit?.name ?? '');
   const [icon, setIcon] = useState(habit?.icon ?? '🎯');
@@ -114,18 +114,18 @@ function HabitFormModal({ habit, onClose, onSave }: { habit?: Habit; onClose: ()
     setRoles(prev => prev.includes(role) ? prev.filter(r => r !== role) : [...prev, role]);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!name.trim()) return;
     if (isEdit && habit) {
-      habitStore.update(habit.id, { name: name.trim(), icon, color, targetDaysPerWeek: targetDays, roles, routineSlot });
+      await habitStore.update(habit.id, { name: name.trim(), icon, color, targetDaysPerWeek: targetDays, roles, routineSlot });
     } else {
-      habitStore.add({
+      await habitStore.add({
         id: newId(), name: name.trim(), icon, color,
         targetDaysPerWeek: targetDays, createdAt: TODAY, isArchived: false,
         roles, routineSlot,
       });
     }
-    onSave(); onClose();
+    await onSave(); onClose();
   };
 
   return (
@@ -218,37 +218,37 @@ function HabitFormModal({ habit, onClose, onSave }: { habit?: Habit; onClose: ()
 
 // ── 메인 페이지 ───────────────────────────────────────────
 export default function HabitPage() {
-  const [habits, setHabits] = useState<Habit[]>(() => habitStore.getAll().filter(h => !h.isArchived));
-  const [logs, setLogs] = useState(() => habitLogStore.getAll());
+  const [habits, setHabits] = useState<Habit[]>([]);
+  const [logs, setLogs] = useState<import('@/types').HabitLog[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [view, setView] = useState<'today' | 'month'>('month');
   const [currentMonth] = useState(new Date());
-  // Performance 입력 패널이 열린 habitId 추적
   const [openPerformance, setOpenPerformance] = useState<string | null>(null);
 
-  const refresh = useCallback(() => {
-    setHabits(habitStore.getAll().filter(h => !h.isArchived));
-    setLogs(habitLogStore.getAll());
+  const refresh = useCallback(async () => {
+    const [allHabits, allLogs] = await Promise.all([habitStore.getAll(), habitLogStore.getAll()]);
+    setHabits(allHabits.filter(h => !h.isArchived));
+    setLogs(allLogs);
   }, []);
+  useEffect(() => { refresh(); }, [refresh]);
 
-  const toggle = (habitId: string, date: string) => {
-    habitLogStore.toggle(habitId, date);
-    refresh();
-    // 오늘 체크인 완료 시 Performance 패널 오픈
-    const isNowComplete = !logs.find(l => l.habitId === habitId && l.date === date)?.completed;
-    if (date === TODAY && isNowComplete) {
+  const toggle = async (habitId: string, date: string) => {
+    const wasComplete = logs.find(l => l.habitId === habitId && l.date === date)?.completed ?? false;
+    await habitLogStore.toggle(habitId, date);
+    await refresh();
+    if (date === TODAY && !wasComplete) {
       setOpenPerformance(habitId);
     } else {
       setOpenPerformance(null);
     }
   };
 
-  const removeHabit = (habit: Habit) => {
+  const removeHabit = async (habit: Habit) => {
     if (!confirm(`"${habit.name}" 습관을 삭제할까요?\n참여 기록도 함께 삭제됩니다.`)) return;
-    habitLogStore.deleteByHabitId(habit.id);
-    habitStore.delete(habit.id);
-    refresh();
+    await habitLogStore.deleteByHabitId(habit.id);
+    await habitStore.delete(habit.id);
+    await refresh();
   };
 
   const isCompleted = (habitId: string, date: string) =>
@@ -405,7 +405,8 @@ export default function HabitPage() {
                   <PerformanceInput
                     habitId={habit.id}
                     date={TODAY}
-                    onSave={() => { refresh(); setOpenPerformance(null); }}
+                    logs={logs}
+                    onSave={async () => { await refresh(); setOpenPerformance(null); }}
                   />
                 )}
               </div>

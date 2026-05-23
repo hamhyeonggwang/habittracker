@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { repairStorage, seedDummyData, seedDashboardData } from '@/lib/storage';
+import { migrateFromLocalStorage } from '@/lib/migrate';
 import BottomNav from '@/components/layout/BottomNav';
 import DashboardPage from '@/components/dashboard/DashboardPage';
 import HabitPage from '@/components/habit/HabitPage';
@@ -15,10 +15,7 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    repairStorage();
-    seedDummyData();
-    seedDashboardData();
-    setMounted(true);
+    migrateFromLocalStorage().finally(() => setMounted(true));
   }, []);
 
   if (!mounted) {

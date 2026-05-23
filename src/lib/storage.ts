@@ -1,32 +1,10 @@
+import { supabase } from './supabase';
 import {
   Habit, HabitLog, Task, MentalStateLog, ArchiveItem,
-  ArchiveCategory, Priority, TimeSlot, MoodScore,
-  RoleTag, RoutineSlot, PerformanceScore,
-  IdentityStatement, Goal, GoalStatus, Quarter, MonthPlan,
-  FinanceItem, FinanceCategory,
+  PerformanceScore, RoleTag, RoutineSlot, Priority, TimeSlot,
+  MoodScore, ArchiveCategory, GoalStatus,
+  IdentityStatement, Goal, Quarter, MonthPlan, FinanceItem, FinanceCategory,
 } from '@/types';
-
-const KEYS = {
-  HABITS: 'lhd_habits',
-  HABIT_LOGS: 'lhd_habit_logs',
-  TASKS: 'lhd_tasks',
-  MENTAL_STATE: 'lhd_mental_state',
-  ARCHIVE: 'lhd_archive',
-  SEEDED: 'lhd_seeded',
-  // Dashboard editable sections
-  IDENTITY: 'lhd_identity',
-  GOALS: 'lhd_goals',
-  QUARTERS: 'lhd_quarters',
-  MONTH_PLANS: 'lhd_month_plans',
-  FINANCE: 'lhd_finance',
-  DASH_SEEDED: 'lhd_dash_seeded',
-} as const;
-
-const ARCHIVE_CATEGORIES = new Set<ArchiveCategory>(['book', 'work', 'research', 'clinical', 'idea', 'etc']);
-const PRIORITIES = new Set<Priority>(['low', 'medium', 'high']);
-const TIME_SLOTS = new Set<TimeSlot>(['morning', 'afternoon', 'evening']);
-const ROLE_TAGS = new Set<RoleTag>(['researcher', 'clinician', 'learner', 'health', 'social', 'creator']);
-const ROUTINE_SLOTS = new Set<RoutineSlot>(['morning', 'afternoon', 'evening', 'flexible']);
 
 export function newId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -35,281 +13,264 @@ export function newId(): string {
   return `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-function isRecord(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null;
-}
+// ── Row mappers (DB snake_case → TS camelCase) ──────────────
 
-function asString(v: unknown, fallback = ''): string {
-  return typeof v === 'string' ? v : fallback;
-}
-
-function asBool(v: unknown, fallback = false): boolean {
-  return typeof v === 'boolean' ? v : fallback;
-}
-
-function asMoodScore(v: unknown, fallback: MoodScore = 3): MoodScore {
-  const n = typeof v === 'number' ? Math.round(v) : Number(v);
-  if (n >= 1 && n <= 5) return n as MoodScore;
-  return fallback;
-}
-
-function readRaw(key: string): unknown[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return [];
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeRaw(key: string, data: unknown[]): void {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(key, JSON.stringify(data));
-  } catch {
-    // private mode / quota — ignore
-  }
-}
-
-function asRoleTags(v: unknown): RoleTag[] {
-  if (!Array.isArray(v)) return [];
-  return v.filter((r): r is RoleTag => ROLE_TAGS.has(r as RoleTag));
-}
-
-function asRoutineSlot(v: unknown): RoutineSlot {
-  return ROUTINE_SLOTS.has(v as RoutineSlot) ? (v as RoutineSlot) : 'flexible';
-}
-
-function asPerformanceScore(v: unknown): PerformanceScore | undefined {
-  const n = typeof v === 'number' ? Math.round(v) : Number(v);
-  if (n >= 1 && n <= 5) return n as PerformanceScore;
-  return undefined;
-}
-
-function normalizeHabit(raw: unknown): Habit | null {
-  if (!isRecord(raw) || !raw.id || !raw.name) return null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapHabit(r: any): Habit {
   return {
-    id: asString(raw.id),
-    name: asString(raw.name),
-    icon: asString(raw.icon, '🎯'),
-    color: asString(raw.color, '#4a7c59'),
-    targetDaysPerWeek: Math.min(7, Math.max(1, Number(raw.targetDaysPerWeek) || 7)),
-    createdAt: asString(raw.createdAt, new Date().toISOString()),
-    isArchived: asBool(raw.isArchived),
-    roles: asRoleTags(raw.roles),
-    routineSlot: asRoutineSlot(raw.routineSlot),
+    id: r.id,
+    name: r.name,
+    icon: r.icon ?? '🎯',
+    color: r.color ?? '#4a7c59',
+    targetDaysPerWeek: r.target_days_per_week ?? 7,
+    createdAt: r.created_at,
+    isArchived: r.is_archived ?? false,
+    roles: (r.roles ?? []) as RoleTag[],
+    routineSlot: (r.routine_slot ?? 'flexible') as RoutineSlot,
   };
 }
 
-function normalizeHabitLog(raw: unknown): HabitLog | null {
-  if (!isRecord(raw) || !raw.id || !raw.habitId || !raw.date) return null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapHabitLog(r: any): HabitLog {
   return {
-    id: asString(raw.id),
-    habitId: asString(raw.habitId),
-    date: asString(raw.date),
-    completed: asBool(raw.completed),
-    note: raw.note ? asString(raw.note) : undefined,
-    energyAfter: asPerformanceScore(raw.energyAfter),
-    satisfactionAfter: asPerformanceScore(raw.satisfactionAfter),
+    id: r.id,
+    habitId: r.habit_id,
+    date: r.date,
+    completed: r.completed ?? false,
+    note: r.note ?? undefined,
+    energyAfter: r.energy_after ?? undefined,
+    satisfactionAfter: r.satisfaction_after ?? undefined,
   };
 }
 
-function normalizeTask(raw: unknown): Task | null {
-  if (!isRecord(raw) || !raw.id || !raw.title || !raw.date) return null;
-  const priority = PRIORITIES.has(raw.priority as Priority) ? (raw.priority as Priority) : 'medium';
-  const timeSlot = TIME_SLOTS.has(raw.timeSlot as TimeSlot) ? (raw.timeSlot as TimeSlot) : 'morning';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapTask(r: any): Task {
   return {
-    id: asString(raw.id),
-    title: asString(raw.title),
-    priority,
-    timeSlot,
-    date: asString(raw.date),
-    completed: asBool(raw.completed),
-    incompleteReason: raw.incompleteReason ? asString(raw.incompleteReason) : undefined,
-    createdAt: asString(raw.createdAt, asString(raw.date)),
+    id: r.id,
+    title: r.title,
+    priority: (r.priority ?? 'medium') as Priority,
+    timeSlot: (r.time_slot ?? 'morning') as TimeSlot,
+    date: r.date,
+    completed: r.completed ?? false,
+    incompleteReason: r.incomplete_reason ?? undefined,
+    createdAt: r.created_at,
   };
 }
 
-function normalizeMentalLog(raw: unknown): MentalStateLog | null {
-  if (!isRecord(raw) || !raw.id || !raw.date) return null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapMentalLog(r: any): MentalStateLog {
   return {
-    id: asString(raw.id),
-    date: asString(raw.date),
-    mood: asMoodScore(raw.mood),
-    energy: asMoodScore(raw.energy),
-    stress: asMoodScore(raw.stress),
-    sleepQuality: asMoodScore(raw.sleepQuality),
-    note: asString(raw.note),
+    id: r.id,
+    date: r.date,
+    mood: (r.mood ?? 3) as MoodScore,
+    energy: (r.energy ?? 3) as MoodScore,
+    stress: (r.stress ?? 3) as MoodScore,
+    sleepQuality: (r.sleep_quality ?? 3) as MoodScore,
+    note: r.note ?? '',
   };
 }
 
-function normalizeArchiveItem(raw: unknown): ArchiveItem | null {
-  if (!isRecord(raw) || !raw.id || !raw.title) return null;
-  const category = ARCHIVE_CATEGORIES.has(raw.category as ArchiveCategory)
-    ? (raw.category as ArchiveCategory)
-    : 'etc';
-  const createdAt = asString(raw.createdAt, new Date().toISOString());
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapArchiveItem(r: any): ArchiveItem {
   return {
-    id: asString(raw.id),
-    title: asString(raw.title),
-    content: asString(raw.content),
-    category,
-    tags: Array.isArray(raw.tags) ? raw.tags.filter((t): t is string => typeof t === 'string') : [],
-    createdAt,
-    updatedAt: asString(raw.updatedAt, createdAt),
+    id: r.id,
+    title: r.title,
+    content: r.content ?? '',
+    category: (r.category ?? 'etc') as ArchiveCategory,
+    tags: r.tags ?? [],
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
   };
 }
 
-const GOAL_STATUSES = new Set<GoalStatus>(['준비 중', '진행 중', '완료']);
-const FINANCE_CATEGORIES = new Set<FinanceCategory>(['income', 'fixed', 'variable']);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapIdentityStatement(r: any): IdentityStatement {
+  return { id: r.id, keyword: r.keyword ?? '', statement: r.statement ?? '' };
+}
 
-function normalizeIdentityStatement(raw: unknown): IdentityStatement | null {
-  if (!isRecord(raw) || !raw.id) return null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapGoal(r: any): Goal {
   return {
-    id: asString(raw.id),
-    keyword: asString(raw.keyword),
-    statement: asString(raw.statement),
+    id: r.id,
+    field: r.field ?? '',
+    goal: r.goal ?? '',
+    metric: r.metric ?? '',
+    status: (r.status ?? '준비 중') as GoalStatus,
   };
 }
 
-function normalizeGoal(raw: unknown): Goal | null {
-  if (!isRecord(raw) || !raw.id) return null;
-  const status = GOAL_STATUSES.has(raw.status as GoalStatus) ? (raw.status as GoalStatus) : '준비 중';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapQuarter(r: any): Quarter {
+  return { id: r.id, label: r.label ?? '', milestone: r.milestone ?? '', criteria: r.criteria ?? '' };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapMonthPlan(r: any): MonthPlan {
+  return { month: r.month, plan: r.plan ?? '' };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapFinanceItem(r: any): FinanceItem {
   return {
-    id: asString(raw.id),
-    field: asString(raw.field),
-    goal: asString(raw.goal),
-    metric: asString(raw.metric),
-    status,
+    id: r.id,
+    type: r.type ?? '',
+    amount: r.amount ?? 0,
+    category: (r.category ?? 'fixed') as FinanceCategory,
   };
 }
 
-function normalizeQuarter(raw: unknown): Quarter | null {
-  if (!isRecord(raw) || !raw.id) return null;
-  return {
-    id: asString(raw.id),
-    label: asString(raw.label),
-    milestone: asString(raw.milestone),
-    criteria: asString(raw.criteria),
-  };
-}
-
-function normalizeMonthPlan(raw: unknown): MonthPlan | null {
-  if (!isRecord(raw)) return null;
-  const month = typeof raw.month === 'number' ? raw.month : Number(raw.month);
-  if (month < 1 || month > 12 || !Number.isInteger(month)) return null;
-  return { month, plan: asString(raw.plan) };
-}
-
-function normalizeFinanceItem(raw: unknown): FinanceItem | null {
-  if (!isRecord(raw) || !raw.id) return null;
-  const category = FINANCE_CATEGORIES.has(raw.category as FinanceCategory)
-    ? (raw.category as FinanceCategory) : 'fixed';
-  return {
-    id: asString(raw.id),
-    type: asString(raw.type),
-    amount: typeof raw.amount === 'number' ? raw.amount : Number(raw.amount) || 0,
-    category,
-  };
-}
-
-function getItems<T>(key: string, normalize: (raw: unknown) => T | null): T[] {
-  return readRaw(key).map(normalize).filter((item): item is T => item !== null);
-}
-
-function setItems<T>(key: string, data: T[]): void {
-  writeRaw(key, data);
-}
-
-/** Fix or drop invalid cached rows so the UI never crashes on load. */
-export function repairStorage(): void {
-  if (typeof window === 'undefined') return;
-  setItems(KEYS.HABITS, getItems(KEYS.HABITS, normalizeHabit));
-  setItems(KEYS.HABIT_LOGS, getItems(KEYS.HABIT_LOGS, normalizeHabitLog));
-  setItems(KEYS.TASKS, getItems(KEYS.TASKS, normalizeTask));
-  setItems(KEYS.MENTAL_STATE, getItems(KEYS.MENTAL_STATE, normalizeMentalLog));
-  setItems(KEYS.ARCHIVE, getItems(KEYS.ARCHIVE, normalizeArchiveItem));
-}
-
-export function clearAppStorage(): void {
-  if (typeof window === 'undefined') return;
-  Object.values(KEYS).forEach(k => {
-    try { localStorage.removeItem(k); } catch { /* ignore */ }
-  });
-}
+// ── Stores ───────────────────────────────────────────────────
 
 export const habitStore = {
-  getAll: (): Habit[] => getItems(KEYS.HABITS, normalizeHabit),
-  save: (habits: Habit[]) => setItems(KEYS.HABITS, habits),
-  add: (habit: Habit) => setItems(KEYS.HABITS, [...habitStore.getAll(), habit]),
-  update: (id: string, updates: Partial<Habit>) => {
-    setItems(KEYS.HABITS, habitStore.getAll().map(h => h.id === id ? { ...h, ...updates } : h));
+  async getAll(): Promise<Habit[]> {
+    const { data } = await supabase.from('habits').select('*').order('created_at');
+    return (data ?? []).map(mapHabit);
   },
-  delete: (id: string) => setItems(KEYS.HABITS, habitStore.getAll().filter(h => h.id !== id)),
+  async add(habit: Habit): Promise<void> {
+    await supabase.from('habits').insert({
+      id: habit.id, name: habit.name, icon: habit.icon, color: habit.color,
+      target_days_per_week: habit.targetDaysPerWeek, created_at: habit.createdAt,
+      is_archived: habit.isArchived, roles: habit.roles, routine_slot: habit.routineSlot,
+    });
+  },
+  async update(id: string, updates: Partial<Habit>): Promise<void> {
+    const row: Record<string, unknown> = {};
+    if (updates.name !== undefined) row.name = updates.name;
+    if (updates.icon !== undefined) row.icon = updates.icon;
+    if (updates.color !== undefined) row.color = updates.color;
+    if (updates.targetDaysPerWeek !== undefined) row.target_days_per_week = updates.targetDaysPerWeek;
+    if (updates.isArchived !== undefined) row.is_archived = updates.isArchived;
+    if (updates.roles !== undefined) row.roles = updates.roles;
+    if (updates.routineSlot !== undefined) row.routine_slot = updates.routineSlot;
+    await supabase.from('habits').update(row).eq('id', id);
+  },
+  async delete(id: string): Promise<void> {
+    await supabase.from('habits').delete().eq('id', id);
+  },
+  async save(habits: Habit[]): Promise<void> {
+    await supabase.from('habits').delete().neq('id', '');
+    if (habits.length) {
+      await supabase.from('habits').insert(habits.map(h => ({
+        id: h.id, name: h.name, icon: h.icon, color: h.color,
+        target_days_per_week: h.targetDaysPerWeek, created_at: h.createdAt,
+        is_archived: h.isArchived, roles: h.roles, routine_slot: h.routineSlot,
+      })));
+    }
+  },
 };
 
 export const habitLogStore = {
-  getAll: (): HabitLog[] => getItems(KEYS.HABIT_LOGS, normalizeHabitLog),
-  getByDate: (date: string): HabitLog[] => habitLogStore.getAll().filter(l => l.date === date),
-  getByHabitId: (habitId: string): HabitLog[] => habitLogStore.getAll().filter(l => l.habitId === habitId),
-  toggle: (habitId: string, date: string) => {
-    const all = habitLogStore.getAll();
-    const existing = all.find(l => l.habitId === habitId && l.date === date);
-    if (existing) {
-      setItems(KEYS.HABIT_LOGS, all.map(l =>
-        l.id === existing.id ? { ...l, completed: !l.completed } : l
-      ));
+  async getAll(): Promise<HabitLog[]> {
+    const { data } = await supabase.from('habit_logs').select('*').order('date');
+    return (data ?? []).map(mapHabitLog);
+  },
+  async getByDate(date: string): Promise<HabitLog[]> {
+    const { data } = await supabase.from('habit_logs').select('*').eq('date', date);
+    return (data ?? []).map(mapHabitLog);
+  },
+  async toggle(habitId: string, date: string): Promise<void> {
+    const { data } = await supabase.from('habit_logs').select('*')
+      .eq('habit_id', habitId).eq('date', date).maybeSingle();
+    if (data) {
+      await supabase.from('habit_logs').update({ completed: !data.completed }).eq('id', data.id);
     } else {
-      setItems(KEYS.HABIT_LOGS, [...all, { id: newId(), habitId, date, completed: true }]);
+      await supabase.from('habit_logs').insert({ id: newId(), habit_id: habitId, date, completed: true });
     }
   },
-  deleteByHabitId: (habitId: string) => {
-    setItems(KEYS.HABIT_LOGS, habitLogStore.getAll().filter(l => l.habitId !== habitId));
+  async deleteByHabitId(habitId: string): Promise<void> {
+    await supabase.from('habit_logs').delete().eq('habit_id', habitId);
   },
-  updatePerformance: (habitId: string, date: string, energy: PerformanceScore, satisfaction: PerformanceScore) => {
-    const all = habitLogStore.getAll();
-    const existing = all.find(l => l.habitId === habitId && l.date === date);
-    if (existing) {
-      setItems(KEYS.HABIT_LOGS, all.map(l =>
-        l.id === existing.id ? { ...l, energyAfter: energy, satisfactionAfter: satisfaction } : l
-      ));
+  async updatePerformance(habitId: string, date: string, energy: PerformanceScore, satisfaction: PerformanceScore): Promise<void> {
+    const { data } = await supabase.from('habit_logs').select('id')
+      .eq('habit_id', habitId).eq('date', date).maybeSingle();
+    if (data) {
+      await supabase.from('habit_logs').update({ energy_after: energy, satisfaction_after: satisfaction }).eq('id', data.id);
     }
+  },
+  async upsertMany(logs: HabitLog[]): Promise<void> {
+    if (!logs.length) return;
+    await supabase.from('habit_logs').upsert(logs.map(l => ({
+      id: l.id, habit_id: l.habitId, date: l.date, completed: l.completed,
+      note: l.note, energy_after: l.energyAfter, satisfaction_after: l.satisfactionAfter,
+    })));
   },
 };
 
 export const taskStore = {
-  getAll: (): Task[] => getItems(KEYS.TASKS, normalizeTask),
-  getByDate: (date: string): Task[] => taskStore.getAll().filter(t => t.date === date),
-  add: (task: Task) => setItems(KEYS.TASKS, [...taskStore.getAll(), task]),
-  update: (id: string, updates: Partial<Task>) => {
-    setItems(KEYS.TASKS, taskStore.getAll().map(t => t.id === id ? { ...t, ...updates } : t));
+  async getAll(): Promise<Task[]> {
+    const { data } = await supabase.from('tasks').select('*').order('created_at');
+    return (data ?? []).map(mapTask);
   },
-  delete: (id: string) => setItems(KEYS.TASKS, taskStore.getAll().filter(t => t.id !== id)),
+  async getByDate(date: string): Promise<Task[]> {
+    const { data } = await supabase.from('tasks').select('*').eq('date', date).order('created_at');
+    return (data ?? []).map(mapTask);
+  },
+  async add(task: Task): Promise<void> {
+    await supabase.from('tasks').insert({
+      id: task.id, title: task.title, priority: task.priority,
+      time_slot: task.timeSlot, date: task.date, completed: task.completed,
+      incomplete_reason: task.incompleteReason, created_at: task.createdAt,
+    });
+  },
+  async update(id: string, updates: Partial<Task>): Promise<void> {
+    const row: Record<string, unknown> = {};
+    if (updates.title !== undefined) row.title = updates.title;
+    if (updates.priority !== undefined) row.priority = updates.priority;
+    if (updates.timeSlot !== undefined) row.time_slot = updates.timeSlot;
+    if (updates.completed !== undefined) row.completed = updates.completed;
+    if (updates.incompleteReason !== undefined) row.incomplete_reason = updates.incompleteReason;
+    await supabase.from('tasks').update(row).eq('id', id);
+  },
+  async delete(id: string): Promise<void> {
+    await supabase.from('tasks').delete().eq('id', id);
+  },
 };
 
 export const mentalStore = {
-  getAll: (): MentalStateLog[] => getItems(KEYS.MENTAL_STATE, normalizeMentalLog),
-  getByDate: (date: string): MentalStateLog | null =>
-    mentalStore.getAll().find(m => m.date === date) ?? null,
-  save: (log: MentalStateLog) => {
-    const all = mentalStore.getAll().filter(m => m.date !== log.date);
-    setItems(KEYS.MENTAL_STATE, [...all, log]);
+  async getAll(): Promise<MentalStateLog[]> {
+    const { data } = await supabase.from('mental_state_logs').select('*').order('date');
+    return (data ?? []).map(mapMentalLog);
+  },
+  async getByDate(date: string): Promise<MentalStateLog | null> {
+    const { data } = await supabase.from('mental_state_logs').select('*')
+      .eq('date', date).maybeSingle();
+    return data ? mapMentalLog(data) : null;
+  },
+  async save(log: MentalStateLog): Promise<void> {
+    await supabase.from('mental_state_logs').upsert({
+      id: log.id, date: log.date, mood: log.mood, energy: log.energy,
+      stress: log.stress, sleep_quality: log.sleepQuality, note: log.note,
+    }, { onConflict: 'date' });
   },
 };
 
 export const archiveStore = {
-  getAll: (): ArchiveItem[] => getItems(KEYS.ARCHIVE, normalizeArchiveItem),
-  add: (item: ArchiveItem) => setItems(KEYS.ARCHIVE, [...archiveStore.getAll(), item]),
-  update: (id: string, updates: Partial<ArchiveItem>) => {
-    setItems(KEYS.ARCHIVE, archiveStore.getAll().map(a => a.id === id ? { ...a, ...updates } : a));
+  async getAll(): Promise<ArchiveItem[]> {
+    const { data } = await supabase.from('archive_items').select('*').order('created_at', { ascending: false });
+    return (data ?? []).map(mapArchiveItem);
   },
-  delete: (id: string) => setItems(KEYS.ARCHIVE, archiveStore.getAll().filter(a => a.id !== id)),
-  search: (query: string): ArchiveItem[] => {
+  async add(item: ArchiveItem): Promise<void> {
+    await supabase.from('archive_items').insert({
+      id: item.id, title: item.title, content: item.content,
+      category: item.category, tags: item.tags, created_at: item.createdAt, updated_at: item.updatedAt,
+    });
+  },
+  async update(id: string, updates: Partial<ArchiveItem>): Promise<void> {
+    const row: Record<string, unknown> = {};
+    if (updates.title !== undefined) row.title = updates.title;
+    if (updates.content !== undefined) row.content = updates.content;
+    if (updates.category !== undefined) row.category = updates.category;
+    if (updates.tags !== undefined) row.tags = updates.tags;
+    if (updates.updatedAt !== undefined) row.updated_at = updates.updatedAt;
+    await supabase.from('archive_items').update(row).eq('id', id);
+  },
+  async delete(id: string): Promise<void> {
+    await supabase.from('archive_items').delete().eq('id', id);
+  },
+  async search(query: string): Promise<ArchiveItem[]> {
+    const all = await archiveStore.getAll();
     const q = query.toLowerCase();
-    return archiveStore.getAll().filter(a =>
+    return all.filter(a =>
       a.title.toLowerCase().includes(q) ||
       a.content.toLowerCase().includes(q) ||
       a.tags.some(t => t.toLowerCase().includes(q))
@@ -318,146 +279,70 @@ export const archiveStore = {
 };
 
 export const identityStatementStore = {
-  getAll: (): IdentityStatement[] => getItems(KEYS.IDENTITY, normalizeIdentityStatement),
-  save: (items: IdentityStatement[]) => setItems(KEYS.IDENTITY, items),
+  async getAll(): Promise<IdentityStatement[]> {
+    const { data } = await supabase.from('identity_statements').select('*');
+    return (data ?? []).map(mapIdentityStatement);
+  },
+  async save(items: IdentityStatement[]): Promise<void> {
+    await supabase.from('identity_statements').delete().neq('id', '');
+    if (items.length) await supabase.from('identity_statements').insert(items);
+  },
 };
 
 export const goalStore = {
-  getAll: (): Goal[] => getItems(KEYS.GOALS, normalizeGoal),
-  save: (items: Goal[]) => setItems(KEYS.GOALS, items),
+  async getAll(): Promise<Goal[]> {
+    const { data } = await supabase.from('goals').select('*');
+    return (data ?? []).map(mapGoal);
+  },
+  async save(items: Goal[]): Promise<void> {
+    await supabase.from('goals').delete().neq('id', '');
+    if (items.length) await supabase.from('goals').insert(items);
+  },
 };
 
 export const quarterStore = {
-  getAll: (): Quarter[] => getItems(KEYS.QUARTERS, normalizeQuarter),
-  save: (items: Quarter[]) => setItems(KEYS.QUARTERS, items),
+  async getAll(): Promise<Quarter[]> {
+    const { data } = await supabase.from('quarters').select('*');
+    return (data ?? []).map(mapQuarter);
+  },
+  async save(items: Quarter[]): Promise<void> {
+    await supabase.from('quarters').delete().neq('id', '');
+    if (items.length) await supabase.from('quarters').insert(items);
+  },
 };
 
 export const monthPlanStore = {
-  // 항상 1-12월 전체를 반환, 저장 안 된 달은 빈 plan으로 채움
-  getAll: (): MonthPlan[] => {
-    const stored = getItems(KEYS.MONTH_PLANS, normalizeMonthPlan);
+  async getAll(): Promise<MonthPlan[]> {
+    const { data } = await supabase.from('month_plans').select('*').order('month');
+    const stored = (data ?? []).map(mapMonthPlan);
     return Array.from({ length: 12 }, (_, i) => {
       const found = stored.find(m => m.month === i + 1);
       return found ?? { month: i + 1, plan: '' };
     });
   },
-  save: (items: MonthPlan[]) => setItems(KEYS.MONTH_PLANS, items),
+  async save(items: MonthPlan[]): Promise<void> {
+    const rows = items.map(m => ({ month: m.month, plan: m.plan }));
+    if (rows.length) {
+      await supabase.from('month_plans').upsert(rows, { onConflict: 'month' });
+    }
+  },
 };
 
 export const financeStore = {
-  getAll: (): FinanceItem[] => getItems(KEYS.FINANCE, normalizeFinanceItem),
-  save: (items: FinanceItem[]) => setItems(KEYS.FINANCE, items),
+  async getAll(): Promise<FinanceItem[]> {
+    const { data } = await supabase.from('finance_items').select('*');
+    return (data ?? []).map(mapFinanceItem);
+  },
+  async save(items: FinanceItem[]): Promise<void> {
+    await supabase.from('finance_items').delete().neq('id', '');
+    if (items.length) await supabase.from('finance_items').insert(items.map(i => ({
+      id: i.id, type: i.type, amount: i.amount, category: i.category,
+    })));
+  },
 };
 
-export function seedDashboardData() {
-  if (typeof window === 'undefined') return;
-  if (localStorage.getItem(KEYS.DASH_SEEDED)) return;
-
-  identityStatementStore.save([
-    { id: newId(), keyword: '성장', statement: '나는 매일 1%씩 성장할 것이다' },
-    { id: newId(), keyword: '건강', statement: '나는 규칙적인 운동으로 건강을 유지할 것이다' },
-    { id: newId(), keyword: '재정', statement: '나는 수입의 30%를 저축할 것이다' },
-    { id: newId(), keyword: '관계', statement: '나는 소중한 사람들과 시간을 보낼 것이다' },
-    { id: newId(), keyword: '학습', statement: '나는 매월 2권의 책을 읽을 것이다' },
-  ]);
-
-  goalStore.save([
-    { id: newId(), field: '커리어', goal: '승진 달성', metric: '연봉 15% 인상', status: '진행 중' },
-    { id: newId(), field: '건강', goal: '체중 관리', metric: '목표 체중 도달', status: '진행 중' },
-    { id: newId(), field: '재정', goal: '비상금 확보', metric: '6개월치 생활비', status: '준비 중' },
-    { id: newId(), field: '자기개발', goal: '자격증 취득', metric: '관련 자격증 2개', status: '진행 중' },
-  ]);
-
-  quarterStore.save([
-    { id: newId(), label: '1분기 (1~3월)', milestone: '새 프로젝트 리드 시작', criteria: '-' },
-    { id: newId(), label: '2분기 (4~6월)', milestone: '투자 포트폴리오 구성', criteria: '-' },
-    { id: newId(), label: '3분기 (7~9월)', milestone: '자격증 취득 완료', criteria: '-' },
-    { id: newId(), label: '4분기 (10~12월)', milestone: '부업 파이프라인 기획', criteria: '-' },
-  ]);
-
-  monthPlanStore.save([]);
-
-  financeStore.save([
-    { id: newId(), type: '급여', amount: 3000000, category: 'income' },
-    { id: newId(), type: '부수입 1', amount: 300000, category: 'income' },
-    { id: newId(), type: '부수입 2', amount: 300000, category: 'income' },
-    { id: newId(), type: '주거비', amount: 350000, category: 'fixed' },
-    { id: newId(), type: '보험료', amount: 120000, category: 'fixed' },
-    { id: newId(), type: '통신비', amount: 80000, category: 'fixed' },
-    { id: newId(), type: '구독서비스', amount: 140000, category: 'fixed' },
-    { id: newId(), type: '교통비', amount: 45000, category: 'variable' },
-    { id: newId(), type: '식비', amount: 450000, category: 'variable' },
-    { id: newId(), type: '여가/문화', amount: 250000, category: 'variable' },
-  ]);
-
-  localStorage.setItem(KEYS.DASH_SEEDED, 'true');
-}
-
-export function seedDummyData() {
-  if (typeof window === 'undefined') return;
-  try {
-    if (localStorage.getItem(KEYS.SEEDED)) return;
-
-    const today = new Date();
-    const fmt = (d: Date) => d.toISOString().split('T')[0];
-    const daysAgo = (n: number) => {
-      const d = new Date(today);
-      d.setDate(d.getDate() - n);
-      return fmt(d);
-    };
-
-    const habits: Habit[] = [
-      { id: 'h1', name: '매일 운동', icon: '🏃', color: '#22c55e', targetDaysPerWeek: 5, createdAt: daysAgo(30), isArchived: false, roles: ['health'], routineSlot: 'morning' },
-      { id: 'h2', name: '독서 30분', icon: '📚', color: '#3b82f6', targetDaysPerWeek: 7, createdAt: daysAgo(30), isArchived: false, roles: ['learner', 'researcher'], routineSlot: 'evening' },
-      { id: 'h3', name: '명상 10분', icon: '🧘', color: '#a855f7', targetDaysPerWeek: 7, createdAt: daysAgo(30), isArchived: false, roles: ['health'], routineSlot: 'morning' },
-      { id: 'h4', name: '30% 저축', icon: '💰', color: '#f59e0b', targetDaysPerWeek: 7, createdAt: daysAgo(30), isArchived: false, roles: ['social'], routineSlot: 'flexible' },
-      { id: 'h5', name: '네트워킹 활동', icon: '🤝', color: '#ec4899', targetDaysPerWeek: 2, createdAt: daysAgo(30), isArchived: false, roles: ['social', 'clinician'], routineSlot: 'afternoon' },
-    ];
-    habitStore.save(habits);
-
-    const logs: HabitLog[] = [];
-    for (let i = 0; i < 14; i++) {
-      const date = daysAgo(i);
-      habits.forEach(h => {
-        if (Math.random() > 0.3) {
-          logs.push({ id: newId(), habitId: h.id, date, completed: true });
-        }
-      });
-    }
-    setItems(KEYS.HABIT_LOGS, logs);
-
-    const tasks: Task[] = [
-      { id: 't1', title: 'ICF 코드 분류 논문 리뷰', priority: 'high', timeSlot: 'morning', date: fmt(today), completed: true, createdAt: fmt(today) },
-      { id: 't2', title: 'Delphi 설문 전문가 패널 연락', priority: 'high', timeSlot: 'morning', date: fmt(today), completed: false, createdAt: fmt(today) },
-      { id: 't3', title: 'KAOT 서울지부 회의 준비', priority: 'medium', timeSlot: 'afternoon', date: fmt(today), completed: true, createdAt: fmt(today) },
-      { id: 't4', title: '아동 상지재활 케이스 기록', priority: 'medium', timeSlot: 'afternoon', date: fmt(today), completed: false, createdAt: fmt(today) },
-      { id: 't5', title: '인스타그램 콘텐츠 업로드', priority: 'low', timeSlot: 'evening', date: fmt(today), completed: false, createdAt: fmt(today) },
-    ];
-    setItems(KEYS.TASKS, tasks);
-
-    const mentalLogs: MentalStateLog[] = [];
-    for (let i = 0; i < 7; i++) {
-      mentalLogs.push({
-        id: newId(),
-        date: daysAgo(i),
-        mood: (Math.floor(Math.random() * 3) + 3) as MoodScore,
-        energy: (Math.floor(Math.random() * 3) + 2) as MoodScore,
-        stress: (Math.floor(Math.random() * 3) + 2) as MoodScore,
-        sleepQuality: (Math.floor(Math.random() * 3) + 2) as MoodScore,
-        note: i === 0 ? '논문 진행이 잘 되는 날. 집중력이 좋았다.' : '',
-      });
-    }
-    setItems(KEYS.MENTAL_STATE, mentalLogs);
-
-    const archive: ArchiveItem[] = [
-      { id: 'a1', title: 'ICF 자동 분류의 핵심은 컨텍스트 이해', content: 'sLLM 모델이 임상 텍스트에서 body function vs activity를 구분하려면 문장 앞뒤 맥락이 필수적이다.', category: 'research', tags: ['ICF', 'NLP', '논문'], createdAt: daysAgo(3), updatedAt: daysAgo(3) },
-      { id: 'a2', title: '제로 투 원 - 독점의 역설', content: '경쟁이 없는 시장을 만드는 것이 진정한 혁신.', category: 'book', tags: ['독서', '비즈니스'], createdAt: daysAgo(7), updatedAt: daysAgo(7) },
-      { id: 'a3', title: '바이브코딩 콘텐츠 방향성', content: 'AI와 함께 만드는 임상 도구 시리즈.', category: 'idea', tags: ['콘텐츠', '인스타그램'], createdAt: daysAgo(1), updatedAt: daysAgo(1) },
-    ];
-    setItems(KEYS.ARCHIVE, archive);
-
-    localStorage.setItem(KEYS.SEEDED, 'true');
-  } catch {
-    clearAppStorage();
-  }
-}
+// ── No-op stubs kept for page.tsx compatibility ──────────────
+export function repairStorage(): void {}
+export function clearAppStorage(): void {}
+export async function seedDummyData(): Promise<void> {}
+export async function seedDashboardData(): Promise<void> {}

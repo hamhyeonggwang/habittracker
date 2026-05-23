@@ -39,14 +39,17 @@ export const TASK_LABELS = {
   completed:       '완료',
   inProgress:      '진행 중',
   pending:         '대기 중',
-  reasonPlaceholder: '어떤 상황이 있었나요? (선택)',  // ← "미완료 사유"
-  reasonLabel:     '상황 메모',                        // ← "미완료 사유"
-  highPriority:    '핵심 업무',                        // ← "중요도 높음"
+  reasonPlaceholder: '어떤 상황이 있었나요? (선택)',
+  reasonLabel:     '상황 메모',
+  highPriority:    '핵심 업무',
   medPriority:     '일반 업무',
   lowPriority:     '여유 업무',
   noTasks:         '오늘 일정이 비어있어요',
   addFirst:        '첫 업무를 추가해볼까요?',
   summaryDone:     (done: number, total: number) => `${done}개 완료 · ${total - done}개 진행 예정`,
+  priorities: { high: '핵심', medium: '일반', low: '여유' } as Record<string, string>,
+  timeslots:  { morning: '오전', afternoon: '오후', evening: '저녁' } as Record<string, string>,
+  timeslotIcons: { morning: '🌅', afternoon: '☀️', evening: '🌙' } as Record<string, string>,
 } as const;
 
 // ── 컨디션 관련 ───────────────────────────────────────────
