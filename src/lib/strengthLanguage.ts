@@ -102,6 +102,41 @@ export const ARCHIVE_LABELS = {
   contentPlaceholder: '오늘 배운 것, 느낀 것, 기억하고 싶은 것을 자유롭게 적어보세요...',
 } as const;
 
+// ── MOHO 관련 ─────────────────────────────────────────────
+export const MOHO_LABELS = {
+  // Volition: 역할 태그
+  roles: {
+    researcher: '🔬 연구자',
+    clinician:  '🏥 임상가',
+    learner:    '📚 학습자',
+    health:     '💪 건강인',
+    social:     '🤝 사회인',
+    creator:    '✍️ 창작자',
+  } as const,
+
+  // Habituation: 루틴 시간대
+  routineSlots: {
+    morning:   '🌅 오전',
+    afternoon: '☀️ 오후',
+    evening:   '🌙 저녁',
+    flexible:  '🔄 자유',
+  } as const,
+
+  // Performance: 수행 후 기록
+  performance: {
+    energy:              '⚡ 수행 후 에너지',
+    satisfaction:        '★ 만족도',
+    inputTitle:          '수행 소감',
+    energyPlaceholder:   '얼마나 에너지가 올랐나요?',
+    savBtn:              '저장',
+  } as const,
+
+  // 섹션 타이틀
+  volitionTitle:     'VOLITION — 나의 역할',
+  habituationTitle:  'HABITUATION — 루틴 흐름',
+  performanceTitle:  'PERFORMANCE — 수행 에너지',
+} as const;
+
 // ── 달성률 → 메시지 변환 헬퍼 ───────────────────────────────
 export function getRateMessage(rate: number): string {
   if (rate >= 100) return STATUS_LABELS.rate100;

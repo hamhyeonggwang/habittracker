@@ -1,6 +1,7 @@
 import {
   Habit, HabitLog, Task, MentalStateLog, ArchiveItem,
   ArchiveCategory, Priority, TimeSlot, MoodScore,
+  RoleTag, RoutineSlot, PerformanceScore,
 } from '@/types';
 
 const KEYS = {
@@ -15,6 +16,8 @@ const KEYS = {
 const ARCHIVE_CATEGORIES = new Set<ArchiveCategory>(['book', 'work', 'research', 'clinical', 'idea', 'etc']);
 const PRIORITIES = new Set<Priority>(['low', 'medium', 'high']);
 const TIME_SLOTS = new Set<TimeSlot>(['morning', 'afternoon', 'evening']);
+const ROLE_TAGS = new Set<RoleTag>(['researcher', 'clinician', 'learner', 'health', 'social', 'creator']);
+const ROUTINE_SLOTS = new Set<RoutineSlot>(['morning', 'afternoon', 'evening', 'flexible']);
 
 export function newId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -62,6 +65,21 @@ function writeRaw(key: string, data: unknown[]): void {
   }
 }
 
+function asRoleTags(v: unknown): RoleTag[] {
+  if (!Array.isArray(v)) return [];
+  return v.filter((r): r is RoleTag => ROLE_TAGS.has(r as RoleTag));
+}
+
+function asRoutineSlot(v: unknown): RoutineSlot {
+  return ROUTINE_SLOTS.has(v as RoutineSlot) ? (v as RoutineSlot) : 'flexible';
+}
+
+function asPerformanceScore(v: unknown): PerformanceScore | undefined {
+  const n = typeof v === 'number' ? Math.round(v) : Number(v);
+  if (n >= 1 && n <= 5) return n as PerformanceScore;
+  return undefined;
+}
+
 function normalizeHabit(raw: unknown): Habit | null {
   if (!isRecord(raw) || !raw.id || !raw.name) return null;
   return {
@@ -72,6 +90,8 @@ function normalizeHabit(raw: unknown): Habit | null {
     targetDaysPerWeek: Math.min(7, Math.max(1, Number(raw.targetDaysPerWeek) || 7)),
     createdAt: asString(raw.createdAt, new Date().toISOString()),
     isArchived: asBool(raw.isArchived),
+    roles: asRoleTags(raw.roles),
+    routineSlot: asRoutineSlot(raw.routineSlot),
   };
 }
 
@@ -83,6 +103,8 @@ function normalizeHabitLog(raw: unknown): HabitLog | null {
     date: asString(raw.date),
     completed: asBool(raw.completed),
     note: raw.note ? asString(raw.note) : undefined,
+    energyAfter: asPerformanceScore(raw.energyAfter),
+    satisfactionAfter: asPerformanceScore(raw.satisfactionAfter),
   };
 }
 
@@ -185,6 +207,15 @@ export const habitLogStore = {
   deleteByHabitId: (habitId: string) => {
     setItems(KEYS.HABIT_LOGS, habitLogStore.getAll().filter(l => l.habitId !== habitId));
   },
+  updatePerformance: (habitId: string, date: string, energy: PerformanceScore, satisfaction: PerformanceScore) => {
+    const all = habitLogStore.getAll();
+    const existing = all.find(l => l.habitId === habitId && l.date === date);
+    if (existing) {
+      setItems(KEYS.HABIT_LOGS, all.map(l =>
+        l.id === existing.id ? { ...l, energyAfter: energy, satisfactionAfter: satisfaction } : l
+      ));
+    }
+  },
 };
 
 export const taskStore = {
@@ -238,11 +269,11 @@ export function seedDummyData() {
     };
 
     const habits: Habit[] = [
-      { id: 'h1', name: '매일 운동', icon: '🏃', color: '#22c55e', targetDaysPerWeek: 5, createdAt: daysAgo(30), isArchived: false },
-      { id: 'h2', name: '독서 30분', icon: '📚', color: '#3b82f6', targetDaysPerWeek: 7, createdAt: daysAgo(30), isArchived: false },
-      { id: 'h3', name: '명상 10분', icon: '🧘', color: '#a855f7', targetDaysPerWeek: 7, createdAt: daysAgo(30), isArchived: false },
-      { id: 'h4', name: '30% 저축', icon: '💰', color: '#f59e0b', targetDaysPerWeek: 7, createdAt: daysAgo(30), isArchived: false },
-      { id: 'h5', name: '네트워킹 활동', icon: '🤝', color: '#ec4899', targetDaysPerWeek: 2, createdAt: daysAgo(30), isArchived: false },
+      { id: 'h1', name: '매일 운동', icon: '🏃', color: '#22c55e', targetDaysPerWeek: 5, createdAt: daysAgo(30), isArchived: false, roles: ['health'], routineSlot: 'morning' },
+      { id: 'h2', name: '독서 30분', icon: '📚', color: '#3b82f6', targetDaysPerWeek: 7, createdAt: daysAgo(30), isArchived: false, roles: ['learner', 'researcher'], routineSlot: 'evening' },
+      { id: 'h3', name: '명상 10분', icon: '🧘', color: '#a855f7', targetDaysPerWeek: 7, createdAt: daysAgo(30), isArchived: false, roles: ['health'], routineSlot: 'morning' },
+      { id: 'h4', name: '30% 저축', icon: '💰', color: '#f59e0b', targetDaysPerWeek: 7, createdAt: daysAgo(30), isArchived: false, roles: ['social'], routineSlot: 'flexible' },
+      { id: 'h5', name: '네트워킹 활동', icon: '🤝', color: '#ec4899', targetDaysPerWeek: 2, createdAt: daysAgo(30), isArchived: false, roles: ['social', 'clinician'], routineSlot: 'afternoon' },
     ];
     habitStore.save(habits);
 
