@@ -2,6 +2,8 @@ import {
   Habit, HabitLog, Task, MentalStateLog, ArchiveItem,
   ArchiveCategory, Priority, TimeSlot, MoodScore,
   RoleTag, RoutineSlot, PerformanceScore,
+  IdentityStatement, Goal, GoalStatus, Quarter, MonthPlan,
+  FinanceItem, FinanceCategory,
 } from '@/types';
 
 const KEYS = {
@@ -11,6 +13,13 @@ const KEYS = {
   MENTAL_STATE: 'lhd_mental_state',
   ARCHIVE: 'lhd_archive',
   SEEDED: 'lhd_seeded',
+  // Dashboard editable sections
+  IDENTITY: 'lhd_identity',
+  GOALS: 'lhd_goals',
+  QUARTERS: 'lhd_quarters',
+  MONTH_PLANS: 'lhd_month_plans',
+  FINANCE: 'lhd_finance',
+  DASH_SEEDED: 'lhd_dash_seeded',
 } as const;
 
 const ARCHIVE_CATEGORIES = new Set<ArchiveCategory>(['book', 'work', 'research', 'clinical', 'idea', 'etc']);
@@ -154,6 +163,59 @@ function normalizeArchiveItem(raw: unknown): ArchiveItem | null {
   };
 }
 
+const GOAL_STATUSES = new Set<GoalStatus>(['준비 중', '진행 중', '완료']);
+const FINANCE_CATEGORIES = new Set<FinanceCategory>(['income', 'fixed', 'variable']);
+
+function normalizeIdentityStatement(raw: unknown): IdentityStatement | null {
+  if (!isRecord(raw) || !raw.id) return null;
+  return {
+    id: asString(raw.id),
+    keyword: asString(raw.keyword),
+    statement: asString(raw.statement),
+  };
+}
+
+function normalizeGoal(raw: unknown): Goal | null {
+  if (!isRecord(raw) || !raw.id) return null;
+  const status = GOAL_STATUSES.has(raw.status as GoalStatus) ? (raw.status as GoalStatus) : '준비 중';
+  return {
+    id: asString(raw.id),
+    field: asString(raw.field),
+    goal: asString(raw.goal),
+    metric: asString(raw.metric),
+    status,
+  };
+}
+
+function normalizeQuarter(raw: unknown): Quarter | null {
+  if (!isRecord(raw) || !raw.id) return null;
+  return {
+    id: asString(raw.id),
+    label: asString(raw.label),
+    milestone: asString(raw.milestone),
+    criteria: asString(raw.criteria),
+  };
+}
+
+function normalizeMonthPlan(raw: unknown): MonthPlan | null {
+  if (!isRecord(raw)) return null;
+  const month = typeof raw.month === 'number' ? raw.month : Number(raw.month);
+  if (month < 1 || month > 12 || !Number.isInteger(month)) return null;
+  return { month, plan: asString(raw.plan) };
+}
+
+function normalizeFinanceItem(raw: unknown): FinanceItem | null {
+  if (!isRecord(raw) || !raw.id) return null;
+  const category = FINANCE_CATEGORIES.has(raw.category as FinanceCategory)
+    ? (raw.category as FinanceCategory) : 'fixed';
+  return {
+    id: asString(raw.id),
+    type: asString(raw.type),
+    amount: typeof raw.amount === 'number' ? raw.amount : Number(raw.amount) || 0,
+    category,
+  };
+}
+
 function getItems<T>(key: string, normalize: (raw: unknown) => T | null): T[] {
   return readRaw(key).map(normalize).filter((item): item is T => item !== null);
 }
@@ -254,6 +316,82 @@ export const archiveStore = {
     );
   },
 };
+
+export const identityStatementStore = {
+  getAll: (): IdentityStatement[] => getItems(KEYS.IDENTITY, normalizeIdentityStatement),
+  save: (items: IdentityStatement[]) => setItems(KEYS.IDENTITY, items),
+};
+
+export const goalStore = {
+  getAll: (): Goal[] => getItems(KEYS.GOALS, normalizeGoal),
+  save: (items: Goal[]) => setItems(KEYS.GOALS, items),
+};
+
+export const quarterStore = {
+  getAll: (): Quarter[] => getItems(KEYS.QUARTERS, normalizeQuarter),
+  save: (items: Quarter[]) => setItems(KEYS.QUARTERS, items),
+};
+
+export const monthPlanStore = {
+  // 항상 1-12월 전체를 반환, 저장 안 된 달은 빈 plan으로 채움
+  getAll: (): MonthPlan[] => {
+    const stored = getItems(KEYS.MONTH_PLANS, normalizeMonthPlan);
+    return Array.from({ length: 12 }, (_, i) => {
+      const found = stored.find(m => m.month === i + 1);
+      return found ?? { month: i + 1, plan: '' };
+    });
+  },
+  save: (items: MonthPlan[]) => setItems(KEYS.MONTH_PLANS, items),
+};
+
+export const financeStore = {
+  getAll: (): FinanceItem[] => getItems(KEYS.FINANCE, normalizeFinanceItem),
+  save: (items: FinanceItem[]) => setItems(KEYS.FINANCE, items),
+};
+
+export function seedDashboardData() {
+  if (typeof window === 'undefined') return;
+  if (localStorage.getItem(KEYS.DASH_SEEDED)) return;
+
+  identityStatementStore.save([
+    { id: newId(), keyword: '성장', statement: '나는 매일 1%씩 성장할 것이다' },
+    { id: newId(), keyword: '건강', statement: '나는 규칙적인 운동으로 건강을 유지할 것이다' },
+    { id: newId(), keyword: '재정', statement: '나는 수입의 30%를 저축할 것이다' },
+    { id: newId(), keyword: '관계', statement: '나는 소중한 사람들과 시간을 보낼 것이다' },
+    { id: newId(), keyword: '학습', statement: '나는 매월 2권의 책을 읽을 것이다' },
+  ]);
+
+  goalStore.save([
+    { id: newId(), field: '커리어', goal: '승진 달성', metric: '연봉 15% 인상', status: '진행 중' },
+    { id: newId(), field: '건강', goal: '체중 관리', metric: '목표 체중 도달', status: '진행 중' },
+    { id: newId(), field: '재정', goal: '비상금 확보', metric: '6개월치 생활비', status: '준비 중' },
+    { id: newId(), field: '자기개발', goal: '자격증 취득', metric: '관련 자격증 2개', status: '진행 중' },
+  ]);
+
+  quarterStore.save([
+    { id: newId(), label: '1분기 (1~3월)', milestone: '새 프로젝트 리드 시작', criteria: '-' },
+    { id: newId(), label: '2분기 (4~6월)', milestone: '투자 포트폴리오 구성', criteria: '-' },
+    { id: newId(), label: '3분기 (7~9월)', milestone: '자격증 취득 완료', criteria: '-' },
+    { id: newId(), label: '4분기 (10~12월)', milestone: '부업 파이프라인 기획', criteria: '-' },
+  ]);
+
+  monthPlanStore.save([]);
+
+  financeStore.save([
+    { id: newId(), type: '급여', amount: 3000000, category: 'income' },
+    { id: newId(), type: '부수입 1', amount: 300000, category: 'income' },
+    { id: newId(), type: '부수입 2', amount: 300000, category: 'income' },
+    { id: newId(), type: '주거비', amount: 350000, category: 'fixed' },
+    { id: newId(), type: '보험료', amount: 120000, category: 'fixed' },
+    { id: newId(), type: '통신비', amount: 80000, category: 'fixed' },
+    { id: newId(), type: '구독서비스', amount: 140000, category: 'fixed' },
+    { id: newId(), type: '교통비', amount: 45000, category: 'variable' },
+    { id: newId(), type: '식비', amount: 450000, category: 'variable' },
+    { id: newId(), type: '여가/문화', amount: 250000, category: 'variable' },
+  ]);
+
+  localStorage.setItem(KEYS.DASH_SEEDED, 'true');
+}
 
 export function seedDummyData() {
   if (typeof window === 'undefined') return;

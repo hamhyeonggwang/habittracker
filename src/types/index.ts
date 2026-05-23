@@ -105,6 +105,52 @@ export interface DailyStats {
 
 // ============================================================
 // ============================================================
+// DASHBOARD — IDENTITY
+// ============================================================
+export interface IdentityStatement {
+  id: string;
+  keyword: string;
+  statement: string;
+}
+
+export type GoalStatus = '준비 중' | '진행 중' | '완료';
+
+export interface Goal {
+  id: string;
+  field: string;
+  goal: string;
+  metric: string;
+  status: GoalStatus;
+}
+
+// ============================================================
+// DASHBOARD — ROADMAP
+// ============================================================
+export interface Quarter {
+  id: string;
+  label: string;
+  milestone: string;
+  criteria: string;
+}
+
+export interface MonthPlan {
+  month: number; // 1-12
+  plan: string;
+}
+
+// ============================================================
+// DASHBOARD — FINANCE
+// ============================================================
+export type FinanceCategory = 'income' | 'fixed' | 'variable';
+
+export interface FinanceItem {
+  id: string;
+  type: string;
+  amount: number;
+  category: FinanceCategory;
+}
+
+// ============================================================
 // MOHO AGGREGATE (computed, not stored)
 // ============================================================
 export interface RoleStats {
