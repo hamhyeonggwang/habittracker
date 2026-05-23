@@ -15,7 +15,9 @@ function getItem<T>(key: string): T[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as T[]) : [];
   } catch {
     return [];
   }
