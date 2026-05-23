@@ -109,9 +109,13 @@ export default function HabitPage() {
   const daysInMonth = getDaysInMonth(currentMonth);
 
   const weeks = useMemo(() => {
-    const w: string[][] = [[], [], [], []];
-    monthDays.forEach((d, i) => { w[Math.floor(i / 7)].push(d); });
-    return w.filter(wk => wk.length > 0);
+    const w: string[][] = [];
+    monthDays.forEach((d, i) => {
+      const wi = Math.floor(i / 7);
+      if (!w[wi]) w[wi] = [];
+      w[wi].push(d);
+    });
+    return w;
   }, [monthDays]);
 
   const getMonthlyRate = (habitId: string) => {
