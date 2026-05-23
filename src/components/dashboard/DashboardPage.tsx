@@ -121,35 +121,42 @@ function IdentityTab() {
       <div>
         <p className="text-[11px] font-bold uppercase tracking-wider mb-2"
           style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>I Will Statement</p>
-        <div className="space-y-1.5">
-          {dispS.map((d, i) => (
-            <div key={d.id} className={cn('flex items-start gap-2', !editing && 'py-1.5 border-b last:border-0')}
-              style={{ borderColor: 'var(--border-light)' }}>
-              {editing ? (
-                <>
-                  <EditInput value={d.keyword} onChange={v => updateS(i, 'keyword', v)}
-                    placeholder="키워드" className="w-20 flex-shrink-0" />
-                  <EditInput value={d.statement} onChange={v => updateS(i, 'statement', v)}
-                    placeholder="I will statement..." className="flex-1" />
+        {editing ? (
+          <div className="space-y-2">
+            {dispS.map((d, i) => (
+              <div key={d.id} className="rounded-lg p-2.5 space-y-2"
+                style={{ background: 'var(--sage-pale)', border: '1px solid var(--border)' }}>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider"
+                    style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>키워드</span>
                   <DeleteBtn onClick={() => removeS(i)} />
-                </>
-              ) : (
-                <>
-                  <span className="text-[11px] font-bold w-14 flex-shrink-0 pt-0.5"
-                    style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>{d.keyword}</span>
-                  <span className="text-[12px]"
-                    style={{ color: 'var(--text-secondary)', fontFamily: 'Noto Sans KR, sans-serif' }}>{d.statement}</span>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-        {editing && (
-          <button onClick={addS}
-            className="mt-2 flex items-center gap-1 text-[11px] font-semibold"
-            style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
-            <Plus size={12} /> 추가
-          </button>
+                </div>
+                <EditInput value={d.keyword} onChange={v => updateS(i, 'keyword', v)}
+                  placeholder="예: 성장, 건강, 재정…" />
+                <span className="text-[10px] font-bold uppercase tracking-wider block"
+                  style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>선언문</span>
+                <EditInput value={d.statement} onChange={v => updateS(i, 'statement', v)}
+                  placeholder="나는 …" />
+              </div>
+            ))}
+            <button onClick={addS}
+              className="mt-1 flex items-center gap-1 text-[11px] font-semibold"
+              style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
+              <Plus size={12} /> 선언문 추가
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-0">
+            {dispS.map((d, i) => (
+              <div key={d.id} className="flex items-start gap-2 py-1.5 border-b last:border-0"
+                style={{ borderColor: 'var(--border-light)' }}>
+                <span className="text-[11px] font-bold w-14 flex-shrink-0 pt-0.5"
+                  style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>{d.keyword}</span>
+                <span className="text-[12px]"
+                  style={{ color: 'var(--text-secondary)', fontFamily: 'Noto Sans KR, sans-serif' }}>{d.statement}</span>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
@@ -160,15 +167,26 @@ function IdentityTab() {
         {editing ? (
           <div className="space-y-2">
             {dispG.map((g, i) => (
-              <div key={g.id} className="flex gap-1.5 items-center">
-                <EditInput value={g.field} onChange={v => updateG(i, 'field', v)} placeholder="분야" className="w-16 flex-shrink-0" />
-                <EditInput value={g.goal} onChange={v => updateG(i, 'goal', v)} placeholder="목표" className="flex-1" />
-                <EditInput value={g.metric} onChange={v => updateG(i, 'metric', v)} placeholder="측정지표" className="flex-1" />
-                <button onClick={() => cycleStatus(i)}
-                  className={cn('whitespace-nowrap flex-shrink-0', statusCls(g.status))}>
-                  {g.status}
-                </button>
-                <DeleteBtn onClick={() => removeG(i)} />
+              <div key={g.id} className="rounded-lg p-2.5 space-y-2"
+                style={{ background: 'white', border: '1px solid var(--border)' }}>
+                <div className="flex items-center justify-between">
+                  <button onClick={() => cycleStatus(i)}
+                    className={cn('whitespace-nowrap', statusCls(g.status))}>
+                    {g.status}
+                  </button>
+                  <DeleteBtn onClick={() => removeG(i)} />
+                </div>
+                {([
+                  { label: '분야', key: 'field' as const, ph: '예: 커리어, 건강', val: g.field },
+                  { label: '목표', key: 'goal'  as const, ph: '달성하고자 하는 목표', val: g.goal },
+                  { label: '지표', key: 'metric' as const, ph: '측정 기준 (예: 연봉 15% 인상)', val: g.metric },
+                ] as const).map(({ label, key, ph, val }) => (
+                  <div key={key} className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold w-8 flex-shrink-0"
+                      style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>{label}</span>
+                    <EditInput value={val} onChange={v => updateG(i, key, v)} placeholder={ph} />
+                  </div>
+                ))}
               </div>
             ))}
             <button onClick={addG}
