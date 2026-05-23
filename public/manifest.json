@@ -1,0 +1,18 @@
+{
+  "name": "Life Hacking Dashboard",
+  "short_name": "Life Dashboard",
+  "description": "매일의 습관, 업무, 컨디션을 추적하고 성장을 시각화하는 대시보드",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8faf8",
+  "theme_color": "#22c55e",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
