@@ -3,6 +3,8 @@
 // ============================================================
 
 export type Priority = 'low' | 'medium' | 'high';
+export type ProjectScope = 'weekly' | 'monthly';
+export type ProjectStatus = 'active' | 'done' | 'paused';
 export type TimeSlot = 'morning' | 'afternoon' | 'evening';
 export type ArchiveCategory = 'book' | 'work' | 'research' | 'clinical' | 'idea' | 'etc';
 export type MoodScore = 1 | 2 | 3 | 4 | 5;
@@ -45,6 +47,21 @@ export interface HabitLog {
 }
 
 // ============================================================
+// PROJECT (주간/월간 프로젝트)
+// ============================================================
+export interface Project {
+  id: string;
+  title: string;
+  scope: ProjectScope;    // 'weekly' | 'monthly'
+  startDate: string;      // YYYY-MM-DD
+  endDate: string;        // YYYY-MM-DD
+  status: ProjectStatus;  // 'active' | 'done' | 'paused'
+  color: string;
+  roles: RoleTag[];
+  createdAt: string;
+}
+
+// ============================================================
 // DAILY TASK
 // ============================================================
 export interface Task {
@@ -56,6 +73,7 @@ export interface Task {
   completed: boolean;
   incompleteReason?: string;
   createdAt: string;
+  projectId?: string; // 소속 프로젝트 (없으면 독립형)
 }
 
 // ============================================================

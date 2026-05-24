@@ -1,5 +1,5 @@
 -- ============================================================
--- Life Hacking Dashboard — Supabase Schema
+-- Occupation Tracking Dashboard — Supabase Schema
 -- Run this in: Supabase Dashboard > SQL Editor > New query
 -- ============================================================
 
@@ -108,3 +108,50 @@ CREATE TABLE IF NOT EXISTS finance_items (
   category text DEFAULT 'fixed'
 );
 ALTER TABLE finance_items DISABLE ROW LEVEL SECURITY;
+
+-- 11. PROJECTS
+CREATE TABLE IF NOT EXISTS projects (
+  id         text PRIMARY KEY,
+  title      text NOT NULL,
+  scope      text DEFAULT 'weekly',
+  start_date text NOT NULL,
+  end_date   text NOT NULL,
+  status     text DEFAULT 'active',
+  color      text DEFAULT '#4a7c59',
+  roles      text[] DEFAULT '{}',
+  created_at text NOT NULL
+);
+ALTER TABLE projects DISABLE ROW LEVEL SECURITY;
+
+-- tasks에 project_id 컬럼 추가 (이미 있으면 무시됨)
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS project_id text REFERENCES projects(id) ON DELETE SET NULL;
+
+-- ============================================================
+-- RLS POLICIES — anon 롤 전체 허용
+-- sb_publishable_ 키는 anon 롤로 동작하므로
+-- DISABLE ROW LEVEL SECURITY 만으로는 INSERT가 차단됨.
+-- RLS를 켠 채로 명시적 policy를 추가해야 함.
+-- ============================================================
+ALTER TABLE habits              ENABLE ROW LEVEL SECURITY;
+ALTER TABLE habit_logs          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tasks               ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mental_state_logs   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE archive_items       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE identity_statements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE goals               ENABLE ROW LEVEL SECURITY;
+ALTER TABLE quarters            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE month_plans         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE finance_items       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE projects            ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "anon_all" ON habits              FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all" ON habit_logs          FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all" ON tasks               FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all" ON mental_state_logs   FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all" ON archive_items       FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all" ON identity_statements FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all" ON goals               FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all" ON quarters            FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all" ON month_plans         FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all" ON finance_items       FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all" ON projects            FOR ALL TO anon USING (true) WITH CHECK (true);

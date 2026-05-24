@@ -1,6 +1,6 @@
-# Life Hacking Dashboard
+# OTD·H — Occupation Tracking Dashboard
 
-Next.js 기반의 습관, 업무, 컨디션 추적 대시보드입니다.
+작업치료사를 위한 Next.js 기반 습관, 업무, 컨디션 추적 대시보드입니다.
 
 ## Local Development
 

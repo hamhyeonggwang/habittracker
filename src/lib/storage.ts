@@ -4,6 +4,7 @@ import {
   PerformanceScore, RoleTag, RoutineSlot, Priority, TimeSlot,
   MoodScore, ArchiveCategory, GoalStatus,
   IdentityStatement, Goal, Quarter, MonthPlan, FinanceItem, FinanceCategory,
+  Project, ProjectScope, ProjectStatus,
 } from '@/types';
 
 export function newId(): string {
@@ -62,6 +63,21 @@ function mapTask(r: Row): Task {
     date: r.date as string,
     completed: (r.completed as boolean) ?? false,
     incompleteReason: r.incomplete_reason as string | undefined,
+    createdAt: r.created_at as string,
+    projectId: r.project_id as string | undefined,
+  };
+}
+
+function mapProject(r: Row): Project {
+  return {
+    id: r.id as string,
+    title: r.title as string,
+    scope: ((r.scope as ProjectScope) ?? 'weekly'),
+    startDate: r.start_date as string,
+    endDate: r.end_date as string,
+    status: ((r.status as ProjectStatus) ?? 'active'),
+    color: (r.color as string) ?? '#4a7c59',
+    roles: ((r.roles as RoleTag[]) ?? []),
     createdAt: r.created_at as string,
   };
 }
@@ -244,6 +260,7 @@ export const taskStore = {
       id: task.id, title: task.title, priority: task.priority,
       time_slot: task.timeSlot, date: task.date, completed: task.completed,
       incomplete_reason: task.incompleteReason, created_at: task.createdAt,
+      project_id: task.projectId ?? null,
     });
     if (error) logError('tasks.add', error);
   },
@@ -254,6 +271,7 @@ export const taskStore = {
     if (updates.timeSlot !== undefined) row.time_slot = updates.timeSlot;
     if (updates.completed !== undefined) row.completed = updates.completed;
     if (updates.incompleteReason !== undefined) row.incomplete_reason = updates.incompleteReason;
+    if (updates.projectId !== undefined) row.project_id = updates.projectId;
     const { error } = await supabase.from('tasks').update(row).eq('id', id);
     if (error) logError('tasks.update', error);
   },
@@ -383,5 +401,44 @@ export const financeStore = {
     await differentialSave('finance_items', items, i => ({
       id: i.id, type: i.type, amount: i.amount, category: i.category,
     }));
+  },
+};
+
+export const projectStore = {
+  async getAll(): Promise<Project[]> {
+    const { data, error } = await supabase.from('projects').select('*').order('created_at');
+    if (error) { logError('projects.getAll', error); return []; }
+    return (data ?? []).map(mapProject);
+  },
+  async getActive(): Promise<Project[]> {
+    const { data, error } = await supabase.from('projects').select('*')
+      .eq('status', 'active').order('start_date');
+    if (error) { logError('projects.getActive', error); return []; }
+    return (data ?? []).map(mapProject);
+  },
+  async add(project: Project): Promise<void> {
+    const { error } = await supabase.from('projects').insert({
+      id: project.id, title: project.title, scope: project.scope,
+      start_date: project.startDate, end_date: project.endDate,
+      status: project.status, color: project.color,
+      roles: project.roles, created_at: project.createdAt,
+    });
+    if (error) logError('projects.add', error);
+  },
+  async update(id: string, updates: Partial<Project>): Promise<void> {
+    const row: Row = {};
+    if (updates.title !== undefined) row.title = updates.title;
+    if (updates.scope !== undefined) row.scope = updates.scope;
+    if (updates.startDate !== undefined) row.start_date = updates.startDate;
+    if (updates.endDate !== undefined) row.end_date = updates.endDate;
+    if (updates.status !== undefined) row.status = updates.status;
+    if (updates.color !== undefined) row.color = updates.color;
+    if (updates.roles !== undefined) row.roles = updates.roles;
+    const { error } = await supabase.from('projects').update(row).eq('id', id);
+    if (error) logError('projects.update', error);
+  },
+  async delete(id: string): Promise<void> {
+    const { error } = await supabase.from('projects').delete().eq('id', id);
+    if (error) logError('projects.delete', error);
   },
 };
