@@ -1,6 +1,5 @@
 // ============================================================
 // CORE DATA TYPES
-// Designed for LocalStorage now, Supabase-ready later
 // ============================================================
 
 export type Priority = 'low' | 'medium' | 'high';
@@ -173,14 +172,3 @@ export interface PerformanceTrend {
   avgSatisfaction: number;
 }
 
-// ============================================================
-// SUPABASE TABLE MAPPING (for future migration)
-// Each interface maps to a Supabase table:
-// habits           → Habit
-// habit_logs       → HabitLog
-// tasks            → Task
-// mental_state_logs → MentalStateLog
-// archive_items    → ArchiveItem
-//
-// Add userId: string to each when auth is enabled
-// ============================================================

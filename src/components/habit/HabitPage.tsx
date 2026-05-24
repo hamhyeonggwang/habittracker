@@ -223,7 +223,7 @@ export default function HabitPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [view, setView] = useState<'today' | 'month'>('month');
-  const [currentMonth] = useState(new Date());
+  const currentMonth = useMemo(() => new Date(), []);
   const [openPerformance, setOpenPerformance] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
@@ -233,8 +233,32 @@ export default function HabitPage() {
   }, []);
   useEffect(() => { refresh(); }, [refresh]);
 
+  // O(1) 완료 체크용 Set — logs.find() 반복 탐색 대체
+  const completedSet = useMemo(() => {
+    const s = new Set<string>();
+    logs.forEach(l => { if (l.completed) s.add(`${l.habitId}:${l.date}`); });
+    return s;
+  }, [logs]);
+
+  const isCompleted = (habitId: string, date: string) => completedSet.has(`${habitId}:${date}`);
+
+  // 습관별 연속 참여일 사전 계산 — 렌더마다 재탐색 방지
+  const streaks = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const habit of habits) {
+      let streak = 0;
+      for (let i = 0; i < 60; i++) {
+        const d = format(subDays(new Date(), i), 'yyyy-MM-dd');
+        if (completedSet.has(`${habit.id}:${d}`)) streak++;
+        else break;
+      }
+      map[habit.id] = streak;
+    }
+    return map;
+  }, [habits, completedSet]);
+
   const toggle = async (habitId: string, date: string) => {
-    const wasComplete = logs.find(l => l.habitId === habitId && l.date === date)?.completed ?? false;
+    const wasComplete = completedSet.has(`${habitId}:${date}`);
     await habitLogStore.toggle(habitId, date);
     await refresh();
     if (date === TODAY && !wasComplete) {
@@ -249,19 +273,6 @@ export default function HabitPage() {
     await habitLogStore.deleteByHabitId(habit.id);
     await habitStore.delete(habit.id);
     await refresh();
-  };
-
-  const isCompleted = (habitId: string, date: string) =>
-    logs.find(l => l.habitId === habitId && l.date === date)?.completed ?? false;
-
-  const getStreak = (habitId: string) => {
-    let streak = 0;
-    for (let i = 0; i < 60; i++) {
-      const d = format(subDays(new Date(), i), 'yyyy-MM-dd');
-      if (logs.find(l => l.habitId === habitId && l.date === d && l.completed)) streak++;
-      else break;
-    }
-    return streak;
   };
 
   const monthDays = useMemo(() => {
@@ -345,7 +356,7 @@ export default function HabitPage() {
         <div className="space-y-2.5">
           {slotHabits.map(habit => {
             const done = isCompleted(habit.id, TODAY);
-            const streak = getStreak(habit.id);
+            const streak = streaks[habit.id] ?? 0;
             const rate = getMonthlyRate(habit.id);
             const showPerf = openPerformance === habit.id && done;
             return (

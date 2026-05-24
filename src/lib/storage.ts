@@ -13,128 +13,163 @@ export function newId(): string {
   return `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+type Row = Record<string, unknown>;
+
+function logError(op: string, error: unknown) {
+  console.error(`[storage:${op}]`, error);
+}
+
+function daysAgo(n: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString().split('T')[0];
+}
+
 // ── Row mappers (DB snake_case → TS camelCase) ──────────────
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapHabit(r: any): Habit {
+function mapHabit(r: Row): Habit {
   return {
-    id: r.id,
-    name: r.name,
-    icon: r.icon ?? '🎯',
-    color: r.color ?? '#4a7c59',
-    targetDaysPerWeek: r.target_days_per_week ?? 7,
-    createdAt: r.created_at,
-    isArchived: r.is_archived ?? false,
-    roles: (r.roles ?? []) as RoleTag[],
-    routineSlot: (r.routine_slot ?? 'flexible') as RoutineSlot,
+    id: r.id as string,
+    name: r.name as string,
+    icon: (r.icon as string) ?? '🎯',
+    color: (r.color as string) ?? '#4a7c59',
+    targetDaysPerWeek: (r.target_days_per_week as number) ?? 7,
+    createdAt: r.created_at as string,
+    isArchived: (r.is_archived as boolean) ?? false,
+    roles: ((r.roles as RoleTag[]) ?? []),
+    routineSlot: ((r.routine_slot as RoutineSlot) ?? 'flexible'),
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapHabitLog(r: any): HabitLog {
+function mapHabitLog(r: Row): HabitLog {
   return {
-    id: r.id,
-    habitId: r.habit_id,
-    date: r.date,
-    completed: r.completed ?? false,
-    note: r.note ?? undefined,
-    energyAfter: r.energy_after ?? undefined,
-    satisfactionAfter: r.satisfaction_after ?? undefined,
+    id: r.id as string,
+    habitId: r.habit_id as string,
+    date: r.date as string,
+    completed: (r.completed as boolean) ?? false,
+    note: r.note as string | undefined,
+    energyAfter: r.energy_after as PerformanceScore | undefined,
+    satisfactionAfter: r.satisfaction_after as PerformanceScore | undefined,
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapTask(r: any): Task {
+function mapTask(r: Row): Task {
   return {
-    id: r.id,
-    title: r.title,
-    priority: (r.priority ?? 'medium') as Priority,
-    timeSlot: (r.time_slot ?? 'morning') as TimeSlot,
-    date: r.date,
-    completed: r.completed ?? false,
-    incompleteReason: r.incomplete_reason ?? undefined,
-    createdAt: r.created_at,
+    id: r.id as string,
+    title: r.title as string,
+    priority: ((r.priority as Priority) ?? 'medium'),
+    timeSlot: ((r.time_slot as TimeSlot) ?? 'morning'),
+    date: r.date as string,
+    completed: (r.completed as boolean) ?? false,
+    incompleteReason: r.incomplete_reason as string | undefined,
+    createdAt: r.created_at as string,
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapMentalLog(r: any): MentalStateLog {
+function mapMentalLog(r: Row): MentalStateLog {
   return {
-    id: r.id,
-    date: r.date,
-    mood: (r.mood ?? 3) as MoodScore,
-    energy: (r.energy ?? 3) as MoodScore,
-    stress: (r.stress ?? 3) as MoodScore,
-    sleepQuality: (r.sleep_quality ?? 3) as MoodScore,
-    note: r.note ?? '',
+    id: r.id as string,
+    date: r.date as string,
+    mood: ((r.mood as MoodScore) ?? 3),
+    energy: ((r.energy as MoodScore) ?? 3),
+    stress: ((r.stress as MoodScore) ?? 3),
+    sleepQuality: ((r.sleep_quality as MoodScore) ?? 3),
+    note: (r.note as string) ?? '',
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapArchiveItem(r: any): ArchiveItem {
+function mapArchiveItem(r: Row): ArchiveItem {
   return {
-    id: r.id,
-    title: r.title,
-    content: r.content ?? '',
-    category: (r.category ?? 'etc') as ArchiveCategory,
-    tags: r.tags ?? [],
-    createdAt: r.created_at,
-    updatedAt: r.updated_at,
+    id: r.id as string,
+    title: r.title as string,
+    content: (r.content as string) ?? '',
+    category: ((r.category as ArchiveCategory) ?? 'etc'),
+    tags: ((r.tags as string[]) ?? []),
+    createdAt: r.created_at as string,
+    updatedAt: r.updated_at as string,
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapIdentityStatement(r: any): IdentityStatement {
-  return { id: r.id, keyword: r.keyword ?? '', statement: r.statement ?? '' };
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapGoal(r: any): Goal {
+function mapIdentityStatement(r: Row): IdentityStatement {
   return {
-    id: r.id,
-    field: r.field ?? '',
-    goal: r.goal ?? '',
-    metric: r.metric ?? '',
-    status: (r.status ?? '준비 중') as GoalStatus,
+    id: r.id as string,
+    keyword: (r.keyword as string) ?? '',
+    statement: (r.statement as string) ?? '',
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapQuarter(r: any): Quarter {
-  return { id: r.id, label: r.label ?? '', milestone: r.milestone ?? '', criteria: r.criteria ?? '' };
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapMonthPlan(r: any): MonthPlan {
-  return { month: r.month, plan: r.plan ?? '' };
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapFinanceItem(r: any): FinanceItem {
+function mapGoal(r: Row): Goal {
   return {
-    id: r.id,
-    type: r.type ?? '',
-    amount: r.amount ?? 0,
-    category: (r.category ?? 'fixed') as FinanceCategory,
+    id: r.id as string,
+    field: (r.field as string) ?? '',
+    goal: (r.goal as string) ?? '',
+    metric: (r.metric as string) ?? '',
+    status: ((r.status as GoalStatus) ?? '준비 중'),
   };
+}
+
+function mapQuarter(r: Row): Quarter {
+  return {
+    id: r.id as string,
+    label: (r.label as string) ?? '',
+    milestone: (r.milestone as string) ?? '',
+    criteria: (r.criteria as string) ?? '',
+  };
+}
+
+function mapMonthPlan(r: Row): MonthPlan {
+  return { month: r.month as number, plan: (r.plan as string) ?? '' };
+}
+
+function mapFinanceItem(r: Row): FinanceItem {
+  return {
+    id: r.id as string,
+    type: (r.type as string) ?? '',
+    amount: (r.amount as number) ?? 0,
+    category: ((r.category as FinanceCategory) ?? 'fixed'),
+  };
+}
+
+// ── 공통: 차등 저장 (upsert + 삭제된 행만 delete) ──────────
+async function differentialSave<T extends { id: string }>(
+  table: string,
+  items: T[],
+  toRow: (item: T) => Row,
+): Promise<void> {
+  const { data: existing, error: readErr } = await supabase.from(table).select('id');
+  if (readErr) { logError(`${table}.save/read`, readErr); return; }
+
+  const keepIds = new Set(items.map(i => i.id));
+  const toDelete = (existing ?? []).map(r => r.id as string).filter(id => !keepIds.has(id));
+
+  if (toDelete.length) {
+    const { error } = await supabase.from(table).delete().in('id', toDelete);
+    if (error) logError(`${table}.save/delete`, error);
+  }
+  if (items.length) {
+    const { error } = await supabase.from(table).upsert(items.map(toRow));
+    if (error) logError(`${table}.save/upsert`, error);
+  }
 }
 
 // ── Stores ───────────────────────────────────────────────────
 
 export const habitStore = {
   async getAll(): Promise<Habit[]> {
-    const { data } = await supabase.from('habits').select('*').order('created_at');
+    const { data, error } = await supabase.from('habits').select('*').order('created_at');
+    if (error) { logError('habits.getAll', error); return []; }
     return (data ?? []).map(mapHabit);
   },
   async add(habit: Habit): Promise<void> {
-    await supabase.from('habits').insert({
+    const { error } = await supabase.from('habits').insert({
       id: habit.id, name: habit.name, icon: habit.icon, color: habit.color,
       target_days_per_week: habit.targetDaysPerWeek, created_at: habit.createdAt,
       is_archived: habit.isArchived, roles: habit.roles, routine_slot: habit.routineSlot,
     });
+    if (error) logError('habits.add', error);
   },
   async update(id: string, updates: Partial<Habit>): Promise<void> {
-    const row: Record<string, unknown> = {};
+    const row: Row = {};
     if (updates.name !== undefined) row.name = updates.name;
     if (updates.icon !== undefined) row.icon = updates.icon;
     if (updates.color !== undefined) row.color = updates.color;
@@ -142,178 +177,187 @@ export const habitStore = {
     if (updates.isArchived !== undefined) row.is_archived = updates.isArchived;
     if (updates.roles !== undefined) row.roles = updates.roles;
     if (updates.routineSlot !== undefined) row.routine_slot = updates.routineSlot;
-    await supabase.from('habits').update(row).eq('id', id);
+    const { error } = await supabase.from('habits').update(row).eq('id', id);
+    if (error) logError('habits.update', error);
   },
   async delete(id: string): Promise<void> {
-    await supabase.from('habits').delete().eq('id', id);
-  },
-  async save(habits: Habit[]): Promise<void> {
-    await supabase.from('habits').delete().neq('id', '');
-    if (habits.length) {
-      await supabase.from('habits').insert(habits.map(h => ({
-        id: h.id, name: h.name, icon: h.icon, color: h.color,
-        target_days_per_week: h.targetDaysPerWeek, created_at: h.createdAt,
-        is_archived: h.isArchived, roles: h.roles, routine_slot: h.routineSlot,
-      })));
-    }
+    const { error } = await supabase.from('habits').delete().eq('id', id);
+    if (error) logError('habits.delete', error);
   },
 };
 
 export const habitLogStore = {
+  // 최근 90일 로그만 fetch — 월간 캘린더(~31일) + 스트릭(최대 60일) 커버
   async getAll(): Promise<HabitLog[]> {
-    const { data } = await supabase.from('habit_logs').select('*').order('date');
+    const since = daysAgo(90);
+    const { data, error } = await supabase.from('habit_logs').select('*')
+      .gte('date', since).order('date');
+    if (error) { logError('habit_logs.getAll', error); return []; }
     return (data ?? []).map(mapHabitLog);
   },
   async getByDate(date: string): Promise<HabitLog[]> {
-    const { data } = await supabase.from('habit_logs').select('*').eq('date', date);
+    const { data, error } = await supabase.from('habit_logs').select('*').eq('date', date);
+    if (error) { logError('habit_logs.getByDate', error); return []; }
     return (data ?? []).map(mapHabitLog);
   },
   async toggle(habitId: string, date: string): Promise<void> {
-    const { data } = await supabase.from('habit_logs').select('*')
+    const { data, error: readErr } = await supabase.from('habit_logs').select('*')
       .eq('habit_id', habitId).eq('date', date).maybeSingle();
+    if (readErr) { logError('habit_logs.toggle/read', readErr); return; }
     if (data) {
-      await supabase.from('habit_logs').update({ completed: !data.completed }).eq('id', data.id);
+      const { error } = await supabase.from('habit_logs').update({ completed: !data.completed }).eq('id', data.id);
+      if (error) logError('habit_logs.toggle/update', error);
     } else {
-      await supabase.from('habit_logs').insert({ id: newId(), habit_id: habitId, date, completed: true });
+      const { error } = await supabase.from('habit_logs').insert({ id: newId(), habit_id: habitId, date, completed: true });
+      if (error) logError('habit_logs.toggle/insert', error);
     }
   },
   async deleteByHabitId(habitId: string): Promise<void> {
-    await supabase.from('habit_logs').delete().eq('habit_id', habitId);
+    const { error } = await supabase.from('habit_logs').delete().eq('habit_id', habitId);
+    if (error) logError('habit_logs.deleteByHabitId', error);
   },
   async updatePerformance(habitId: string, date: string, energy: PerformanceScore, satisfaction: PerformanceScore): Promise<void> {
-    const { data } = await supabase.from('habit_logs').select('id')
+    const { data, error: readErr } = await supabase.from('habit_logs').select('id')
       .eq('habit_id', habitId).eq('date', date).maybeSingle();
+    if (readErr) { logError('habit_logs.updatePerformance/read', readErr); return; }
     if (data) {
-      await supabase.from('habit_logs').update({ energy_after: energy, satisfaction_after: satisfaction }).eq('id', data.id);
+      const { error } = await supabase.from('habit_logs')
+        .update({ energy_after: energy, satisfaction_after: satisfaction }).eq('id', data.id);
+      if (error) logError('habit_logs.updatePerformance/update', error);
     }
-  },
-  async upsertMany(logs: HabitLog[]): Promise<void> {
-    if (!logs.length) return;
-    await supabase.from('habit_logs').upsert(logs.map(l => ({
-      id: l.id, habit_id: l.habitId, date: l.date, completed: l.completed,
-      note: l.note, energy_after: l.energyAfter, satisfaction_after: l.satisfactionAfter,
-    })));
   },
 };
 
 export const taskStore = {
   async getAll(): Promise<Task[]> {
-    const { data } = await supabase.from('tasks').select('*').order('created_at');
+    const { data, error } = await supabase.from('tasks').select('*').order('created_at');
+    if (error) { logError('tasks.getAll', error); return []; }
     return (data ?? []).map(mapTask);
   },
   async getByDate(date: string): Promise<Task[]> {
-    const { data } = await supabase.from('tasks').select('*').eq('date', date).order('created_at');
+    const { data, error } = await supabase.from('tasks').select('*').eq('date', date).order('created_at');
+    if (error) { logError('tasks.getByDate', error); return []; }
     return (data ?? []).map(mapTask);
   },
   async add(task: Task): Promise<void> {
-    await supabase.from('tasks').insert({
+    const { error } = await supabase.from('tasks').insert({
       id: task.id, title: task.title, priority: task.priority,
       time_slot: task.timeSlot, date: task.date, completed: task.completed,
       incomplete_reason: task.incompleteReason, created_at: task.createdAt,
     });
+    if (error) logError('tasks.add', error);
   },
   async update(id: string, updates: Partial<Task>): Promise<void> {
-    const row: Record<string, unknown> = {};
+    const row: Row = {};
     if (updates.title !== undefined) row.title = updates.title;
     if (updates.priority !== undefined) row.priority = updates.priority;
     if (updates.timeSlot !== undefined) row.time_slot = updates.timeSlot;
     if (updates.completed !== undefined) row.completed = updates.completed;
     if (updates.incompleteReason !== undefined) row.incomplete_reason = updates.incompleteReason;
-    await supabase.from('tasks').update(row).eq('id', id);
+    const { error } = await supabase.from('tasks').update(row).eq('id', id);
+    if (error) logError('tasks.update', error);
   },
   async delete(id: string): Promise<void> {
-    await supabase.from('tasks').delete().eq('id', id);
+    const { error } = await supabase.from('tasks').delete().eq('id', id);
+    if (error) logError('tasks.delete', error);
   },
 };
 
 export const mentalStore = {
   async getAll(): Promise<MentalStateLog[]> {
-    const { data } = await supabase.from('mental_state_logs').select('*').order('date');
+    const { data, error } = await supabase.from('mental_state_logs').select('*').order('date');
+    if (error) { logError('mental_state_logs.getAll', error); return []; }
     return (data ?? []).map(mapMentalLog);
   },
   async getByDate(date: string): Promise<MentalStateLog | null> {
-    const { data } = await supabase.from('mental_state_logs').select('*')
+    const { data, error } = await supabase.from('mental_state_logs').select('*')
       .eq('date', date).maybeSingle();
+    if (error) { logError('mental_state_logs.getByDate', error); return null; }
     return data ? mapMentalLog(data) : null;
   },
   async save(log: MentalStateLog): Promise<void> {
-    await supabase.from('mental_state_logs').upsert({
+    const { error } = await supabase.from('mental_state_logs').upsert({
       id: log.id, date: log.date, mood: log.mood, energy: log.energy,
       stress: log.stress, sleep_quality: log.sleepQuality, note: log.note,
     }, { onConflict: 'date' });
+    if (error) logError('mental_state_logs.save', error);
   },
 };
 
 export const archiveStore = {
   async getAll(): Promise<ArchiveItem[]> {
-    const { data } = await supabase.from('archive_items').select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('archive_items').select('*')
+      .order('created_at', { ascending: false });
+    if (error) { logError('archive_items.getAll', error); return []; }
     return (data ?? []).map(mapArchiveItem);
   },
   async add(item: ArchiveItem): Promise<void> {
-    await supabase.from('archive_items').insert({
+    const { error } = await supabase.from('archive_items').insert({
       id: item.id, title: item.title, content: item.content,
-      category: item.category, tags: item.tags, created_at: item.createdAt, updated_at: item.updatedAt,
+      category: item.category, tags: item.tags,
+      created_at: item.createdAt, updated_at: item.updatedAt,
     });
+    if (error) logError('archive_items.add', error);
   },
   async update(id: string, updates: Partial<ArchiveItem>): Promise<void> {
-    const row: Record<string, unknown> = {};
+    const row: Row = {};
     if (updates.title !== undefined) row.title = updates.title;
     if (updates.content !== undefined) row.content = updates.content;
     if (updates.category !== undefined) row.category = updates.category;
     if (updates.tags !== undefined) row.tags = updates.tags;
     if (updates.updatedAt !== undefined) row.updated_at = updates.updatedAt;
-    await supabase.from('archive_items').update(row).eq('id', id);
+    const { error } = await supabase.from('archive_items').update(row).eq('id', id);
+    if (error) logError('archive_items.update', error);
   },
   async delete(id: string): Promise<void> {
-    await supabase.from('archive_items').delete().eq('id', id);
-  },
-  async search(query: string): Promise<ArchiveItem[]> {
-    const all = await archiveStore.getAll();
-    const q = query.toLowerCase();
-    return all.filter(a =>
-      a.title.toLowerCase().includes(q) ||
-      a.content.toLowerCase().includes(q) ||
-      a.tags.some(t => t.toLowerCase().includes(q))
-    );
+    const { error } = await supabase.from('archive_items').delete().eq('id', id);
+    if (error) logError('archive_items.delete', error);
   },
 };
 
 export const identityStatementStore = {
   async getAll(): Promise<IdentityStatement[]> {
-    const { data } = await supabase.from('identity_statements').select('*');
+    const { data, error } = await supabase.from('identity_statements').select('*');
+    if (error) { logError('identity_statements.getAll', error); return []; }
     return (data ?? []).map(mapIdentityStatement);
   },
   async save(items: IdentityStatement[]): Promise<void> {
-    await supabase.from('identity_statements').delete().neq('id', '');
-    if (items.length) await supabase.from('identity_statements').insert(items);
+    await differentialSave('identity_statements', items, i => ({
+      id: i.id, keyword: i.keyword, statement: i.statement,
+    }));
   },
 };
 
 export const goalStore = {
   async getAll(): Promise<Goal[]> {
-    const { data } = await supabase.from('goals').select('*');
+    const { data, error } = await supabase.from('goals').select('*');
+    if (error) { logError('goals.getAll', error); return []; }
     return (data ?? []).map(mapGoal);
   },
   async save(items: Goal[]): Promise<void> {
-    await supabase.from('goals').delete().neq('id', '');
-    if (items.length) await supabase.from('goals').insert(items);
+    await differentialSave('goals', items, g => ({
+      id: g.id, field: g.field, goal: g.goal, metric: g.metric, status: g.status,
+    }));
   },
 };
 
 export const quarterStore = {
   async getAll(): Promise<Quarter[]> {
-    const { data } = await supabase.from('quarters').select('*');
+    const { data, error } = await supabase.from('quarters').select('*');
+    if (error) { logError('quarters.getAll', error); return []; }
     return (data ?? []).map(mapQuarter);
   },
   async save(items: Quarter[]): Promise<void> {
-    await supabase.from('quarters').delete().neq('id', '');
-    if (items.length) await supabase.from('quarters').insert(items);
+    await differentialSave('quarters', items, q => ({
+      id: q.id, label: q.label, milestone: q.milestone, criteria: q.criteria,
+    }));
   },
 };
 
 export const monthPlanStore = {
   async getAll(): Promise<MonthPlan[]> {
-    const { data } = await supabase.from('month_plans').select('*').order('month');
+    const { data, error } = await supabase.from('month_plans').select('*').order('month');
+    if (error) { logError('month_plans.getAll', error); return []; }
     const stored = (data ?? []).map(mapMonthPlan);
     return Array.from({ length: 12 }, (_, i) => {
       const found = stored.find(m => m.month === i + 1);
@@ -323,26 +367,21 @@ export const monthPlanStore = {
   async save(items: MonthPlan[]): Promise<void> {
     const rows = items.map(m => ({ month: m.month, plan: m.plan }));
     if (rows.length) {
-      await supabase.from('month_plans').upsert(rows, { onConflict: 'month' });
+      const { error } = await supabase.from('month_plans').upsert(rows, { onConflict: 'month' });
+      if (error) logError('month_plans.save', error);
     }
   },
 };
 
 export const financeStore = {
   async getAll(): Promise<FinanceItem[]> {
-    const { data } = await supabase.from('finance_items').select('*');
+    const { data, error } = await supabase.from('finance_items').select('*');
+    if (error) { logError('finance_items.getAll', error); return []; }
     return (data ?? []).map(mapFinanceItem);
   },
   async save(items: FinanceItem[]): Promise<void> {
-    await supabase.from('finance_items').delete().neq('id', '');
-    if (items.length) await supabase.from('finance_items').insert(items.map(i => ({
+    await differentialSave('finance_items', items, i => ({
       id: i.id, type: i.type, amount: i.amount, category: i.category,
-    })));
+    }));
   },
 };
-
-// ── No-op stubs kept for page.tsx compatibility ──────────────
-export function repairStorage(): void {}
-export function clearAppStorage(): void {}
-export async function seedDummyData(): Promise<void> {}
-export async function seedDashboardData(): Promise<void> {}
