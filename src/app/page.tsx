@@ -20,14 +20,111 @@ const PAGE_COMPONENTS: Record<PageId, React.ReactNode> = {
   archive: <ArchivePage />,
 };
 
+function SplashScreen({ leaving }: { leaving: boolean }) {
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: '#ffffff',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        animation: leaving ? 'splashOut 0.45s ease forwards' : 'splashIn 0.3s ease',
+        zIndex: 9999,
+      }}
+    >
+      {/* 로고 */}
+      <div style={{ animation: 'logoIn 0.65s cubic-bezier(0.22,1,0.36,1) 0.1s both' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
+            fontWeight: 800,
+            fontSize: 'clamp(54px, 14vw, 74px)',
+            letterSpacing: '0.015em',
+            color: '#1c1f2e',
+            lineHeight: 1,
+            userSelect: 'none',
+          }}
+        >
+          <span>OTD</span>
+          <span
+            style={{
+              display: 'inline-block',
+              width: 'clamp(10px, 2.5vw, 14px)',
+              height: 'clamp(10px, 2.5vw, 14px)',
+              borderRadius: '50%',
+              background: '#2D58E0',
+              margin: '0 clamp(3px, 0.7vw, 5px)',
+              flexShrink: 0,
+              transform: 'translateY(6%)',
+            }}
+          />
+          <span>H</span>
+        </div>
+
+        {/* 태그라인 */}
+        <p
+          style={{
+            textAlign: 'center',
+            fontSize: '10px',
+            letterSpacing: '0.22em',
+            color: '#b0baa8',
+            marginTop: '18px',
+            fontFamily: 'Pretendard, sans-serif',
+            fontWeight: 500,
+            textTransform: 'uppercase',
+          }}
+        >
+          Occupational Therapist&apos;s Daily Hub
+        </p>
+      </div>
+
+      {/* 로딩 점 */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '64px',
+          display: 'flex',
+          gap: '7px',
+          alignItems: 'center',
+        }}
+      >
+        {[0, 1, 2].map(i => (
+          <div
+            key={i}
+            style={{
+              width: '5px',
+              height: '5px',
+              borderRadius: '50%',
+              background: '#4a7c59',
+              animation: `splashDot 1.4s ease-in-out ${i * 0.18}s infinite`,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const [page, setPage] = useState<PageId>('dashboard');
   const [mounted, setMounted] = useState(false);
-  // 한 번 방문한 페이지만 마운트 유지 — 초기에는 dashboard만
-  const [visited, setVisited] = useState<Record<PageId, boolean>>({ dashboard: true, habit: false, task: false, mental: false, archive: false });
+  const [splashLeaving, setSplashLeaving] = useState(false);
+  const [visited, setVisited] = useState<Record<PageId, boolean>>({
+    dashboard: true, habit: false, task: false, mental: false, archive: false,
+  });
 
   useEffect(() => {
-    migrateFromLocalStorage().finally(() => setMounted(true));
+    // 최소 0.9s 표시 후 퇴장 애니메이션
+    const minDelay = new Promise<void>(res => setTimeout(res, 900));
+    Promise.all([migrateFromLocalStorage(), minDelay]).finally(() => {
+      setSplashLeaving(true);
+      setTimeout(() => setMounted(true), 450);
+    });
   }, []);
 
   const handlePageChange = (id: string) => {
@@ -36,29 +133,24 @@ export default function Home() {
     setVisited(prev => prev[newPage] ? prev : { ...prev, [newPage]: true });
   };
 
-  if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8faf8]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-green-500 flex items-center justify-center text-white text-xl">
-            🎯
-          </div>
-          <div className="w-4 h-4 border-2 border-green-400 border-t-transparent rounded-full animate-spin" />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <main className="min-h-screen bg-[#f8faf8]" style={{ paddingBottom: 'calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 0.5rem)' }}>
-      <div className="max-w-lg mx-auto px-4">
-        {ALL_PAGES.map(p => (
-          <div key={p} style={{ display: page === p ? 'block' : 'none' }}>
-            {visited[p] && PAGE_COMPONENTS[p]}
+    <>
+      {!mounted && <SplashScreen leaving={splashLeaving} />}
+      {mounted && (
+        <main
+          className="min-h-screen bg-[#f8faf8]"
+          style={{ paddingBottom: 'calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 0.5rem)' }}
+        >
+          <div className="max-w-lg mx-auto px-4">
+            {ALL_PAGES.map(p => (
+              <div key={p} style={{ display: page === p ? 'block' : 'none' }}>
+                {visited[p] && PAGE_COMPONENTS[p]}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-      <BottomNav current={page} onChange={handlePageChange} />
-    </main>
+          <BottomNav current={page} onChange={handlePageChange} />
+        </main>
+      )}
+    </>
   );
 }
