@@ -13,7 +13,7 @@ import { MENTAL_LABELS } from '@/lib/strengthLanguage';
 const METRICS = [
   { key: 'mood' as const, label: '기분', icon: '😊' },
   { key: 'energy' as const, label: '에너지', icon: '⚡' },
-  { key: 'stress' as const, label: '스트레스', icon: '🌊' },
+  { key: 'stress' as const, label: '안정감', icon: '🧘' },
   { key: 'sleepQuality' as const, label: '수면', icon: '🌙' },
 ];
 
@@ -60,7 +60,7 @@ export default function MentalPage() {
     return {
       label: format(new Date(date), 'EEE', { locale: ko }),
       기분: log?.mood ?? 0, 에너지: log?.energy ?? 0,
-      스트레스: log?.stress ?? 0, 수면: log?.sleepQuality ?? 0,
+      안정감: log?.stress ?? 0, 수면: log?.sleepQuality ?? 0,
     };
   }), [allLogs]);
 
@@ -163,13 +163,13 @@ export default function MentalPage() {
               />
               <Line type="monotone" dataKey="기분" stroke="var(--sage)" strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="에너지" stroke="#d97706" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="스트레스" stroke="var(--navy)" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="안정감" stroke="var(--navy)" strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="수면" stroke="#7c3aed" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
         <div className="flex gap-4 justify-center pb-3">
-          {[['var(--sage)','기분'],['#d97706','에너지'],['var(--navy)','스트레스'],['#7c3aed','수면']].map(([c, l]) => (
+          {[['var(--sage)','기분'],['#d97706','에너지'],['var(--navy)','안정감'],['#7c3aed','수면']].map(([c, l]) => (
             <div key={l} className="flex items-center gap-1.5">
               <div className="w-3 h-0.5 rounded-full" style={{ background: c }} />
               <span className="text-[10px]" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>{l}</span>
