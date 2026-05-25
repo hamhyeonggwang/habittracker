@@ -82,10 +82,11 @@ export interface Task {
 export interface MentalStateLog {
   id: string;
   date: string; // YYYY-MM-DD
-  mood: MoodScore;
-  energy: MoodScore;
-  stress: MoodScore;
-  sleepQuality: MoodScore;
+  // MOHO 기반 에너지 4축
+  body: MoodScore;        // 신체 수행 에너지
+  emotion: MoodScore;     // 정서 참여 에너지
+  focus: MoodScore;       // 인지 흐름 상태
+  environment: MoodScore; // 환경 지원도
   note: string;
 }
 

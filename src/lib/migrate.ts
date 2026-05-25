@@ -78,8 +78,10 @@ export async function migrateFromLocalStorage(): Promise<void> {
     const mental = readLS(LS_KEYS.MENTAL_STATE) as Record<string, unknown>[];
     if (mental.length) {
       await supabase.from('mental_state_logs').upsert(mental.map((m) => ({
-        id: m.id, date: m.date, mood: m.mood ?? 3, energy: m.energy ?? 3,
-        stress: m.stress ?? 3, sleep_quality: m.sleepQuality ?? 3, note: m.note ?? '',
+        id: m.id, date: m.date,
+        body: m.mood ?? 3, emotion: m.energy ?? 3,
+        focus: m.stress ?? 3, environment: m.sleepQuality ?? 3,
+        note: m.note ?? '',
       })), { onConflict: 'date' });
     }
 

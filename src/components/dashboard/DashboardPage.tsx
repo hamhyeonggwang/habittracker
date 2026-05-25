@@ -480,7 +480,7 @@ export default function DashboardPage() {
     const completedHabits = todayLogs.filter(l => l.completed).length;
     const habitRate = activeHabits.length ? (completedHabits / activeHabits.length) * 100 : 0;
     const mentalScore = todayMental
-      ? Math.round((todayMental.mood + todayMental.energy + todayMental.stress + todayMental.sleepQuality) / 4 * 10) / 10
+      ? Math.round((todayMental.body + todayMental.emotion + todayMental.focus + todayMental.environment) / 4 * 10) / 10
       : null;
     const momentum = Math.round((habitRate + taskRate + (mentalScore ? mentalScore * 20 : 0)) / 3);
 

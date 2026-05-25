@@ -11,17 +11,17 @@ import { Save, CheckCircle2 } from 'lucide-react';
 import { MENTAL_LABELS } from '@/lib/strengthLanguage';
 
 const METRICS = [
-  { key: 'mood' as const, label: '기분', icon: '😊' },
-  { key: 'energy' as const, label: '에너지', icon: '⚡' },
-  { key: 'stress' as const, label: '안정감', icon: '🧘' },
-  { key: 'sleepQuality' as const, label: '수면', icon: '🌙' },
+  { key: 'body'        as const, label: 'Body',        sub: '신체 수행 에너지', color: '#22c55e', dot: '🟢' },
+  { key: 'emotion'     as const, label: 'Emotion',     sub: '정서 참여 에너지', color: '#2c4a7c', dot: '🔵' },
+  { key: 'focus'       as const, label: 'Focus',       sub: '인지 흐름 상태',   color: '#7c3aed', dot: '🟣' },
+  { key: 'environment' as const, label: 'Environment', sub: '환경 지원도',      color: '#ea580c', dot: '🟠' },
 ];
 
 export default function MentalPage() {
   const [existing, setExisting] = useState<MentalStateLog | null>(null);
   const [allLogs, setAllLogs] = useState<MentalStateLog[]>([]);
   const [values, setValues] = useState<Record<string, MoodScore>>({
-    mood: 3, energy: 3, stress: 3, sleepQuality: 3,
+    body: 3, emotion: 3, focus: 3, environment: 3,
   });
   const [note, setNote] = useState('');
   const [saved, setSaved] = useState(false);
@@ -34,7 +34,7 @@ export default function MentalPage() {
     setExisting(todayLog);
     setAllLogs(logs);
     if (todayLog) {
-      setValues({ mood: todayLog.mood, energy: todayLog.energy, stress: todayLog.stress, sleepQuality: todayLog.sleepQuality });
+      setValues({ body: todayLog.body, emotion: todayLog.emotion, focus: todayLog.focus, environment: todayLog.environment });
       setNote(todayLog.note);
     }
   }, []);
@@ -44,8 +44,9 @@ export default function MentalPage() {
   const handleSave = async () => {
     await mentalStore.save({
       id: existing?.id ?? newId(),
-      date: TODAY, mood: values.mood, energy: values.energy,
-      stress: values.stress, sleepQuality: values.sleepQuality, note,
+      date: TODAY,
+      body: values.body, emotion: values.emotion, focus: values.focus, environment: values.environment,
+      note,
     });
     setSaved(true);
     await loadData();
@@ -54,13 +55,14 @@ export default function MentalPage() {
 
   const avg = Math.round((Object.values(values).reduce((a, b) => a + b, 0) / 4) * 10) / 10;
   const radarData = METRICS.map(m => ({ metric: m.label, value: values[m.key], fullMark: 5 }));
+  const chartColors: Record<string, string> = Object.fromEntries(METRICS.map(m => [m.label, m.color]));
 
   const weeklyData = useMemo(() => getLast7Days().map(date => {
     const log = allLogs.find(l => l.date === date);
     return {
       label: format(new Date(date), 'EEE', { locale: ko }),
-      기분: log?.mood ?? 0, 에너지: log?.energy ?? 0,
-      안정감: log?.stress ?? 0, 수면: log?.sleepQuality ?? 0,
+      Body: log?.body ?? 0, Emotion: log?.emotion ?? 0,
+      Focus: log?.focus ?? 0, Environment: log?.environment ?? 0,
     };
   }), [allLogs]);
 
@@ -78,7 +80,7 @@ export default function MentalPage() {
 
       {/* ── 에너지 지도 ── */}
       <div className="card overflow-hidden">
-        <div className="sheet-header">{MENTAL_LABELS.radarTitle}</div>
+        <div className="sheet-header">ENERGY MAP</div>
         <div className="p-4 flex items-center justify-between">
           <div>
             <p className="text-[11px] font-semibold mb-1" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>종합 에너지</p>
@@ -110,11 +112,14 @@ export default function MentalPage() {
           {METRICS.map(m => (
             <div key={m.key}>
               <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">{m.icon}</span>
-                  <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>{m.label}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm">{m.dot}</span>
+                  <div>
+                    <span className="text-[13px] font-bold" style={{ color: m.color, fontFamily: 'Pretendard, sans-serif', letterSpacing: '0.02em' }}>{m.label}</span>
+                    <span className="text-[10px] ml-1.5" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>{m.sub}</span>
+                  </div>
                 </div>
-                <span className="text-[11px] font-medium" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
+                <span className="text-[11px] font-medium" style={{ color: m.color, fontFamily: 'Pretendard, sans-serif' }}>
                   {getScoreMessage(values[m.key])}
                 </span>
               </div>
@@ -161,18 +166,17 @@ export default function MentalPage() {
                 contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--border)', fontFamily: 'Pretendard' }}
                 formatter={(v: number, name: string) => [getScoreMessage(Math.round(v)) + ` (${v})`, name]}
               />
-              <Line type="monotone" dataKey="기분" stroke="var(--sage)" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="에너지" stroke="#d97706" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="안정감" stroke="var(--navy)" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="수면" stroke="#7c3aed" strokeWidth={2} dot={false} />
+              {METRICS.map(m => (
+                <Line key={m.key} type="monotone" dataKey={m.label} stroke={m.color} strokeWidth={2} dot={false} />
+              ))}
             </LineChart>
           </ResponsiveContainer>
         </div>
         <div className="flex gap-4 justify-center pb-3">
-          {[['var(--sage)','기분'],['#d97706','에너지'],['var(--navy)','안정감'],['#7c3aed','수면']].map(([c, l]) => (
-            <div key={l} className="flex items-center gap-1.5">
-              <div className="w-3 h-0.5 rounded-full" style={{ background: c }} />
-              <span className="text-[10px]" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>{l}</span>
+          {METRICS.map(m => (
+            <div key={m.key} className="flex items-center gap-1.5">
+              <div className="w-3 h-0.5 rounded-full" style={{ background: m.color }} />
+              <span className="text-[10px]" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>{m.label}</span>
             </div>
           ))}
         </div>

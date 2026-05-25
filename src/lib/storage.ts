@@ -86,10 +86,10 @@ function mapMentalLog(r: Row): MentalStateLog {
   return {
     id: r.id as string,
     date: r.date as string,
-    mood: ((r.mood as MoodScore) ?? 3),
-    energy: ((r.energy as MoodScore) ?? 3),
-    stress: ((r.stress as MoodScore) ?? 3),
-    sleepQuality: ((r.sleep_quality as MoodScore) ?? 3),
+    body:        ((r.body as MoodScore) ?? 3),
+    emotion:     ((r.emotion as MoodScore) ?? 3),
+    focus:       ((r.focus as MoodScore) ?? 3),
+    environment: ((r.environment as MoodScore) ?? 3),
     note: (r.note as string) ?? '',
   };
 }
@@ -295,8 +295,9 @@ export const mentalStore = {
   },
   async save(log: MentalStateLog): Promise<void> {
     const { error } = await supabase.from('mental_state_logs').upsert({
-      id: log.id, date: log.date, mood: log.mood, energy: log.energy,
-      stress: log.stress, sleep_quality: log.sleepQuality, note: log.note,
+      id: log.id, date: log.date,
+      body: log.body, emotion: log.emotion, focus: log.focus, environment: log.environment,
+      note: log.note,
     }, { onConflict: 'date' });
     if (error) logError('mental_state_logs.save', error);
   },

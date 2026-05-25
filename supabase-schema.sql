@@ -42,15 +42,15 @@ CREATE TABLE IF NOT EXISTS tasks (
 );
 ALTER TABLE tasks DISABLE ROW LEVEL SECURITY;
 
--- 4. MENTAL_STATE_LOGS
+-- 4. MENTAL_STATE_LOGS (MOHO 4축 에너지 모델)
 CREATE TABLE IF NOT EXISTS mental_state_logs (
-  id            text PRIMARY KEY,
-  date          text NOT NULL UNIQUE,
-  mood          int  DEFAULT 3,
-  energy        int  DEFAULT 3,
-  stress        int  DEFAULT 3,
-  sleep_quality int  DEFAULT 3,
-  note          text DEFAULT ''
+  id          text PRIMARY KEY,
+  date        text NOT NULL UNIQUE,
+  body        int  DEFAULT 3,  -- 신체 수행 에너지
+  emotion     int  DEFAULT 3,  -- 정서 참여 에너지
+  focus       int  DEFAULT 3,  -- 인지 흐름 상태
+  environment int  DEFAULT 3,  -- 환경 지원도
+  note        text DEFAULT ''
 );
 ALTER TABLE mental_state_logs DISABLE ROW LEVEL SECURITY;
 
