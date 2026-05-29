@@ -284,12 +284,18 @@ export default function HabitPage() {
   const daysInMonth = getDaysInMonth(currentMonth);
 
   const weeks = useMemo(() => {
-    const w: string[][] = [];
-    monthDays.forEach((d, i) => {
-      const wi = Math.floor(i / 7);
-      if (!w[wi]) w[wi] = [];
-      w[wi].push(d);
-    });
+    const w: (string | null)[][] = [];
+    let currentWeek: (string | null)[] = [];
+    const firstDayOfWeek = new Date(monthDays[0]).getDay(); // 0=일, 6=토
+    for (let i = 0; i < firstDayOfWeek; i++) currentWeek.push(null);
+    for (const d of monthDays) {
+      currentWeek.push(d);
+      if (currentWeek.length === 7) { w.push(currentWeek); currentWeek = []; }
+    }
+    if (currentWeek.length > 0) {
+      while (currentWeek.length < 7) currentWeek.push(null);
+      w.push(currentWeek);
+    }
     return w;
   }, [monthDays]);
 
