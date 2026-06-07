@@ -11,10 +11,10 @@ import { Save, CheckCircle2 } from 'lucide-react';
 import { MENTAL_LABELS } from '@/lib/strengthLanguage';
 
 const METRICS = [
-  { key: 'body'        as const, label: 'Body',        sub: '신체 수행 에너지', color: '#22c55e', dot: '🟢' },
-  { key: 'emotion'     as const, label: 'Emotion',     sub: '정서 참여 에너지', color: '#2c4a7c', dot: '🔵' },
-  { key: 'focus'       as const, label: 'Focus',       sub: '인지 흐름 상태',   color: '#7c3aed', dot: '🟣' },
-  { key: 'environment' as const, label: 'Environment', sub: '환경 지원도',      color: '#ea580c', dot: '🟠' },
+  { key: 'body'        as const, label: 'Physical Capacity',    sub: '신체 수행 에너지', color: '#22c55e', dot: '🟢' },
+  { key: 'emotion'     as const, label: 'Emotional State',      sub: '정서 참여 에너지', color: '#2c4a7c', dot: '🔵' },
+  { key: 'focus'       as const, label: 'Cognitive Capacity',   sub: '인지 집중·흐름',   color: '#7c3aed', dot: '🟣' },
+  { key: 'environment' as const, label: 'Environmental Support', sub: '환경 지원도',     color: '#ea580c', dot: '🟠' },
 ];
 
 export default function MentalPage() {
@@ -61,8 +61,10 @@ export default function MentalPage() {
     const log = allLogs.find(l => l.date === date);
     return {
       label: format(new Date(date), 'EEE', { locale: ko }),
-      Body: log?.body ?? 0, Emotion: log?.emotion ?? 0,
-      Focus: log?.focus ?? 0, Environment: log?.environment ?? 0,
+      [METRICS[0].label]: log?.body ?? 0,
+      [METRICS[1].label]: log?.emotion ?? 0,
+      [METRICS[2].label]: log?.focus ?? 0,
+      [METRICS[3].label]: log?.environment ?? 0,
     };
   }), [allLogs]);
 

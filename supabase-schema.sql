@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS finance_items (
   id       text PRIMARY KEY,
   type     text DEFAULT '',
   amount   int  DEFAULT 0,
-  category text DEFAULT 'fixed'
+  category text DEFAULT 'fixed'  -- income | savings | fixed | variable
 );
 ALTER TABLE finance_items DISABLE ROW LEVEL SECURITY;
 
@@ -123,8 +123,21 @@ CREATE TABLE IF NOT EXISTS projects (
 );
 ALTER TABLE projects DISABLE ROW LEVEL SECURITY;
 
+-- 12. MEANINGFUL_MOMENTS (오늘 가장 의미 있었던 순간 — 하루 1건)
+CREATE TABLE IF NOT EXISTS meaningful_moments (
+  id         text PRIMARY KEY,
+  date       text NOT NULL UNIQUE,
+  content    text DEFAULT '',
+  created_at text NOT NULL
+);
+ALTER TABLE meaningful_moments DISABLE ROW LEVEL SECURITY;
+
 -- tasks에 project_id 컬럼 추가 (이미 있으면 무시됨)
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS project_id text REFERENCES projects(id) ON DELETE SET NULL;
+
+-- tasks에 roles(정체성 역할 태그) 컬럼 추가 (이미 있으면 무시됨)
+-- therapist | leader | researcher | developer | father | believer
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS roles text[] DEFAULT '{}';
 
 -- ============================================================
 -- RLS POLICIES — anon 롤 전체 허용
@@ -143,6 +156,7 @@ ALTER TABLE quarters            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE month_plans         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE finance_items       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE meaningful_moments  ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "anon_all" ON habits              FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "anon_all" ON habit_logs          FOR ALL TO anon USING (true) WITH CHECK (true);
@@ -155,3 +169,4 @@ CREATE POLICY "anon_all" ON quarters            FOR ALL TO anon USING (true) WIT
 CREATE POLICY "anon_all" ON month_plans         FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "anon_all" ON finance_items       FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "anon_all" ON projects            FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "anon_all" ON meaningful_moments  FOR ALL TO anon USING (true) WITH CHECK (true);

@@ -12,6 +12,9 @@ export type MoodScore = 1 | 2 | 3 | 4 | 5;
 // MOHO — Volition: 삶의 역할 태그
 export type RoleTag = 'researcher' | 'clinician' | 'learner' | 'health' | 'social' | 'creator';
 
+// 업무 역할 태그 (삶의 정체성 역할) — 작업/참여 맥락 분류
+export type LifeRole = 'therapist' | 'leader' | 'researcher' | 'developer' | 'father' | 'believer';
+
 // MOHO — Habituation: 루틴 시간대
 export type RoutineSlot = 'morning' | 'afternoon' | 'evening' | 'flexible';
 
@@ -74,6 +77,7 @@ export interface Task {
   incompleteReason?: string;
   createdAt: string;
   projectId?: string; // 소속 프로젝트 (없으면 독립형)
+  roles: LifeRole[];  // 정체성 역할 태그 (선택, 0개 이상)
 }
 
 // ============================================================
@@ -88,6 +92,16 @@ export interface MentalStateLog {
   focus: MoodScore;       // 인지 흐름 상태
   environment: MoodScore; // 환경 지원도
   note: string;
+}
+
+// ============================================================
+// MEANINGFUL MOMENT (오늘 가장 의미 있었던 순간 — 하루 1건)
+// ============================================================
+export interface MeaningfulMoment {
+  id: string;
+  date: string;    // YYYY-MM-DD (하루 1건, unique)
+  content: string; // 한 줄 기록
+  createdAt: string;
 }
 
 // ============================================================
@@ -159,7 +173,7 @@ export interface MonthPlan {
 // ============================================================
 // DASHBOARD — FINANCE
 // ============================================================
-export type FinanceCategory = 'income' | 'fixed' | 'variable';
+export type FinanceCategory = 'income' | 'savings' | 'fixed' | 'variable';
 
 export interface FinanceItem {
   id: string;

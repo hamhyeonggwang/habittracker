@@ -2,12 +2,43 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Plus, Check, Trash2, X, ChevronDown, ChevronUp, Folder, FolderPlus } from 'lucide-react';
 import { newId, taskStore, projectStore } from '@/lib/storage';
-import { Task, Priority, TimeSlot, Project, ProjectScope } from '@/types';
+import { Task, Priority, TimeSlot, Project, ProjectScope, LifeRole } from '@/types';
 import { Button, EmptyState } from '@/components/ui';
 import { TODAY, cn } from '@/lib/utils';
 import { TASK_LABELS, getRateMessage } from '@/lib/strengthLanguage';
 
 const PRIORITY_ORDER: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
+
+// ── 정체성 역할 태그 (업무 분류용) ───────────────────────────
+const ROLE_TAGS: { key: LifeRole; label: string; emoji: string; color: string }[] = [
+  { key: 'therapist',  label: '작업치료사', emoji: '🩺', color: '#4a7c59' },
+  { key: 'leader',     label: '팀장',       emoji: '🧭', color: '#2c4a7c' },
+  { key: 'researcher', label: '연구자',     emoji: '🔬', color: '#7c3aed' },
+  { key: 'developer',  label: '개발자',     emoji: '💻', color: '#0891b2' },
+  { key: 'father',     label: '아버지',     emoji: '👨‍👧', color: '#d97706' },
+  { key: 'believer',   label: '신앙인',     emoji: '🙏', color: '#be185d' },
+];
+type RoleTagDef = { key: LifeRole; label: string; emoji: string; color: string };
+const ROLE_MAP = Object.fromEntries(ROLE_TAGS.map(r => [r.key, r])) as Record<LifeRole, RoleTagDef>;
+
+// ── 역할 태그 칩 (다중 선택) ─────────────────────────────────
+function RoleTagChip({ role, selected, onClick }: {
+  role: { key: LifeRole; label: string; emoji: string; color: string };
+  selected: boolean; onClick: () => void;
+}) {
+  return (
+    <button type="button" onClick={onClick}
+      className="px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all border flex items-center gap-1"
+      style={{
+        fontFamily: 'Pretendard, sans-serif',
+        background: selected ? role.color : 'var(--sage-pale)',
+        color: selected ? 'white' : 'var(--text-secondary)',
+        borderColor: selected ? role.color : 'var(--border)',
+      }}>
+      <span>{role.emoji}</span>{role.label}
+    </button>
+  );
+}
 
 const PROJECT_COLORS = ['#4a7c59', '#2c4a7c', '#7c4a2c', '#7c2c5a', '#2c7c6e', '#6e2c7c'];
 
@@ -110,6 +141,10 @@ function AddModal({
   const [priority, setPriority] = useState<Priority>('medium');
   const [timeSlot, setTimeSlot] = useState<TimeSlot>('morning');
   const [projectId, setProjectId] = useState<string>('');
+  const [roles, setRoles] = useState<LifeRole[]>([]);
+
+  const toggleRole = (key: LifeRole) =>
+    setRoles(prev => prev.includes(key) ? prev.filter(r => r !== key) : [...prev, key]);
 
   const submit = async () => {
     if (!title.trim()) return;
@@ -117,6 +152,7 @@ function AddModal({
       id: newId(), title: title.trim(), priority, timeSlot, date: TODAY,
       completed: false, createdAt: TODAY,
       projectId: projectId || undefined,
+      roles,
     });
     await onAdd();
     onClose();
@@ -135,6 +171,19 @@ function AddModal({
             <input value={title} onChange={e => setTitle(e.target.value)} placeholder="오늘 도전할 일을 입력하세요"
               className="w-full px-3 py-2.5 rounded-lg border text-sm focus:outline-none"
               style={{ borderColor: 'var(--border)', fontFamily: 'Pretendard, sans-serif' }} autoFocus />
+          </div>
+
+          {/* 역할 태그 (선택, 다중) */}
+          <div>
+            <label className="text-xs font-semibold mb-2 block" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
+              역할 태그 <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(선택 · 복수 가능)</span>
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {ROLE_TAGS.map(role => (
+                <RoleTagChip key={role.key} role={role}
+                  selected={roles.includes(role.key)} onClick={() => toggleRole(role.key)} />
+              ))}
+            </div>
           </div>
 
           {/* 프로젝트 연결 */}
@@ -359,6 +408,16 @@ export default function TaskPage() {
   const rate = tasks.length ? Math.round((completedCount / tasks.length) * 100) : 0;
   const inProgress = tasks.filter(t => !t.completed).length;
 
+  // 역할별 오늘 참여 통계 (역할 태그가 달린 업무만 집계)
+  const roleStats = useMemo(() => {
+    return ROLE_TAGS.map(role => {
+      const roleTasks = tasks.filter(t => t.roles?.includes(role.key));
+      if (!roleTasks.length) return null;
+      const done = roleTasks.filter(t => t.completed).length;
+      return { role, total: roleTasks.length, done, rate: Math.round((done / roleTasks.length) * 100) };
+    }).filter(Boolean) as { role: typeof ROLE_TAGS[number]; total: number; done: number; rate: number }[];
+  }, [tasks]);
+
   return (
     <div className="page-enter space-y-4">
       {/* ── Header ── */}
@@ -405,6 +464,30 @@ export default function TaskPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 역할별 오늘 참여 ── */}
+      {roleStats.length > 0 && (
+        <div className="card overflow-hidden">
+          <div className="sheet-header-navy">역할별 오늘 참여</div>
+          <div className="p-3 space-y-2.5">
+            {roleStats.map(({ role, total, done, rate }) => (
+              <div key={role.key}>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-[12px] font-semibold flex items-center gap-1" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
+                    <span>{role.emoji}</span>{role.label}
+                    <span className="ml-0.5 font-normal text-[10px]" style={{ color: 'var(--text-muted)' }}>({done}/{total})</span>
+                  </span>
+                  <span className="text-[12px] font-bold" style={{ color: role.color, fontFamily: 'Pretendard, sans-serif' }}>{rate}%</span>
+                </div>
+                <div className="w-full rounded-full overflow-hidden" style={{ height: 5, background: 'var(--border)' }}>
+                  <div className="h-full rounded-full transition-all duration-700"
+                    style={{ width: `${rate}%`, background: role.color }} />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -474,6 +557,14 @@ export default function TaskPage() {
                                   </span>
                                 )}
                                 <span>{task.title}</span>
+                                {task.roles?.map(rk => {
+                                  const r = ROLE_MAP[rk];
+                                  if (!r) return null;
+                                  return (
+                                    <span key={rk} title={r.label}
+                                      className="text-[10px] flex-shrink-0">{r.emoji}</span>
+                                  );
+                                })}
                               </div>
                             </td>
                             <td>

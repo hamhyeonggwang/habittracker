@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: '홈', icon: LayoutDashboard },
-  { id: 'habit', label: '습관', icon: CheckSquare },
+  { id: 'habit', label: '참여', icon: CheckSquare },
   { id: 'task', label: '업무', icon: ListTodo },
   { id: 'mental', label: '컨디션', icon: Heart },
   { id: 'archive', label: '아카이브', icon: BookMarked },

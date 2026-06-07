@@ -3,21 +3,21 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   habitStore, habitLogStore, taskStore, mentalStore, archiveStore,
   identityStatementStore, goalStore, quarterStore, monthPlanStore, financeStore,
-  newId,
+  meaningfulStore, newId,
 } from '@/lib/storage';
-import { StatCard } from '@/components/ui';
+import { StatCard, Button } from '@/components/ui';
 import { formatDate, TODAY, cn } from '@/lib/utils';
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, subDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { Flame, TrendingUp, Zap, Sparkles, Target, Pencil, Check, X, Plus, Trash2 } from 'lucide-react';
+import { Flame, TrendingUp, Zap, Sparkles, Target, Pencil, Check, X, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import {
   DASH_LABELS, HABIT_LABELS, TASK_LABELS, MENTAL_LABELS,
   getRateMessage, getStreakMessage,
 } from '@/lib/strengthLanguage';
 import type {
   IdentityStatement, Goal, GoalStatus, Quarter, MonthPlan,
-  FinanceItem, FinanceCategory,
+  FinanceItem, FinanceCategory, MeaningfulMoment,
 } from '@/types';
 
 // ── 상수 ─────────────────────────────────────────────────────
@@ -124,8 +124,12 @@ function IdentityTab() {
 
       {/* I Will Statements */}
       <div>
-        <p className="text-[11px] font-bold uppercase tracking-wider mb-2"
-          style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>I Will Statement</p>
+        <p className="text-[11px] font-bold uppercase tracking-wider mb-1"
+          style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>I WILL · 되고 싶은 나</p>
+        <p className="text-[10px] mb-2 leading-relaxed"
+          style={{ color: 'var(--text-muted)', fontFamily: 'Noto Sans KR, sans-serif' }}>
+          내가 되고 싶은 사람의 모습을, 매일의 실천 한 문장으로 연결해보세요.
+        </p>
         {editing ? (
           <div className="space-y-2">
             {dispS.map((d, i) => (
@@ -133,15 +137,15 @@ function IdentityTab() {
                 style={{ background: 'var(--sage-pale)', border: '1px solid var(--border)' }}>
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold uppercase tracking-wider"
-                    style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>키워드</span>
+                    style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>되고 싶은 모습</span>
                   <DeleteBtn onClick={() => removeS(i)} />
                 </div>
                 <EditInput value={d.keyword} onChange={v => updateS(i, 'keyword', v)}
-                  placeholder="예: 성장, 건강, 재정…" />
+                  placeholder="예: 좋은 아빠, 성장하는 치료사, 건강한 나" />
                 <span className="text-[10px] font-bold uppercase tracking-wider block"
-                  style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>선언문</span>
+                  style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>실천 문장</span>
                 <EditInput value={d.statement} onChange={v => updateS(i, 'statement', v)}
-                  placeholder="나는 …" />
+                  placeholder="예: 나는 매일 아이와 30분 함께한다" />
               </div>
             ))}
             <button onClick={addS}
@@ -331,13 +335,15 @@ function FinanceTab() {
 
   const disp = editing ? draft : items;
   const income   = disp.filter(i => i.category === 'income');
+  const savingsItems = disp.filter(i => i.category === 'savings');
   const fixed    = disp.filter(i => i.category === 'fixed');
   const variable = disp.filter(i => i.category === 'variable');
 
   const totalIncome = income.reduce((s, i) => s + i.amount, 0);
-  const totalExp    = [...fixed, ...variable].reduce((s, i) => s + i.amount, 0);
-  const savings     = totalIncome - totalExp;
-  const savingsRate = totalIncome > 0 ? Math.round((savings / totalIncome) * 100) : 0;
+  const totalSavings = savingsItems.reduce((s, i) => s + i.amount, 0);
+  const availableBudget = totalIncome - totalSavings;
+  const allocatedBudget = [...fixed, ...variable].reduce((s, i) => s + i.amount, 0);
+  const savingsRate = totalIncome > 0 ? Math.round((totalSavings / totalIncome) * 100) : 0;
   const fmt = (n: number) => `₩${n.toLocaleString()}`;
 
   const updateItem = (id: string, field: 'type' | 'amount', val: string) =>
@@ -352,11 +358,13 @@ function FinanceTab() {
 
   const sectionColor: Record<FinanceCategory, string> = {
     income: 'var(--sage)',
+    savings: '#d97706',
     fixed: 'var(--navy)',
     variable: '#92400e',
   };
   const sectionLabel: Record<FinanceCategory, string> = {
     income: '수입',
+    savings: '저축 및 투자',
     fixed: '고정 지출',
     variable: '변동 지출',
   };
@@ -412,9 +420,13 @@ function FinanceTab() {
     <div className="p-3 space-y-3">
       <EditBar editing={editing} onEdit={startEdit} onSave={save} onCancel={cancel} />
 
-      {/* Summary cards */}
+      {/* Summary cards — 수입 → 저축 → 월 지출 가능 예산 */}
       <div className="grid grid-cols-3 gap-2">
-        {([['수입', totalIncome, 'var(--sage)'], ['지출', totalExp, 'var(--navy)'], ['저축', savings, '#d97706']] as const).map(
+        {([
+          ['수입', totalIncome, 'var(--sage)'],
+          ['저축', totalSavings, '#d97706'],
+          ['월 지출 가능 예산', availableBudget, 'var(--navy)'],
+        ] as const).map(
           ([label, val, color]) => (
             <div key={label} className="rounded-lg p-2 text-center"
               style={{ background: 'var(--sage-pale)', border: '1px solid var(--border)' }}>
@@ -438,14 +450,131 @@ function FinanceTab() {
             style={{ width: `${Math.min(savingsRate, 100)}%`, background: 'var(--sage)' }} />
         </div>
         <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
-          목표 30% 달성을 향해 나아가는 중 🌱
+          {savingsRate >= 30 ? '목표 30% 달성! 🌱' : '목표 30% 달성을 향해 나아가는 중 🌱'}
         </p>
       </div>
 
-      {/* Sections */}
+      {allocatedBudget > 0 && (
+        <p className="text-[10px] text-center" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
+          예산 배분 합계 {fmt(allocatedBudget)}
+          {availableBudget >= 0 && (
+            <> · 잔여 {fmt(availableBudget - allocatedBudget)}</>
+          )}
+        </p>
+      )}
+
+      {/* Sections — 수입 → 저축 → 예산 */}
       {renderSection('income', income)}
+      {renderSection('savings', savingsItems)}
       {renderSection('fixed', fixed)}
       {renderSection('variable', variable)}
+    </div>
+  );
+}
+
+// ── 오늘 가장 의미 있었던 순간 ──────────────────────────────
+function MeaningfulMomentCard() {
+  const [existing, setExisting] = useState<MeaningfulMoment | null>(null);
+  const [text, setText] = useState('');
+  const [editing, setEditing] = useState(false);
+  const [monthList, setMonthList] = useState<MeaningfulMoment[]>([]);
+  const [showList, setShowList] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const load = useCallback(async () => {
+    const [today, all] = await Promise.all([
+      meaningfulStore.getByDate(TODAY),
+      meaningfulStore.getAll(),
+    ]);
+    setExisting(today);
+    setText(today?.content ?? '');
+    setEditing(!today);
+    const prefix = TODAY.slice(0, 7);
+    setMonthList(all.filter(m => m.date.startsWith(prefix) && m.content.trim()));
+  }, []);
+  useEffect(() => { load(); }, [load]);
+  const monthCount = monthList.length;
+
+  const save = async () => {
+    if (!text.trim()) return;
+    await meaningfulStore.save({
+      id: existing?.id ?? newId(),
+      date: TODAY,
+      content: text.trim(),
+      createdAt: existing?.createdAt || new Date().toISOString(),
+    });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1500);
+    await load();
+  };
+
+  return (
+    <div className="card overflow-hidden">
+      <div className="sheet-header flex items-center justify-between">
+        <span>오늘 가장 의미 있었던 순간</span>
+        {monthCount > 0 && <span className="text-[10px] opacity-80">이달 {monthCount}개</span>}
+      </div>
+      <div className="p-3">
+        {existing && !editing ? (
+          <>
+            <div className="flex items-start gap-2">
+              <span className="text-base leading-none mt-0.5">🌿</span>
+              <p className="flex-1 text-[13px] leading-relaxed"
+                style={{ color: 'var(--text-primary)', fontFamily: 'Noto Sans KR, sans-serif' }}>
+                {existing.content}
+              </p>
+              <button onClick={() => setEditing(true)} className="flex-shrink-0 mt-0.5" aria-label="수정"
+                style={{ color: 'var(--text-muted)' }}>
+                <Pencil size={13} />
+              </button>
+            </div>
+            <p className="text-[10px] mt-1.5" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
+              하루를 채운 한 가지 · 월말에 모아 돌아볼 수 있어요
+            </p>
+          </>
+        ) : (
+          <div className="flex gap-2">
+            <input
+              value={text}
+              onChange={e => setText(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') save(); }}
+              placeholder="예: 아이들과 물놀이 · 논문 작성 · 기도 시간"
+              className="flex-1 px-3 py-2 rounded-lg border text-[13px] focus:outline-none"
+              style={{ borderColor: 'var(--border)', fontFamily: 'Noto Sans KR, sans-serif' }} />
+            <Button onClick={save} size="sm" disabled={!text.trim()}>
+              {saved ? <Check size={14} /> : '저장'}
+            </Button>
+          </div>
+        )}
+
+        {/* 이달의 의미 있었던 순간 타임라인 */}
+        {monthCount > 0 && (
+          <div className="mt-2.5 pt-2.5 border-t" style={{ borderColor: 'var(--border-light)' }}>
+            <button onClick={() => setShowList(s => !s)}
+              className="flex items-center gap-1 text-[11px] font-semibold"
+              style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
+              {format(new Date(), 'M월', { locale: ko })} 모아보기 ({monthCount})
+              {showList ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+            </button>
+            {showList && (
+              <div className="mt-2 space-y-1.5">
+                {monthList.map(m => (
+                  <div key={m.id} className="flex gap-2 items-start">
+                    <span className="text-[10px] font-bold flex-shrink-0 mt-0.5 text-right"
+                      style={{ width: 30, color: m.date === TODAY ? 'var(--sage)' : 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
+                      {format(new Date(m.date), 'M/d')}
+                    </span>
+                    <p className="flex-1 text-[12px] leading-relaxed"
+                      style={{ color: 'var(--text-secondary)', fontFamily: 'Noto Sans KR, sans-serif' }}>
+                      {m.content}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -593,6 +722,9 @@ export default function DashboardPage() {
         <StatCard label={DASH_LABELS.streakStatLabel} value={data.streak} unit="일"
           sub={getStreakMessage(data.streak)} icon={<Flame size={12} />} />
       </div>
+
+      {/* ── 오늘 가장 의미 있었던 순간 ── */}
+      <MeaningfulMomentCard />
 
       {/* ── GROWTH JOURNEY ── */}
       <div className="card overflow-hidden">

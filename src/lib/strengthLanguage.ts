@@ -23,7 +23,7 @@ export const STATUS_LABELS = {
 // ── 습관 관련 ──────────────────────────────────────────────
 export const HABIT_LABELS = {
   topMissedTitle:  'GROWTH OPPORTUNITY',        // ← "Top Missed Habit"
-  topMissedSub:    '더 키울 수 있는 습관',       // ← "가장 실패한 습관"
+  topMissedSub:    '더 키울 수 있는 루틴',       // ← "가장 실패한 습관"
   topMissedCta:    '이 습관에 집중해볼까요?',
   streakUnit:      '일 연속 참여',              // ← "일 연속 달성"
   streakZero:      '오늘부터 시작!',
@@ -55,11 +55,11 @@ export const TASK_LABELS = {
 // ── 컨디션 관련 ───────────────────────────────────────────
 export const MENTAL_LABELS = {
   scores: {
-    1: '회복이 필요해요',    // ← "매우 나쁨"
-    2: '조금 힘든 날',       // ← "나쁨"
-    3: '평온한 하루',        // ← "보통"
-    4: '활기찬 하루',        // ← "좋음"
-    5: '최고의 하루! 🌟',    // ← "매우 좋음"
+    1: '회복이 필요한 상태',  // 참여 준비도: Recovery
+    2: '안정을 찾는 상태',    // 참여 준비도: Stabilizing
+    3: '참여 준비 상태',      // 참여 준비도: Ready
+    4: '활발한 참여 상태',    // 참여 준비도: Engaged
+    5: '최적 참여 상태',      // 참여 준비도: Optimal
   },
   sectionTitle: '오늘의 에너지 체크',    // ← "컨디션 기록"
   radarTitle:   '나의 에너지 지도',      // ← "오늘의 상태"
@@ -85,7 +85,7 @@ export const DASH_LABELS = {
   yearChartTitle: 'GROWTH JOURNEY',      // ← "1 YEAR DASHBOARD"
   yearChartSub:   '나의 성장 여정',
   archiveTitle:   'ARCHIVE — 쌓여가는 인사이트',
-  habitStatLabel:   '습관 참여',          // ← "오늘 습관"
+  habitStatLabel:   '루틴 참여',          // ← "오늘 습관"
   taskStatLabel:    '업무 진행',          // ← "업무 완료"
   mentalStatLabel:  '에너지',            // ← "컨디션"
   streakStatLabel:  '연속 참여',         // ← "연속 달성"

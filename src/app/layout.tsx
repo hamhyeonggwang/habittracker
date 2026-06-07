@@ -3,7 +3,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'OTD·H — Occupation Tracking Dashboard',
-  description: '작업치료사의 습관, 업무, 컨디션을 추적하고 성장을 시각화하는 대시보드',
+  description: '작업치료사의 루틴, 업무, 컨디션을 추적하고 성장을 시각화하는 대시보드',
   manifest: '/manifest.json',
   themeColor: '#22c55e',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1',

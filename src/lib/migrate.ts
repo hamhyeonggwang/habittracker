@@ -72,6 +72,7 @@ export async function migrateFromLocalStorage(): Promise<void> {
         completed: t.completed ?? false,
         incomplete_reason: t.incompleteReason ?? null,
         created_at: t.createdAt ?? t.date,
+        roles: t.roles ?? [],
       })));
     }
 

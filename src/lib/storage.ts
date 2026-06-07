@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 import {
-  Habit, HabitLog, Task, MentalStateLog, ArchiveItem,
-  PerformanceScore, RoleTag, RoutineSlot, Priority, TimeSlot,
+  Habit, HabitLog, Task, MentalStateLog, ArchiveItem, MeaningfulMoment,
+  PerformanceScore, RoleTag, LifeRole, RoutineSlot, Priority, TimeSlot,
   MoodScore, ArchiveCategory, GoalStatus,
   IdentityStatement, Goal, Quarter, MonthPlan, FinanceItem, FinanceCategory,
   Project, ProjectScope, ProjectStatus,
@@ -65,6 +65,7 @@ function mapTask(r: Row): Task {
     incompleteReason: r.incomplete_reason as string | undefined,
     createdAt: r.created_at as string,
     projectId: r.project_id as string | undefined,
+    roles: ((r.roles as LifeRole[]) ?? []),
   };
 }
 
@@ -91,6 +92,15 @@ function mapMentalLog(r: Row): MentalStateLog {
     focus:       ((r.focus as MoodScore) ?? 3),
     environment: ((r.environment as MoodScore) ?? 3),
     note: (r.note as string) ?? '',
+  };
+}
+
+function mapMeaningful(r: Row): MeaningfulMoment {
+  return {
+    id: r.id as string,
+    date: r.date as string,
+    content: (r.content as string) ?? '',
+    createdAt: (r.created_at as string) ?? '',
   };
 }
 
@@ -261,6 +271,7 @@ export const taskStore = {
       time_slot: task.timeSlot, date: task.date, completed: task.completed,
       incomplete_reason: task.incompleteReason, created_at: task.createdAt,
       project_id: task.projectId ?? null,
+      roles: task.roles ?? [],
     });
     if (error) logError('tasks.add', error);
   },
@@ -272,6 +283,7 @@ export const taskStore = {
     if (updates.completed !== undefined) row.completed = updates.completed;
     if (updates.incompleteReason !== undefined) row.incomplete_reason = updates.incompleteReason;
     if (updates.projectId !== undefined) row.project_id = updates.projectId;
+    if (updates.roles !== undefined) row.roles = updates.roles;
     const { error } = await supabase.from('tasks').update(row).eq('id', id);
     if (error) logError('tasks.update', error);
   },
@@ -300,6 +312,27 @@ export const mentalStore = {
       note: log.note,
     }, { onConflict: 'date' });
     if (error) logError('mental_state_logs.save', error);
+  },
+};
+
+export const meaningfulStore = {
+  async getAll(): Promise<MeaningfulMoment[]> {
+    const { data, error } = await supabase.from('meaningful_moments').select('*')
+      .order('date', { ascending: false });
+    if (error) { logError('meaningful_moments.getAll', error); return []; }
+    return (data ?? []).map(mapMeaningful);
+  },
+  async getByDate(date: string): Promise<MeaningfulMoment | null> {
+    const { data, error } = await supabase.from('meaningful_moments').select('*')
+      .eq('date', date).maybeSingle();
+    if (error) { logError('meaningful_moments.getByDate', error); return null; }
+    return data ? mapMeaningful(data) : null;
+  },
+  async save(m: MeaningfulMoment): Promise<void> {
+    const { error } = await supabase.from('meaningful_moments').upsert({
+      id: m.id, date: m.date, content: m.content, created_at: m.createdAt,
+    }, { onConflict: 'date' });
+    if (error) logError('meaningful_moments.save', error);
   },
 };
 

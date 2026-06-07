@@ -35,12 +35,12 @@ function RoleChip({ role, selected, onClick }: { role: RoleTag; selected: boolea
 function HabitActionButtons({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
   return (
     <div className="flex items-center gap-0.5 flex-shrink-0">
-      <button type="button" onClick={onEdit} aria-label="습관 수정"
+      <button type="button" onClick={onEdit} aria-label="루틴 수정"
         className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-black/5"
         style={{ color: 'var(--text-muted)' }}>
         <Pencil size={14} />
       </button>
-      <button type="button" onClick={onDelete} aria-label="습관 삭제"
+      <button type="button" onClick={onDelete} aria-label="루틴 삭제"
         className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-red-50"
         style={{ color: 'var(--text-muted)' }}>
         <Trash2 size={14} />
@@ -133,14 +133,14 @@ function HabitFormModal({ habit, onClose, onSave }: { habit?: Habit; onClose: ()
       <div className="modal-sheet" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold" style={{ fontFamily: 'Noto Serif KR, serif', color: 'var(--text-primary)' }}>
-            {isEdit ? '습관 수정' : '새 습관 추가'}
+            {isEdit ? '루틴 수정' : '새 루틴 추가'}
           </h3>
           <button type="button" onClick={onClose}><X size={18} style={{ color: 'var(--text-muted)' }} /></button>
         </div>
         <div className="space-y-4">
           {/* 습관명 */}
           <div>
-            <label className="text-xs font-semibold mb-1.5 block" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>습관명</label>
+            <label className="text-xs font-semibold mb-1.5 block" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>루틴 이름</label>
             <input value={name} onChange={e => setName(e.target.value)} placeholder="예: 매일 운동"
               className="w-full px-3 py-2.5 rounded-lg border text-sm focus:outline-none"
               style={{ borderColor: 'var(--border)', fontFamily: 'Pretendard, sans-serif' }} />
@@ -222,7 +222,7 @@ export default function HabitPage() {
   const [logs, setLogs] = useState<import('@/types').HabitLog[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
-  const [view, setView] = useState<'today' | 'month'>('month');
+  const [view, setView] = useState<'today' | 'month'>('today');
   const currentMonth = useMemo(() => new Date(), []);
   const [openPerformance, setOpenPerformance] = useState<string | null>(null);
 
@@ -269,7 +269,7 @@ export default function HabitPage() {
   };
 
   const removeHabit = async (habit: Habit) => {
-    if (!confirm(`"${habit.name}" 습관을 삭제할까요?\n참여 기록도 함께 삭제됩니다.`)) return;
+    if (!confirm(`"${habit.name}" 루틴을 삭제할까요?\n참여 기록도 함께 삭제됩니다.`)) return;
     await habitLogStore.deleteByHabitId(habit.id);
     await habitStore.delete(habit.id);
     await refresh();
@@ -439,7 +439,7 @@ export default function HabitPage() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between pt-3">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Noto Serif KR, serif' }}>습관 트래커</h1>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Noto Serif KR, serif' }}>참여 트래커</h1>
           <p className="text-[12px] mt-0.5 font-medium" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
             {getRateMessage(todayRate)}
           </p>
@@ -464,7 +464,7 @@ export default function HabitPage() {
 
       {/* ── View Toggle ── */}
       <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
-        {[['month', HABIT_LABELS.calendar], ['today', HABIT_LABELS.checkIn]].map(([v, label]) => (
+        {[['today', HABIT_LABELS.checkIn], ['month', HABIT_LABELS.calendar]].map(([v, label]) => (
           <button key={v} onClick={() => setView(v as 'today' | 'month')}
             className="flex-1 py-2 text-[12px] font-semibold transition-all"
             style={{
@@ -476,9 +476,9 @@ export default function HabitPage() {
       </div>
 
       {habits.length === 0 ? (
-        <EmptyState icon="🌱" title="아직 등록된 습관이 없어요"
-          description="작은 습관 하나부터 시작해볼까요?"
-          action={<Button onClick={() => setShowAdd(true)} size="sm">첫 습관 시작하기 🌱</Button>} />
+        <EmptyState icon="🌱" title="아직 등록된 루틴이 없어요"
+          description="작은 루틴 하나부터 시작해볼까요?"
+          action={<Button onClick={() => setShowAdd(true)} size="sm">첫 루틴 시작하기 🌱</Button>} />
       ) : view === 'today' ? (
         /* ── TODAY CHECK-IN VIEW (루틴 시간대 그룹핑) ── */
         <div className="space-y-4">
@@ -499,12 +499,12 @@ export default function HabitPage() {
                     <span className="flex-shrink-0" style={{ opacity: 0.7 }}>— {monthLabel}</span>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <button type="button" onClick={() => setEditingHabit(habit)} aria-label="습관 수정"
+                    <button type="button" onClick={() => setEditingHabit(habit)} aria-label="루틴 수정"
                       className="w-7 h-7 rounded-md flex items-center justify-center"
                       style={{ background: 'rgba(255,255,255,0.15)', color: 'white' }}>
                       <Pencil size={13} />
                     </button>
-                    <button type="button" onClick={() => removeHabit(habit)} aria-label="습관 삭제"
+                    <button type="button" onClick={() => removeHabit(habit)} aria-label="루틴 삭제"
                       className="w-7 h-7 rounded-md flex items-center justify-center"
                       style={{ background: 'rgba(255,255,255,0.15)', color: 'white' }}>
                       <Trash2 size={13} />
@@ -587,7 +587,7 @@ export default function HabitPage() {
                 <YAxis tick={{ fontSize: 9 }} />
                 <Tooltip
                   contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--border)', fontFamily: 'Pretendard' }}
-                  formatter={(v: number) => [`${v}개 참여`, '오늘 습관']}
+                  formatter={(v: number) => [`${v}개 참여`, '오늘 루틴']}
                 />
                 <Bar dataKey="참여" fill="var(--sage)" radius={[3,3,0,0]} />
               </BarChart>
@@ -628,7 +628,7 @@ export default function HabitPage() {
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-[12px] font-semibold" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
                     {MOHO_LABELS.roles[role]}
-                    <span className="ml-1 font-normal text-[10px]" style={{ color: 'var(--text-muted)' }}>({count}개 습관)</span>
+                    <span className="ml-1 font-normal text-[10px]" style={{ color: 'var(--text-muted)' }}>({count}개 루틴)</span>
                   </span>
                   <span className="text-[12px] font-bold" style={{ color: 'var(--navy)', fontFamily: 'Pretendard, sans-serif' }}>{rate}%</span>
                 </div>
