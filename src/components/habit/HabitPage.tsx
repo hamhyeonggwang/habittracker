@@ -2,31 +2,31 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Plus, X, Check, Sparkles, Pencil, Trash2 } from 'lucide-react';
 import { habitStore, habitLogStore, newId } from '@/lib/storage';
-import { Habit, RoleTag, RoutineSlot, PerformanceScore } from '@/types';
+import { Habit, LifeRole, RoutineSlot, PerformanceScore } from '@/types';
 import { Button, EmptyState, ProgressBar } from '@/components/ui';
 import { TODAY, formatDateShort, cn } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
 import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval, getDaysInMonth } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { HABIT_LABELS, MOHO_LABELS, getRateMessage, getStreakMessage } from '@/lib/strengthLanguage';
+import { LIFE_ROLES, LIFE_ROLE_MAP, LifeRoleDef } from '@/lib/roles';
 
 const ICONS = ['🏃','📚','🧘','💰','🤝','✍️','💧','🥗','🎯','💪','🎸','🌅'];
 const COLORS = ['#4a7c59','#2c4a7c','#7c4a2c','#4a2c7c','#7c2c4a','#2c7c4a','#5a8c42','#3a6a9c'];
-const ALL_ROLES: RoleTag[] = ['researcher', 'clinician', 'learner', 'health', 'social', 'creator'];
 const ALL_SLOTS: RoutineSlot[] = ['morning', 'afternoon', 'evening', 'flexible'];
 
-// ── 역할 태그 칩 ──────────────────────────────────────────
-function RoleChip({ role, selected, onClick }: { role: RoleTag; selected: boolean; onClick: () => void }) {
+// ── 역할 태그 칩 (업무와 공통 역할) ──────────────────────────
+function RoleChip({ role, selected, onClick }: { role: LifeRoleDef; selected: boolean; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick}
-      className="px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all border"
+      className="px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all border flex items-center gap-1"
       style={{
         fontFamily: 'Pretendard, sans-serif',
-        background: selected ? 'var(--sage)' : 'var(--sage-pale)',
+        background: selected ? role.color : 'var(--sage-pale)',
         color: selected ? 'white' : 'var(--text-secondary)',
-        borderColor: selected ? 'var(--sage)' : 'var(--border)',
+        borderColor: selected ? role.color : 'var(--border)',
       }}>
-      {MOHO_LABELS.roles[role]}
+      <span>{role.emoji}</span>{role.label}
     </button>
   );
 }
@@ -107,10 +107,10 @@ function HabitFormModal({ habit, onClose, onSave }: { habit?: Habit; onClose: ()
   const [icon, setIcon] = useState(habit?.icon ?? '🎯');
   const [color, setColor] = useState(habit?.color ?? '#4a7c59');
   const [targetDays, setTargetDays] = useState(habit?.targetDaysPerWeek ?? 7);
-  const [roles, setRoles] = useState<RoleTag[]>(habit?.roles ?? []);
+  const [roles, setRoles] = useState<LifeRole[]>(habit?.roles ?? []);
   const [routineSlot, setRoutineSlot] = useState<RoutineSlot>(habit?.routineSlot ?? 'flexible');
 
-  const toggleRole = (role: RoleTag) => {
+  const toggleRole = (role: LifeRole) => {
     setRoles(prev => prev.includes(role) ? prev.filter(r => r !== role) : [...prev, role]);
   };
 
@@ -185,8 +185,8 @@ function HabitFormModal({ habit, onClose, onSave }: { habit?: Habit; onClose: ()
               역할 태그 <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(복수 선택 가능)</span>
             </label>
             <div className="flex flex-wrap gap-1.5">
-              {ALL_ROLES.map(role => (
-                <RoleChip key={role} role={role} selected={roles.includes(role)} onClick={() => toggleRole(role)} />
+              {LIFE_ROLES.map(role => (
+                <RoleChip key={role.key} role={role} selected={roles.includes(role.key)} onClick={() => toggleRole(role.key)} />
               ))}
             </div>
           </div>
@@ -338,13 +338,13 @@ export default function HabitPage() {
 
   // Volition: 역할별 이달 참여율
   const roleStats = useMemo(() => {
-    return ALL_ROLES.map(role => {
-      const roleHabits = habits.filter(h => h.roles.includes(role));
+    return LIFE_ROLES.map(role => {
+      const roleHabits = habits.filter(h => h.roles.includes(role.key));
       if (!roleHabits.length) return null;
       const total = roleHabits.length * daysInMonth;
       const done = roleHabits.reduce((s, h) => s + monthDays.filter(d => isCompleted(h.id, d)).length, 0);
       return { role, rate: Math.round((done / total) * 100), count: roleHabits.length };
-    }).filter(Boolean) as { role: RoleTag; rate: number; count: number }[];
+    }).filter(Boolean) as { role: LifeRoleDef; rate: number; count: number }[];
   }, [habits, logs, monthDays, daysInMonth]);
 
   // ── Today 뷰: 슬롯별 습관 카드 렌더러 ──────────────────
@@ -373,11 +373,15 @@ export default function HabitPage() {
                     <div className="min-w-0">
                       <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>{habit.name}</p>
                       <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
-                        {habit.roles.map(r => (
-                          <span key={r} className="text-[10px] font-semibold" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
-                            {MOHO_LABELS.roles[r]}
-                          </span>
-                        ))}
+                        {habit.roles.map(r => {
+                          const def = LIFE_ROLE_MAP[r];
+                          if (!def) return null;
+                          return (
+                            <span key={r} className="text-[10px] font-semibold" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
+                              {def.emoji} {def.label}
+                            </span>
+                          );
+                        })}
                         {streak > 0 && (
                           <span className="text-[10px] font-bold" style={{ color: 'var(--navy)', fontFamily: 'Pretendard, sans-serif' }}>
                             {getStreakMessage(streak)}
@@ -517,12 +521,16 @@ export default function HabitPage() {
                 {/* 역할 태그 */}
                 {habit.roles.length > 0 && (
                   <div className="px-3 pt-2 flex flex-wrap gap-1">
-                    {habit.roles.map(r => (
-                      <span key={r} className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                        style={{ background: 'var(--sage-pale)', color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
-                        {MOHO_LABELS.roles[r]}
-                      </span>
-                    ))}
+                    {habit.roles.map(r => {
+                      const def = LIFE_ROLE_MAP[r];
+                      if (!def) return null;
+                      return (
+                        <span key={r} className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                          style={{ background: 'var(--sage-pale)', color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
+                          {def.emoji} {def.label}
+                        </span>
+                      );
+                    })}
                     <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
                       style={{ background: 'rgba(30,58,138,0.08)', color: 'var(--navy)', fontFamily: 'Pretendard, sans-serif' }}>
                       {MOHO_LABELS.routineSlots[habit.routineSlot]}
@@ -624,10 +632,10 @@ export default function HabitPage() {
           <div className="sheet-header-navy">{MOHO_LABELS.volitionTitle}</div>
           <div className="p-3 space-y-2.5">
             {roleStats.map(({ role, rate, count }) => (
-              <div key={role}>
+              <div key={role.key}>
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-[12px] font-semibold" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
-                    {MOHO_LABELS.roles[role]}
+                    {role.emoji} {role.label}
                     <span className="ml-1 font-normal text-[10px]" style={{ color: 'var(--text-muted)' }}>({count}개 루틴)</span>
                   </span>
                   <span className="text-[12px] font-bold" style={{ color: 'var(--navy)', fontFamily: 'Pretendard, sans-serif' }}>{rate}%</span>

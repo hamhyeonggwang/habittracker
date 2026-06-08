@@ -32,8 +32,8 @@ export interface Habit {
   targetDaysPerWeek: number;
   createdAt: string; // ISO date string
   isArchived: boolean;
-  // MOHO — Volition
-  roles: RoleTag[];
+  // 정체성 역할 태그 (업무와 공통)
+  roles: LifeRole[];
   // MOHO — Habituation
   routineSlot: RoutineSlot;
 }
@@ -60,7 +60,7 @@ export interface Project {
   endDate: string;        // YYYY-MM-DD
   status: ProjectStatus;  // 'active' | 'done' | 'paused'
   color: string;
-  roles: RoleTag[];
+  roles: LifeRole[];
   createdAt: string;
 }
 

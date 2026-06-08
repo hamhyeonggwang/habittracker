@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 import {
   Habit, HabitLog, Task, MentalStateLog, ArchiveItem, MeaningfulMoment,
-  PerformanceScore, RoleTag, LifeRole, RoutineSlot, Priority, TimeSlot,
+  PerformanceScore, LifeRole, RoutineSlot, Priority, TimeSlot,
   MoodScore, ArchiveCategory, GoalStatus,
   IdentityStatement, Goal, Quarter, MonthPlan, FinanceItem, FinanceCategory,
   Project, ProjectScope, ProjectStatus,
@@ -37,7 +37,7 @@ function mapHabit(r: Row): Habit {
     targetDaysPerWeek: (r.target_days_per_week as number) ?? 7,
     createdAt: r.created_at as string,
     isArchived: (r.is_archived as boolean) ?? false,
-    roles: ((r.roles as RoleTag[]) ?? []),
+    roles: ((r.roles as LifeRole[]) ?? []),
     routineSlot: ((r.routine_slot as RoutineSlot) ?? 'flexible'),
   };
 }
@@ -78,7 +78,7 @@ function mapProject(r: Row): Project {
     endDate: r.end_date as string,
     status: ((r.status as ProjectStatus) ?? 'active'),
     color: (r.color as string) ?? '#4a7c59',
-    roles: ((r.roles as RoleTag[]) ?? []),
+    roles: ((r.roles as LifeRole[]) ?? []),
     createdAt: r.created_at as string,
   };
 }

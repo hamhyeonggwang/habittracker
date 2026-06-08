@@ -6,24 +6,13 @@ import { Task, Priority, TimeSlot, Project, ProjectScope, LifeRole } from '@/typ
 import { Button, EmptyState } from '@/components/ui';
 import { TODAY, cn } from '@/lib/utils';
 import { TASK_LABELS, getRateMessage } from '@/lib/strengthLanguage';
+import { LIFE_ROLES as ROLE_TAGS, LIFE_ROLE_MAP as ROLE_MAP, LifeRoleDef } from '@/lib/roles';
 
 const PRIORITY_ORDER: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
 
-// ── 정체성 역할 태그 (업무 분류용) ───────────────────────────
-const ROLE_TAGS: { key: LifeRole; label: string; emoji: string; color: string }[] = [
-  { key: 'therapist',  label: '작업치료사', emoji: '🩺', color: '#4a7c59' },
-  { key: 'leader',     label: '팀장',       emoji: '🧭', color: '#2c4a7c' },
-  { key: 'researcher', label: '연구자',     emoji: '🔬', color: '#7c3aed' },
-  { key: 'developer',  label: '개발자',     emoji: '💻', color: '#0891b2' },
-  { key: 'father',     label: '아버지',     emoji: '👨‍👧', color: '#d97706' },
-  { key: 'believer',   label: '신앙인',     emoji: '🙏', color: '#be185d' },
-];
-type RoleTagDef = { key: LifeRole; label: string; emoji: string; color: string };
-const ROLE_MAP = Object.fromEntries(ROLE_TAGS.map(r => [r.key, r])) as Record<LifeRole, RoleTagDef>;
-
 // ── 역할 태그 칩 (다중 선택) ─────────────────────────────────
 function RoleTagChip({ role, selected, onClick }: {
-  role: { key: LifeRole; label: string; emoji: string; color: string };
+  role: LifeRoleDef;
   selected: boolean; onClick: () => void;
 }) {
   return (
@@ -520,7 +509,7 @@ export default function TaskPage() {
                     <tr>
                       <th style={{ width: 32 }}>✓</th>
                       <th>업무</th>
-                      <th style={{ width: 44 }}>집중도</th>
+                      <th style={{ width: 64 }} className="whitespace-nowrap">집중도</th>
                       <th style={{ width: 32 }}></th>
                     </tr>
                   </thead>
@@ -568,7 +557,7 @@ export default function TaskPage() {
                               </div>
                             </td>
                             <td>
-                              <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold"
+                              <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold whitespace-nowrap"
                                 style={{
                                   fontFamily: 'Pretendard, sans-serif',
                                   background: task.priority === 'high' ? 'var(--sage-light)' : task.priority === 'medium' ? 'var(--navy-light)' : 'var(--border-light)',
