@@ -170,3 +170,17 @@ CREATE POLICY "anon_all" ON month_plans         FOR ALL TO anon USING (true) WIT
 CREATE POLICY "anon_all" ON finance_items       FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "anon_all" ON projects            FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "anon_all" ON meaningful_moments  FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- ============================================================
+-- AI_INSIGHTS — 온디맨드 AI 인사이트 캐시
+-- ============================================================
+CREATE TABLE IF NOT EXISTS ai_insights (
+  id         text PRIMARY KEY,
+  date       text NOT NULL,
+  type       text NOT NULL,
+  content    text NOT NULL,
+  data_hash  text NOT NULL,
+  created_at text NOT NULL
+);
+ALTER TABLE ai_insights ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "anon_all" ON ai_insights FOR ALL TO anon USING (true) WITH CHECK (true);

@@ -6,6 +6,7 @@ import { ArchiveItem, ArchiveCategory } from '@/types';
 import { Button, EmptyState } from '@/components/ui';
 import { CATEGORY_LABELS, formatDate } from '@/lib/utils';
 import { ARCHIVE_LABELS } from '@/lib/strengthLanguage';
+import ArchiveConnectButton from './ArchiveConnectButton';
 
 const CAT_COLORS: Record<ArchiveCategory, { bg: string; text: string; border: string }> = {
   book:     { bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe' },
@@ -257,6 +258,7 @@ export default function ArchivePage() {
                     <Trash2 size={10} /> 삭제
                   </button>
                 </div>
+                <ArchiveConnectButton item={item} allItems={items} />
               </div>
             );
           })}

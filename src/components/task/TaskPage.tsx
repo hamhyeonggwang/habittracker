@@ -7,6 +7,7 @@ import { Button, EmptyState } from '@/components/ui';
 import { TODAY, cn } from '@/lib/utils';
 import { TASK_LABELS, getRateMessage } from '@/lib/strengthLanguage';
 import { LIFE_ROLES as ROLE_TAGS, LIFE_ROLE_MAP as ROLE_MAP, LifeRoleDef } from '@/lib/roles';
+import ReasonInsightCard from './ReasonInsightCard';
 
 const PRIORITY_ORDER: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
 
@@ -428,6 +429,8 @@ export default function TaskPage() {
         tasks={tasks}
         onRefreshProjects={refreshProjects}
       />
+
+      <ReasonInsightCard />
 
       {/* ── 진행 현황 ── */}
       {tasks.length > 0 && (

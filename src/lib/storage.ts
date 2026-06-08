@@ -438,6 +438,22 @@ export const financeStore = {
   },
 };
 
+export const insightStore = {
+  async getByDate(date: string, type: string): Promise<{ content: string; dataHash: string } | null> {
+    const { data, error } = await supabase.from('ai_insights').select('*')
+      .eq('date', date).eq('type', type).maybeSingle();
+    if (error) { logError('ai_insights.getByDate', error); return null; }
+    return data ? { content: data.content, dataHash: data.data_hash } : null;
+  },
+  async save(date: string, type: string, content: string, dataHash: string): Promise<void> {
+    const { error } = await supabase.from('ai_insights').upsert({
+      id: `${date}_${type}`, date, type, content, data_hash: dataHash,
+      created_at: new Date().toISOString(),
+    }, { onConflict: 'id' });
+    if (error) logError('ai_insights.save', error);
+  },
+};
+
 export const projectStore = {
   async getAll(): Promise<Project[]> {
     const { data, error } = await supabase.from('projects').select('*').order('created_at');

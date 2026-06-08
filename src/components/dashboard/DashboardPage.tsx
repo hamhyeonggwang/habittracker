@@ -6,6 +6,8 @@ import {
   meaningfulStore, newId,
 } from '@/lib/storage';
 import { StatCard, Button } from '@/components/ui';
+import AIInsightCard from './AIInsightCard';
+import IdentityInsightCard from './IdentityInsightCard';
 import { formatDate, TODAY, cn } from '@/lib/utils';
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, subDays } from 'date-fns';
@@ -130,6 +132,7 @@ function IdentityTab() {
           style={{ color: 'var(--text-muted)', fontFamily: 'Noto Sans KR, sans-serif' }}>
           내가 되고 싶은 사람의 모습을, 매일의 실천 한 문장으로 연결해보세요.
         </p>
+        <div className="mb-3"><IdentityInsightCard /></div>
         {editing ? (
           <div className="space-y-2">
             {dispS.map((d, i) => (
@@ -669,6 +672,8 @@ export default function DashboardPage() {
           {getRateMessage(data.momentum)}
         </p>
       </div>
+
+      <AIInsightCard />
 
       {/* ── MOMENTUM + GROWTH OPPORTUNITY ── */}
       <div className="card overflow-hidden">
