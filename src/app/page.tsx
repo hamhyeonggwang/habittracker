@@ -8,6 +8,8 @@ import TaskPage from '@/components/task/TaskPage';
 import MentalPage from '@/components/mental/MentalPage';
 import ArchivePage from '@/components/archive/ArchivePage';
 import { Toaster } from '@/components/ui/Toast';
+import LoginScreen from '@/components/auth/LoginScreen';
+import { useSession } from '@/lib/useSession';
 
 type PageId = 'dashboard' | 'habit' | 'task' | 'mental' | 'archive';
 
@@ -115,6 +117,7 @@ export default function Home() {
   const [page, setPage] = useState<PageId>('dashboard');
   const [mounted, setMounted] = useState(false);
   const [splashLeaving, setSplashLeaving] = useState(false);
+  const { session, loading: sessionLoading } = useSession();
   const [visited, setVisited] = useState<Record<PageId, boolean>>({
     dashboard: true, habit: false, task: false, mental: false, archive: false,
   });
@@ -134,10 +137,19 @@ export default function Home() {
     setVisited(prev => prev[newPage] ? prev : { ...prev, [newPage]: true });
   };
 
+  // 스플래시: 최소 표시시간(mounted) 또는 세션 복원(sessionLoading) 중에는 유지
+  const showSplash = !mounted || sessionLoading;
+
   return (
     <>
-      {!mounted && <SplashScreen leaving={splashLeaving} />}
-      {mounted && (
+      {showSplash && <SplashScreen leaving={splashLeaving && !sessionLoading} />}
+      {!showSplash && !session && (
+        <>
+          <LoginScreen />
+          <Toaster />
+        </>
+      )}
+      {!showSplash && session && (
         <main
           className="min-h-screen bg-[#f8faf8]"
           style={{ paddingBottom: 'calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 0.5rem)' }}

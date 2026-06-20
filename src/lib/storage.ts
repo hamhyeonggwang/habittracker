@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { showToast } from './toast';
+import { getCurrentUserId } from './auth';
 import {
   Habit, HabitLog, Task, MentalStateLog, ArchiveItem, MeaningfulMoment,
   PerformanceScore, LifeRole, RoutineSlot, Priority, TimeSlot,
@@ -190,7 +191,8 @@ async function differentialSave<T extends { id: string }>(
     if (error) return fail(`${table}.save/delete`, error);
   }
   if (items.length) {
-    const { error } = await supabase.from(table).upsert(items.map(toRow));
+    const uid = getCurrentUserId();
+    const { error } = await supabase.from(table).upsert(items.map(i => ({ ...toRow(i), user_id: uid })));
     if (error) return fail(`${table}.save/upsert`, error);
   }
   return OK;
@@ -209,6 +211,7 @@ export const habitStore = {
       id: habit.id, name: habit.name, icon: habit.icon, color: habit.color,
       target_days_per_week: habit.targetDaysPerWeek, created_at: habit.createdAt,
       is_archived: habit.isArchived, roles: habit.roles, routine_slot: habit.routineSlot,
+      user_id: getCurrentUserId(),
     });
     return error ? fail('habits.add', error) : OK;
   },
@@ -252,7 +255,7 @@ export const habitLogStore = {
       const { error } = await supabase.from('habit_logs').update({ completed: !data.completed }).eq('id', data.id);
       return error ? fail('habit_logs.toggle/update', error) : OK;
     }
-    const { error } = await supabase.from('habit_logs').insert({ id: newId(), habit_id: habitId, date, completed: true });
+    const { error } = await supabase.from('habit_logs').insert({ id: newId(), habit_id: habitId, date, completed: true, user_id: getCurrentUserId() });
     return error ? fail('habit_logs.toggle/insert', error) : OK;
   },
   async deleteByHabitId(habitId: string): Promise<Result> {
@@ -290,6 +293,7 @@ export const taskStore = {
       incomplete_reason: task.incompleteReason, created_at: task.createdAt,
       project_id: task.projectId ?? null,
       roles: task.roles ?? [],
+      user_id: getCurrentUserId(),
     });
     return error ? fail('tasks.add', error) : OK;
   },
@@ -327,7 +331,7 @@ export const mentalStore = {
     const { error } = await supabase.from('mental_state_logs').upsert({
       id: log.id, date: log.date,
       body: log.body, emotion: log.emotion, focus: log.focus, environment: log.environment,
-      note: log.note,
+      note: log.note, user_id: getCurrentUserId(),
     }, { onConflict: 'date' });
     return error ? fail('mental_state_logs.save', error) : OK;
   },
@@ -348,7 +352,7 @@ export const meaningfulStore = {
   },
   async save(m: MeaningfulMoment): Promise<Result> {
     const { error } = await supabase.from('meaningful_moments').upsert({
-      id: m.id, date: m.date, content: m.content, created_at: m.createdAt,
+      id: m.id, date: m.date, content: m.content, created_at: m.createdAt, user_id: getCurrentUserId(),
     }, { onConflict: 'date' });
     return error ? fail('meaningful_moments.save', error) : OK;
   },
@@ -366,6 +370,7 @@ export const archiveStore = {
       id: item.id, title: item.title, content: item.content,
       category: item.category, tags: item.tags,
       created_at: item.createdAt, updated_at: item.updatedAt,
+      user_id: getCurrentUserId(),
     });
     return error ? fail('archive_items.add', error) : OK;
   },
@@ -435,7 +440,8 @@ export const monthPlanStore = {
     });
   },
   async save(items: MonthPlan[]): Promise<Result> {
-    const rows = items.map(m => ({ month: m.month, plan: m.plan }));
+    const uid = getCurrentUserId();
+    const rows = items.map(m => ({ month: m.month, plan: m.plan, user_id: uid }));
     if (rows.length) {
       const { error } = await supabase.from('month_plans').upsert(rows, { onConflict: 'month' });
       if (error) return fail('month_plans.save', error);
@@ -475,6 +481,7 @@ export const projectStore = {
       start_date: project.startDate, end_date: project.endDate,
       status: project.status, color: project.color,
       roles: project.roles, created_at: project.createdAt,
+      user_id: getCurrentUserId(),
     });
     return error ? fail('projects.add', error) : OK;
   },

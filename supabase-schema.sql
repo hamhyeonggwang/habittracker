@@ -170,3 +170,56 @@ CREATE POLICY "anon_all" ON month_plans         FOR ALL TO anon USING (true) WIT
 CREATE POLICY "anon_all" ON finance_items       FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "anon_all" ON projects            FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "anon_all" ON meaningful_moments  FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- ============================================================
+-- P1 ① 멀티테넌트 비파괴 추가 (적용 완료: migration p1_add_user_id_columns_and_life_roles)
+-- nullable user_id + life_roles 테이블. anon_all 정책은 유지되므로 기존 앱 정상 동작.
+-- ============================================================
+ALTER TABLE habits              ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE habit_logs          ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE tasks               ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE projects            ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE mental_state_logs   ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE archive_items       ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE identity_statements ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE goals               ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE quarters            ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE month_plans         ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE finance_items       ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE meaningful_moments  ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
+
+CREATE TABLE IF NOT EXISTS life_roles (
+  id         text PRIMARY KEY,
+  user_id    uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  label      text NOT NULL,
+  emoji      text DEFAULT '🏷️',
+  color      text DEFAULT '#4a7c59',
+  sort_order int  DEFAULT 0,
+  created_at text NOT NULL
+);
+ALTER TABLE life_roles ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "owner_all" ON life_roles
+  FOR ALL TO authenticated
+  USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+-- ============================================================
+-- P1 컷오버 (⚠️ 아직 적용하지 않음 — 인증 배포 + 데이터 백필 이후 한 번에)
+-- 순서: ① 선생님 로그인으로 uuid 확보 → ② 아래 백필 → ③ 제약 교체 → ④ owner_all 추가 → ⑤ anon_all DROP
+-- anon_all을 DROP하는 순간부터 비인증(anon) 접근이 전면 차단된다.
+-- ============================================================
+-- -- ② 기존 데이터 백필 (선생님 uuid로):
+-- UPDATE habits              SET user_id = '<UUID>' WHERE user_id IS NULL;
+-- UPDATE habit_logs          SET user_id = '<UUID>' WHERE user_id IS NULL;
+-- ... (12개 테이블 동일)
+--
+-- -- ③ 멀티테넌트 제약 교체:
+-- ALTER TABLE mental_state_logs  DROP CONSTRAINT mental_state_logs_date_key,  ADD CONSTRAINT mental_state_logs_user_date_key  UNIQUE (user_id, date);
+-- ALTER TABLE meaningful_moments DROP CONSTRAINT meaningful_moments_date_key, ADD CONSTRAINT meaningful_moments_user_date_key UNIQUE (user_id, date);
+-- ALTER TABLE month_plans DROP CONSTRAINT month_plans_pkey, ADD PRIMARY KEY (user_id, month);
+--
+-- -- ④ owner_all (authenticated) 정책 추가 — 12개 테이블:
+-- CREATE POLICY "owner_all" ON habits FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+-- ... (12개 테이블 동일)
+--
+-- -- ⑤ 마지막: anon 접근 차단 (되돌리기 어려움):
+-- DROP POLICY "anon_all" ON habits;  ... (12개 테이블 동일)
