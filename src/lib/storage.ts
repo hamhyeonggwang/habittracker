@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { showToast } from './toast';
 import {
   Habit, HabitLog, Task, MentalStateLog, ArchiveItem, MeaningfulMoment,
   PerformanceScore, LifeRole, RoutineSlot, Priority, TimeSlot,
@@ -16,8 +17,24 @@ export function newId(): string {
 
 type Row = Record<string, unknown>;
 
+// 쓰기 작업 결과 — 호출부(handleSave 등)가 성공/실패를 받아 처리한다.
+export type Result = { ok: true } | { ok: false; error: string };
+const OK: Result = { ok: true };
+
 function logError(op: string, error: unknown) {
   console.error(`[storage:${op}]`, error);
+}
+
+// 쓰기 실패: 콘솔 기록 + 사용자에게 토스트 안내 + 실패 Result 반환.
+// (getter의 읽기 실패는 토스트하지 않고 기존 logError만 유지 — 저장 무피드백만 해결 대상)
+function fail(op: string, error: unknown): Result {
+  logError(op, error);
+  const message =
+    error && typeof error === 'object' && 'message' in error
+      ? String((error as { message: unknown }).message)
+      : '알 수 없는 오류';
+  showToast(`저장에 실패했어요. ${message}`, 'error');
+  return { ok: false, error: message };
 }
 
 function daysAgo(n: number): string {
@@ -161,21 +178,22 @@ async function differentialSave<T extends { id: string }>(
   table: string,
   items: T[],
   toRow: (item: T) => Row,
-): Promise<void> {
+): Promise<Result> {
   const { data: existing, error: readErr } = await supabase.from(table).select('id');
-  if (readErr) { logError(`${table}.save/read`, readErr); return; }
+  if (readErr) return fail(`${table}.save/read`, readErr);
 
   const keepIds = new Set(items.map(i => i.id));
   const toDelete = (existing ?? []).map(r => r.id as string).filter(id => !keepIds.has(id));
 
   if (toDelete.length) {
     const { error } = await supabase.from(table).delete().in('id', toDelete);
-    if (error) logError(`${table}.save/delete`, error);
+    if (error) return fail(`${table}.save/delete`, error);
   }
   if (items.length) {
     const { error } = await supabase.from(table).upsert(items.map(toRow));
-    if (error) logError(`${table}.save/upsert`, error);
+    if (error) return fail(`${table}.save/upsert`, error);
   }
+  return OK;
 }
 
 // ── Stores ───────────────────────────────────────────────────
@@ -186,15 +204,15 @@ export const habitStore = {
     if (error) { logError('habits.getAll', error); return []; }
     return (data ?? []).map(mapHabit);
   },
-  async add(habit: Habit): Promise<void> {
+  async add(habit: Habit): Promise<Result> {
     const { error } = await supabase.from('habits').insert({
       id: habit.id, name: habit.name, icon: habit.icon, color: habit.color,
       target_days_per_week: habit.targetDaysPerWeek, created_at: habit.createdAt,
       is_archived: habit.isArchived, roles: habit.roles, routine_slot: habit.routineSlot,
     });
-    if (error) logError('habits.add', error);
+    return error ? fail('habits.add', error) : OK;
   },
-  async update(id: string, updates: Partial<Habit>): Promise<void> {
+  async update(id: string, updates: Partial<Habit>): Promise<Result> {
     const row: Row = {};
     if (updates.name !== undefined) row.name = updates.name;
     if (updates.icon !== undefined) row.icon = updates.icon;
@@ -204,11 +222,11 @@ export const habitStore = {
     if (updates.roles !== undefined) row.roles = updates.roles;
     if (updates.routineSlot !== undefined) row.routine_slot = updates.routineSlot;
     const { error } = await supabase.from('habits').update(row).eq('id', id);
-    if (error) logError('habits.update', error);
+    return error ? fail('habits.update', error) : OK;
   },
-  async delete(id: string): Promise<void> {
+  async delete(id: string): Promise<Result> {
     const { error } = await supabase.from('habits').delete().eq('id', id);
-    if (error) logError('habits.delete', error);
+    return error ? fail('habits.delete', error) : OK;
   },
 };
 
@@ -226,31 +244,31 @@ export const habitLogStore = {
     if (error) { logError('habit_logs.getByDate', error); return []; }
     return (data ?? []).map(mapHabitLog);
   },
-  async toggle(habitId: string, date: string): Promise<void> {
+  async toggle(habitId: string, date: string): Promise<Result> {
     const { data, error: readErr } = await supabase.from('habit_logs').select('*')
       .eq('habit_id', habitId).eq('date', date).maybeSingle();
-    if (readErr) { logError('habit_logs.toggle/read', readErr); return; }
+    if (readErr) return fail('habit_logs.toggle/read', readErr);
     if (data) {
       const { error } = await supabase.from('habit_logs').update({ completed: !data.completed }).eq('id', data.id);
-      if (error) logError('habit_logs.toggle/update', error);
-    } else {
-      const { error } = await supabase.from('habit_logs').insert({ id: newId(), habit_id: habitId, date, completed: true });
-      if (error) logError('habit_logs.toggle/insert', error);
+      return error ? fail('habit_logs.toggle/update', error) : OK;
     }
+    const { error } = await supabase.from('habit_logs').insert({ id: newId(), habit_id: habitId, date, completed: true });
+    return error ? fail('habit_logs.toggle/insert', error) : OK;
   },
-  async deleteByHabitId(habitId: string): Promise<void> {
+  async deleteByHabitId(habitId: string): Promise<Result> {
     const { error } = await supabase.from('habit_logs').delete().eq('habit_id', habitId);
-    if (error) logError('habit_logs.deleteByHabitId', error);
+    return error ? fail('habit_logs.deleteByHabitId', error) : OK;
   },
-  async updatePerformance(habitId: string, date: string, energy: PerformanceScore, satisfaction: PerformanceScore): Promise<void> {
+  async updatePerformance(habitId: string, date: string, energy: PerformanceScore, satisfaction: PerformanceScore): Promise<Result> {
     const { data, error: readErr } = await supabase.from('habit_logs').select('id')
       .eq('habit_id', habitId).eq('date', date).maybeSingle();
-    if (readErr) { logError('habit_logs.updatePerformance/read', readErr); return; }
+    if (readErr) return fail('habit_logs.updatePerformance/read', readErr);
     if (data) {
       const { error } = await supabase.from('habit_logs')
         .update({ energy_after: energy, satisfaction_after: satisfaction }).eq('id', data.id);
-      if (error) logError('habit_logs.updatePerformance/update', error);
+      return error ? fail('habit_logs.updatePerformance/update', error) : OK;
     }
+    return OK;
   },
 };
 
@@ -265,7 +283,7 @@ export const taskStore = {
     if (error) { logError('tasks.getByDate', error); return []; }
     return (data ?? []).map(mapTask);
   },
-  async add(task: Task): Promise<void> {
+  async add(task: Task): Promise<Result> {
     const { error } = await supabase.from('tasks').insert({
       id: task.id, title: task.title, priority: task.priority,
       time_slot: task.timeSlot, date: task.date, completed: task.completed,
@@ -273,9 +291,9 @@ export const taskStore = {
       project_id: task.projectId ?? null,
       roles: task.roles ?? [],
     });
-    if (error) logError('tasks.add', error);
+    return error ? fail('tasks.add', error) : OK;
   },
-  async update(id: string, updates: Partial<Task>): Promise<void> {
+  async update(id: string, updates: Partial<Task>): Promise<Result> {
     const row: Row = {};
     if (updates.title !== undefined) row.title = updates.title;
     if (updates.priority !== undefined) row.priority = updates.priority;
@@ -285,11 +303,11 @@ export const taskStore = {
     if (updates.projectId !== undefined) row.project_id = updates.projectId;
     if (updates.roles !== undefined) row.roles = updates.roles;
     const { error } = await supabase.from('tasks').update(row).eq('id', id);
-    if (error) logError('tasks.update', error);
+    return error ? fail('tasks.update', error) : OK;
   },
-  async delete(id: string): Promise<void> {
+  async delete(id: string): Promise<Result> {
     const { error } = await supabase.from('tasks').delete().eq('id', id);
-    if (error) logError('tasks.delete', error);
+    return error ? fail('tasks.delete', error) : OK;
   },
 };
 
@@ -305,13 +323,13 @@ export const mentalStore = {
     if (error) { logError('mental_state_logs.getByDate', error); return null; }
     return data ? mapMentalLog(data) : null;
   },
-  async save(log: MentalStateLog): Promise<void> {
+  async save(log: MentalStateLog): Promise<Result> {
     const { error } = await supabase.from('mental_state_logs').upsert({
       id: log.id, date: log.date,
       body: log.body, emotion: log.emotion, focus: log.focus, environment: log.environment,
       note: log.note,
     }, { onConflict: 'date' });
-    if (error) logError('mental_state_logs.save', error);
+    return error ? fail('mental_state_logs.save', error) : OK;
   },
 };
 
@@ -328,11 +346,11 @@ export const meaningfulStore = {
     if (error) { logError('meaningful_moments.getByDate', error); return null; }
     return data ? mapMeaningful(data) : null;
   },
-  async save(m: MeaningfulMoment): Promise<void> {
+  async save(m: MeaningfulMoment): Promise<Result> {
     const { error } = await supabase.from('meaningful_moments').upsert({
       id: m.id, date: m.date, content: m.content, created_at: m.createdAt,
     }, { onConflict: 'date' });
-    if (error) logError('meaningful_moments.save', error);
+    return error ? fail('meaningful_moments.save', error) : OK;
   },
 };
 
@@ -343,15 +361,15 @@ export const archiveStore = {
     if (error) { logError('archive_items.getAll', error); return []; }
     return (data ?? []).map(mapArchiveItem);
   },
-  async add(item: ArchiveItem): Promise<void> {
+  async add(item: ArchiveItem): Promise<Result> {
     const { error } = await supabase.from('archive_items').insert({
       id: item.id, title: item.title, content: item.content,
       category: item.category, tags: item.tags,
       created_at: item.createdAt, updated_at: item.updatedAt,
     });
-    if (error) logError('archive_items.add', error);
+    return error ? fail('archive_items.add', error) : OK;
   },
-  async update(id: string, updates: Partial<ArchiveItem>): Promise<void> {
+  async update(id: string, updates: Partial<ArchiveItem>): Promise<Result> {
     const row: Row = {};
     if (updates.title !== undefined) row.title = updates.title;
     if (updates.content !== undefined) row.content = updates.content;
@@ -359,11 +377,11 @@ export const archiveStore = {
     if (updates.tags !== undefined) row.tags = updates.tags;
     if (updates.updatedAt !== undefined) row.updated_at = updates.updatedAt;
     const { error } = await supabase.from('archive_items').update(row).eq('id', id);
-    if (error) logError('archive_items.update', error);
+    return error ? fail('archive_items.update', error) : OK;
   },
-  async delete(id: string): Promise<void> {
+  async delete(id: string): Promise<Result> {
     const { error } = await supabase.from('archive_items').delete().eq('id', id);
-    if (error) logError('archive_items.delete', error);
+    return error ? fail('archive_items.delete', error) : OK;
   },
 };
 
@@ -373,8 +391,8 @@ export const identityStatementStore = {
     if (error) { logError('identity_statements.getAll', error); return []; }
     return (data ?? []).map(mapIdentityStatement);
   },
-  async save(items: IdentityStatement[]): Promise<void> {
-    await differentialSave('identity_statements', items, i => ({
+  async save(items: IdentityStatement[]): Promise<Result> {
+    return differentialSave('identity_statements', items, i => ({
       id: i.id, keyword: i.keyword, statement: i.statement,
     }));
   },
@@ -386,8 +404,8 @@ export const goalStore = {
     if (error) { logError('goals.getAll', error); return []; }
     return (data ?? []).map(mapGoal);
   },
-  async save(items: Goal[]): Promise<void> {
-    await differentialSave('goals', items, g => ({
+  async save(items: Goal[]): Promise<Result> {
+    return differentialSave('goals', items, g => ({
       id: g.id, field: g.field, goal: g.goal, metric: g.metric, status: g.status,
     }));
   },
@@ -399,8 +417,8 @@ export const quarterStore = {
     if (error) { logError('quarters.getAll', error); return []; }
     return (data ?? []).map(mapQuarter);
   },
-  async save(items: Quarter[]): Promise<void> {
-    await differentialSave('quarters', items, q => ({
+  async save(items: Quarter[]): Promise<Result> {
+    return differentialSave('quarters', items, q => ({
       id: q.id, label: q.label, milestone: q.milestone, criteria: q.criteria,
     }));
   },
@@ -416,12 +434,13 @@ export const monthPlanStore = {
       return found ?? { month: i + 1, plan: '' };
     });
   },
-  async save(items: MonthPlan[]): Promise<void> {
+  async save(items: MonthPlan[]): Promise<Result> {
     const rows = items.map(m => ({ month: m.month, plan: m.plan }));
     if (rows.length) {
       const { error } = await supabase.from('month_plans').upsert(rows, { onConflict: 'month' });
-      if (error) logError('month_plans.save', error);
+      if (error) return fail('month_plans.save', error);
     }
+    return OK;
   },
 };
 
@@ -431,26 +450,10 @@ export const financeStore = {
     if (error) { logError('finance_items.getAll', error); return []; }
     return (data ?? []).map(mapFinanceItem);
   },
-  async save(items: FinanceItem[]): Promise<void> {
-    await differentialSave('finance_items', items, i => ({
+  async save(items: FinanceItem[]): Promise<Result> {
+    return differentialSave('finance_items', items, i => ({
       id: i.id, type: i.type, amount: i.amount, category: i.category,
     }));
-  },
-};
-
-export const insightStore = {
-  async getByDate(date: string, type: string): Promise<{ content: string; dataHash: string } | null> {
-    const { data, error } = await supabase.from('ai_insights').select('*')
-      .eq('date', date).eq('type', type).maybeSingle();
-    if (error) { logError('ai_insights.getByDate', error); return null; }
-    return data ? { content: data.content, dataHash: data.data_hash } : null;
-  },
-  async save(date: string, type: string, content: string, dataHash: string): Promise<void> {
-    const { error } = await supabase.from('ai_insights').upsert({
-      id: `${date}_${type}`, date, type, content, data_hash: dataHash,
-      created_at: new Date().toISOString(),
-    }, { onConflict: 'id' });
-    if (error) logError('ai_insights.save', error);
   },
 };
 
@@ -466,16 +469,16 @@ export const projectStore = {
     if (error) { logError('projects.getActive', error); return []; }
     return (data ?? []).map(mapProject);
   },
-  async add(project: Project): Promise<void> {
+  async add(project: Project): Promise<Result> {
     const { error } = await supabase.from('projects').insert({
       id: project.id, title: project.title, scope: project.scope,
       start_date: project.startDate, end_date: project.endDate,
       status: project.status, color: project.color,
       roles: project.roles, created_at: project.createdAt,
     });
-    if (error) logError('projects.add', error);
+    return error ? fail('projects.add', error) : OK;
   },
-  async update(id: string, updates: Partial<Project>): Promise<void> {
+  async update(id: string, updates: Partial<Project>): Promise<Result> {
     const row: Row = {};
     if (updates.title !== undefined) row.title = updates.title;
     if (updates.scope !== undefined) row.scope = updates.scope;
@@ -485,10 +488,10 @@ export const projectStore = {
     if (updates.color !== undefined) row.color = updates.color;
     if (updates.roles !== undefined) row.roles = updates.roles;
     const { error } = await supabase.from('projects').update(row).eq('id', id);
-    if (error) logError('projects.update', error);
+    return error ? fail('projects.update', error) : OK;
   },
-  async delete(id: string): Promise<void> {
+  async delete(id: string): Promise<Result> {
     const { error } = await supabase.from('projects').delete().eq('id', id);
-    if (error) logError('projects.delete', error);
+    return error ? fail('projects.delete', error) : OK;
   },
 };

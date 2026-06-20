@@ -3,7 +3,8 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { mentalStore, newId } from '@/lib/storage';
 import { MentalStateLog, MoodScore } from '@/types';
 import { ScoreSelector, Button } from '@/components/ui';
-import { TODAY, getLast7Days, formatDate } from '@/lib/utils';
+import { getToday, getLast7Days, formatDate } from '@/lib/utils';
+import { useToday } from '@/lib/useToday';
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -25,10 +26,11 @@ export default function MentalPage() {
   });
   const [note, setNote] = useState('');
   const [saved, setSaved] = useState(false);
+  const today = useToday();
 
   const loadData = useCallback(async () => {
     const [todayLog, logs] = await Promise.all([
-      mentalStore.getByDate(TODAY),
+      mentalStore.getByDate(today),
       mentalStore.getAll(),
     ]);
     setExisting(todayLog);
@@ -37,17 +39,18 @@ export default function MentalPage() {
       setValues({ body: todayLog.body, emotion: todayLog.emotion, focus: todayLog.focus, environment: todayLog.environment });
       setNote(todayLog.note);
     }
-  }, []);
+  }, [today]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
   const handleSave = async () => {
-    await mentalStore.save({
+    const result = await mentalStore.save({
       id: existing?.id ?? newId(),
-      date: TODAY,
+      date: getToday(),
       body: values.body, emotion: values.emotion, focus: values.focus, environment: values.environment,
       note,
     });
+    if (!result.ok) return; // 실패 토스트는 storage가 띄움 — "저장됨" 표시하지 않음
     setSaved(true);
     await loadData();
     setTimeout(() => setSaved(false), 2000);
@@ -77,7 +80,7 @@ export default function MentalPage() {
         <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Noto Serif KR, serif' }}>
           {MENTAL_LABELS.sectionTitle}
         </h1>
-        <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>{formatDate(TODAY)}</p>
+        <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>{formatDate(today)}</p>
       </div>
 
       {/* ── 에너지 지도 ── */}

@@ -7,6 +7,7 @@ import HabitPage from '@/components/habit/HabitPage';
 import TaskPage from '@/components/task/TaskPage';
 import MentalPage from '@/components/mental/MentalPage';
 import ArchivePage from '@/components/archive/ArchivePage';
+import { Toaster } from '@/components/ui/Toast';
 
 type PageId = 'dashboard' | 'habit' | 'task' | 'mental' | 'archive';
 
@@ -149,6 +150,7 @@ export default function Home() {
             ))}
           </div>
           <BottomNav current={page} onChange={handlePageChange} />
+          <Toaster />
         </main>
       )}
     </>

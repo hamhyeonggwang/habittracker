@@ -4,7 +4,8 @@ import { Plus, X, Check, Sparkles, Pencil, Trash2 } from 'lucide-react';
 import { habitStore, habitLogStore, newId } from '@/lib/storage';
 import { Habit, LifeRole, RoutineSlot, PerformanceScore } from '@/types';
 import { Button, EmptyState, ProgressBar } from '@/components/ui';
-import { TODAY, formatDateShort, cn } from '@/lib/utils';
+import { getToday, formatDateShort, cn } from '@/lib/utils';
+import { useToday } from '@/lib/useToday';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
 import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval, getDaysInMonth } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -121,7 +122,7 @@ function HabitFormModal({ habit, onClose, onSave }: { habit?: Habit; onClose: ()
     } else {
       await habitStore.add({
         id: newId(), name: name.trim(), icon, color,
-        targetDaysPerWeek: targetDays, createdAt: TODAY, isArchived: false,
+        targetDaysPerWeek: targetDays, createdAt: getToday(), isArchived: false,
         roles, routineSlot,
       });
     }
@@ -225,6 +226,7 @@ export default function HabitPage() {
   const [view, setView] = useState<'today' | 'month'>('today');
   const currentMonth = useMemo(() => new Date(), []);
   const [openPerformance, setOpenPerformance] = useState<string | null>(null);
+  const today = useToday();
 
   const refresh = useCallback(async () => {
     const [allHabits, allLogs] = await Promise.all([habitStore.getAll(), habitLogStore.getAll()]);
@@ -261,7 +263,7 @@ export default function HabitPage() {
     const wasComplete = completedSet.has(`${habitId}:${date}`);
     await habitLogStore.toggle(habitId, date);
     await refresh();
-    if (date === TODAY && !wasComplete) {
+    if (date === getToday() && !wasComplete) {
       setOpenPerformance(habitId);
     } else {
       setOpenPerformance(null);
@@ -304,7 +306,7 @@ export default function HabitPage() {
     return Math.round((done / daysInMonth) * 100);
   };
 
-  const todayDone = habits.filter(h => isCompleted(h.id, TODAY)).length;
+  const todayDone = habits.filter(h => isCompleted(h.id, today)).length;
   const todayRate = habits.length ? Math.round((todayDone / habits.length) * 100) : 0;
 
   const weeklyData = useMemo(() => Array.from({ length: 7 }, (_, i) => {
@@ -361,7 +363,7 @@ export default function HabitPage() {
         </div>
         <div className="space-y-2.5">
           {slotHabits.map(habit => {
-            const done = isCompleted(habit.id, TODAY);
+            const done = isCompleted(habit.id, today);
             const streak = streaks[habit.id] ?? 0;
             const rate = getMonthlyRate(habit.id);
             const showPerf = openPerformance === habit.id && done;
@@ -398,7 +400,7 @@ export default function HabitPage() {
                       onEdit={() => setEditingHabit(habit)}
                       onDelete={() => removeHabit(habit)}
                     />
-                    <button type="button" onClick={() => toggle(habit.id, TODAY)}
+                    <button type="button" onClick={() => toggle(habit.id, getToday())}
                       className="w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200"
                       style={{
                         background: done ? habit.color : 'var(--sage-pale)',
@@ -425,7 +427,7 @@ export default function HabitPage() {
                 {showPerf && (
                   <PerformanceInput
                     habitId={habit.id}
-                    date={TODAY}
+                    date={today}
                     logs={logs}
                     onSave={async () => { await refresh(); setOpenPerformance(null); }}
                   />
@@ -552,7 +554,7 @@ export default function HabitPage() {
                           const date = week[di];
                           if (!date) return <div key={di} style={{ height: 26 }} />;
                           const done = isCompleted(habit.id, date);
-                          const isToday = date === TODAY;
+                          const isToday = date === today;
                           return (
                             <button key={date} onClick={() => toggle(habit.id, date)}
                               className="habit-cell"

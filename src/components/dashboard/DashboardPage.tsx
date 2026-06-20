@@ -6,9 +6,8 @@ import {
   meaningfulStore, newId,
 } from '@/lib/storage';
 import { StatCard, Button } from '@/components/ui';
-import AIInsightCard from './AIInsightCard';
-import IdentityInsightCard from './IdentityInsightCard';
-import { formatDate, TODAY, cn } from '@/lib/utils';
+import { formatDate, getToday, cn } from '@/lib/utils';
+import { useToday } from '@/lib/useToday';
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, subDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -101,7 +100,8 @@ function IdentityTab() {
   const save = async () => {
     const s = draftS.filter(d => d.keyword.trim() || d.statement.trim());
     const g = draftG.filter(d => d.field.trim() || d.goal.trim());
-    await Promise.all([identityStatementStore.save(s), goalStore.save(g)]);
+    const results = await Promise.all([identityStatementStore.save(s), goalStore.save(g)]);
+    if (results.some(r => !r.ok)) return; // 실패 시 편집 유지(토스트는 storage가 띄움)
     setStatements(s); setGoals(g); setEditing(false);
   };
 
@@ -132,7 +132,6 @@ function IdentityTab() {
           style={{ color: 'var(--text-muted)', fontFamily: 'Noto Sans KR, sans-serif' }}>
           내가 되고 싶은 사람의 모습을, 매일의 실천 한 문장으로 연결해보세요.
         </p>
-        <div className="mb-3"><IdentityInsightCard /></div>
         {editing ? (
           <div className="space-y-2">
             {dispS.map((d, i) => (
@@ -244,7 +243,8 @@ function RoadmapTab() {
   const startEdit = () => { setDraftQ([...quarters]); setDraftM([...monthPlans]); setEditing(true); };
   const cancel = () => setEditing(false);
   const save = async () => {
-    await Promise.all([quarterStore.save(draftQ), monthPlanStore.save(draftM)]);
+    const results = await Promise.all([quarterStore.save(draftQ), monthPlanStore.save(draftM)]);
+    if (results.some(r => !r.ok)) return; // 실패 시 편집 유지
     setQuarters([...draftQ]); setMonthPlans([...draftM]); setEditing(false);
   };
 
@@ -334,7 +334,11 @@ function FinanceTab() {
 
   const startEdit = () => { setDraft([...items]); setEditing(true); };
   const cancel = () => setEditing(false);
-  const save = async () => { await financeStore.save(draft); setItems([...draft]); setEditing(false); };
+  const save = async () => {
+    const r = await financeStore.save(draft);
+    if (!r.ok) return; // 실패 시 편집 유지
+    setItems([...draft]); setEditing(false);
+  };
 
   const disp = editing ? draft : items;
   const income   = disp.filter(i => i.category === 'income');
@@ -483,29 +487,31 @@ function MeaningfulMomentCard() {
   const [monthList, setMonthList] = useState<MeaningfulMoment[]>([]);
   const [showList, setShowList] = useState(false);
   const [saved, setSaved] = useState(false);
+  const todayDate = useToday();
 
   const load = useCallback(async () => {
     const [today, all] = await Promise.all([
-      meaningfulStore.getByDate(TODAY),
+      meaningfulStore.getByDate(todayDate),
       meaningfulStore.getAll(),
     ]);
     setExisting(today);
     setText(today?.content ?? '');
     setEditing(!today);
-    const prefix = TODAY.slice(0, 7);
+    const prefix = todayDate.slice(0, 7);
     setMonthList(all.filter(m => m.date.startsWith(prefix) && m.content.trim()));
-  }, []);
+  }, [todayDate]);
   useEffect(() => { load(); }, [load]);
   const monthCount = monthList.length;
 
   const save = async () => {
     if (!text.trim()) return;
-    await meaningfulStore.save({
+    const result = await meaningfulStore.save({
       id: existing?.id ?? newId(),
-      date: TODAY,
+      date: getToday(),
       content: text.trim(),
       createdAt: existing?.createdAt || new Date().toISOString(),
     });
+    if (!result.ok) return; // 실패 토스트는 storage가 띄움
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
     await load();
@@ -564,7 +570,7 @@ function MeaningfulMomentCard() {
                 {monthList.map(m => (
                   <div key={m.id} className="flex gap-2 items-start">
                     <span className="text-[10px] font-bold flex-shrink-0 mt-0.5 text-right"
-                      style={{ width: 30, color: m.date === TODAY ? 'var(--sage)' : 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
+                      style={{ width: 30, color: m.date === todayDate ? 'var(--sage)' : 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
                       {format(new Date(m.date), 'M/d')}
                     </span>
                     <p className="flex-1 text-[12px] leading-relaxed"
@@ -595,20 +601,21 @@ const EMPTY_DATA = {
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<'identity' | 'roadmap' | 'finance'>('identity');
   const [data, setData] = useState(EMPTY_DATA);
+  const today = useToday();
 
   const loadData = useCallback(async () => {
     const [todayTasks, habits, allLogs, todayMental, allArchive] = await Promise.all([
-      taskStore.getByDate(TODAY),
+      taskStore.getByDate(today),
       habitStore.getAll(),
       habitLogStore.getAll(),
-      mentalStore.getByDate(TODAY),
+      mentalStore.getByDate(today),
       archiveStore.getAll(),
     ]);
 
     const completedTasks = todayTasks.filter(t => t.completed);
     const taskRate = todayTasks.length ? (completedTasks.length / todayTasks.length) * 100 : 0;
     const activeHabits = habits.filter(h => !h.isArchived);
-    const todayLogs = allLogs.filter(l => l.date === TODAY);
+    const todayLogs = allLogs.filter(l => l.date === today);
     const completedHabits = todayLogs.filter(l => l.completed).length;
     const habitRate = activeHabits.length ? (completedHabits / activeHabits.length) * 100 : 0;
     const mentalScore = todayMental
@@ -647,7 +654,7 @@ export default function DashboardPage() {
     const recentArchive = allArchive.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 2);
 
     setData({ taskRate, habitRate, mentalScore, completedHabits, habits: activeHabits, momentum, growthHabit, growthRate, monthlyData, streak, recentArchive, completedTasks, todayTasks });
-  }, []);
+  }, [today]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -663,7 +670,7 @@ export default function DashboardPage() {
       <div className="pt-3 pb-1">
         <p className="text-[11px] font-semibold tracking-widest uppercase mb-0.5"
           style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
-          {formatDate(TODAY, 'yyyy.MM.dd EEEE')}
+          {formatDate(today, 'yyyy.MM.dd EEEE')}
         </p>
         <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Noto Serif KR, serif' }}>
           Occupation Tracking Dashboard
@@ -672,8 +679,6 @@ export default function DashboardPage() {
           {getRateMessage(data.momentum)}
         </p>
       </div>
-
-      <AIInsightCard />
 
       {/* ── MOMENTUM + GROWTH OPPORTUNITY ── */}
       <div className="card overflow-hidden">

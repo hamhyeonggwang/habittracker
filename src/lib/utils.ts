@@ -1,7 +1,14 @@
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, subDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
-export const TODAY = format(new Date(), 'yyyy-MM-dd');
+/**
+ * 현재 날짜(YYYY-MM-DD)를 호출 시점에 평가해 반환.
+ * 모듈 로드 시 1회 고정되던 기존 `TODAY` 상수를 대체 — 앱을 열어둔 채
+ * 자정을 넘겨도 저장·체크가 항상 정확한 날짜를 사용하도록 보장한다.
+ */
+export function getToday(): string {
+  return format(new Date(), 'yyyy-MM-dd');
+}
 
 export function formatDate(date: string | Date, pattern = 'M월 d일 (EEE)') {
   return format(new Date(date), pattern, { locale: ko });

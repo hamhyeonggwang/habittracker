@@ -4,10 +4,10 @@ import { Plus, Check, Trash2, X, ChevronDown, ChevronUp, Folder, FolderPlus } fr
 import { newId, taskStore, projectStore } from '@/lib/storage';
 import { Task, Priority, TimeSlot, Project, ProjectScope, LifeRole } from '@/types';
 import { Button, EmptyState } from '@/components/ui';
-import { TODAY, cn } from '@/lib/utils';
+import { getToday, cn } from '@/lib/utils';
+import { useToday } from '@/lib/useToday';
 import { TASK_LABELS, getRateMessage } from '@/lib/strengthLanguage';
 import { LIFE_ROLES as ROLE_TAGS, LIFE_ROLE_MAP as ROLE_MAP, LifeRoleDef } from '@/lib/roles';
-import ReasonInsightCard from './ReasonInsightCard';
 
 const PRIORITY_ORDER: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
 
@@ -45,7 +45,7 @@ function getProgress(projectId: string, tasks: Task[]): number {
 function AddProjectModal({ onClose, onAdd }: { onClose: () => void; onAdd: () => Promise<void> }) {
   const [title, setTitle] = useState('');
   const [scope, setScope] = useState<ProjectScope>('weekly');
-  const [startDate, setStartDate] = useState(TODAY);
+  const [startDate, setStartDate] = useState(getToday());
   const [endDate, setEndDate] = useState('');
   const [color, setColor] = useState(PROJECT_COLORS[0]);
 
@@ -53,7 +53,7 @@ function AddProjectModal({ onClose, onAdd }: { onClose: () => void; onAdd: () =>
     if (!title.trim() || !endDate) return;
     await projectStore.add({
       id: newId(), title: title.trim(), scope, startDate, endDate,
-      status: 'active', color, roles: [], createdAt: TODAY,
+      status: 'active', color, roles: [], createdAt: getToday(),
     });
     await onAdd();
     onClose();
@@ -139,8 +139,8 @@ function AddModal({
   const submit = async () => {
     if (!title.trim()) return;
     await taskStore.add({
-      id: newId(), title: title.trim(), priority, timeSlot, date: TODAY,
-      completed: false, createdAt: TODAY,
+      id: newId(), title: title.trim(), priority, timeSlot, date: getToday(),
+      completed: false, createdAt: getToday(),
       projectId: projectId || undefined,
       roles,
     });
@@ -357,12 +357,13 @@ export default function TaskPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [memos, setMemos] = useState<Record<string, string>>({});
+  const today = useToday();
 
   const refresh = useCallback(async () => {
-    const [t, p] = await Promise.all([taskStore.getByDate(TODAY), projectStore.getActive()]);
+    const [t, p] = await Promise.all([taskStore.getByDate(today), projectStore.getActive()]);
     setTasks(t);
     setProjects(p);
-  }, []);
+  }, [today]);
   const refreshProjects = useCallback(async () => {
     setProjects(await projectStore.getActive());
   }, []);
@@ -429,8 +430,6 @@ export default function TaskPage() {
         tasks={tasks}
         onRefreshProjects={refreshProjects}
       />
-
-      <ReasonInsightCard />
 
       {/* ── 진행 현황 ── */}
       {tasks.length > 0 && (
