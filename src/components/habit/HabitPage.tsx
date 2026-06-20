@@ -2,7 +2,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Plus, X, Check, Sparkles, Pencil, Trash2 } from 'lucide-react';
 import { habitStore, habitLogStore, newId } from '@/lib/storage';
-import { Habit, LifeRole, RoutineSlot, PerformanceScore } from '@/types';
+import { Habit, LifeRoleDef, RoutineSlot, PerformanceScore } from '@/types';
 import { Button, EmptyState, ProgressBar } from '@/components/ui';
 import { getToday, formatDateShort, cn } from '@/lib/utils';
 import { useToday } from '@/lib/useToday';
@@ -10,7 +10,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval, getDaysInMonth } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { HABIT_LABELS, MOHO_LABELS, getRateMessage, getStreakMessage } from '@/lib/strengthLanguage';
-import { LIFE_ROLES, LIFE_ROLE_MAP, LifeRoleDef } from '@/lib/roles';
+import { useLifeRoles } from '@/lib/useLifeRoles';
+import RoleManager from '@/components/roles/RoleManager';
 
 const ICONS = ['🏃','📚','🧘','💰','🤝','✍️','💧','🥗','🎯','💪','🎸','🌅'];
 const COLORS = ['#4a7c59','#2c4a7c','#7c4a2c','#4a2c7c','#7c2c4a','#2c7c4a','#5a8c42','#3a6a9c'];
@@ -102,17 +103,20 @@ function PerformanceInput({ habitId, date, logs, onSave }: {
 }
 
 // ── 습관 추가/수정 폼 모달 ────────────────────────────────
-function HabitFormModal({ habit, onClose, onSave }: { habit?: Habit; onClose: () => void; onSave: () => Promise<void> }) {
+function HabitFormModal({ habit, onClose, onSave, availableRoles, onManageRoles }: {
+  habit?: Habit; onClose: () => void; onSave: () => Promise<void>;
+  availableRoles: LifeRoleDef[]; onManageRoles: () => void;
+}) {
   const isEdit = !!habit;
   const [name, setName] = useState(habit?.name ?? '');
   const [icon, setIcon] = useState(habit?.icon ?? '🎯');
   const [color, setColor] = useState(habit?.color ?? '#4a7c59');
   const [targetDays, setTargetDays] = useState(habit?.targetDaysPerWeek ?? 7);
-  const [roles, setRoles] = useState<LifeRole[]>(habit?.roles ?? []);
+  const [roles, setRoles] = useState<string[]>(habit?.roles ?? []);
   const [routineSlot, setRoutineSlot] = useState<RoutineSlot>(habit?.routineSlot ?? 'flexible');
 
-  const toggleRole = (role: LifeRole) => {
-    setRoles(prev => prev.includes(role) ? prev.filter(r => r !== role) : [...prev, role]);
+  const toggleRole = (id: string) => {
+    setRoles(prev => prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]);
   };
 
   const handleSubmit = async () => {
@@ -185,10 +189,15 @@ function HabitFormModal({ habit, onClose, onSave }: { habit?: Habit; onClose: ()
             <label className="text-xs font-semibold mb-2 block" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
               역할 태그 <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(복수 선택 가능)</span>
             </label>
-            <div className="flex flex-wrap gap-1.5">
-              {LIFE_ROLES.map(role => (
-                <RoleChip key={role.key} role={role} selected={roles.includes(role.key)} onClick={() => toggleRole(role.key)} />
+            <div className="flex flex-wrap gap-1.5 items-center">
+              {availableRoles.map(role => (
+                <RoleChip key={role.id} role={role} selected={roles.includes(role.id)} onClick={() => toggleRole(role.id)} />
               ))}
+              <button type="button" onClick={onManageRoles}
+                className="px-2.5 py-1 rounded-full text-[11px] font-semibold border border-dashed"
+                style={{ color: 'var(--sage)', borderColor: 'var(--border)', fontFamily: 'Pretendard, sans-serif' }}>
+                + 역할 관리
+              </button>
             </div>
           </div>
 
@@ -226,6 +235,8 @@ export default function HabitPage() {
   const [view, setView] = useState<'today' | 'month'>('today');
   const currentMonth = useMemo(() => new Date(), []);
   const [openPerformance, setOpenPerformance] = useState<string | null>(null);
+  const [showRoleManager, setShowRoleManager] = useState(false);
+  const { roles: lifeRoles, roleMap, refresh: refreshRoles } = useLifeRoles();
   const today = useToday();
 
   const refresh = useCallback(async () => {
@@ -340,14 +351,14 @@ export default function HabitPage() {
 
   // Volition: 역할별 이달 참여율
   const roleStats = useMemo(() => {
-    return LIFE_ROLES.map(role => {
-      const roleHabits = habits.filter(h => h.roles.includes(role.key));
+    return lifeRoles.map(role => {
+      const roleHabits = habits.filter(h => h.roles.includes(role.id));
       if (!roleHabits.length) return null;
       const total = roleHabits.length * daysInMonth;
       const done = roleHabits.reduce((s, h) => s + monthDays.filter(d => isCompleted(h.id, d)).length, 0);
       return { role, rate: Math.round((done / total) * 100), count: roleHabits.length };
     }).filter(Boolean) as { role: LifeRoleDef; rate: number; count: number }[];
-  }, [habits, logs, monthDays, daysInMonth]);
+  }, [habits, logs, monthDays, daysInMonth, lifeRoles]);
 
   // ── Today 뷰: 슬롯별 습관 카드 렌더러 ──────────────────
   const renderTodaySlot = (slot: RoutineSlot) => {
@@ -376,7 +387,7 @@ export default function HabitPage() {
                       <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>{habit.name}</p>
                       <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
                         {habit.roles.map(r => {
-                          const def = LIFE_ROLE_MAP[r];
+                          const def = roleMap[r];
                           if (!def) return null;
                           return (
                             <span key={r} className="text-[10px] font-semibold" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
@@ -524,7 +535,7 @@ export default function HabitPage() {
                 {habit.roles.length > 0 && (
                   <div className="px-3 pt-2 flex flex-wrap gap-1">
                     {habit.roles.map(r => {
-                      const def = LIFE_ROLE_MAP[r];
+                      const def = roleMap[r];
                       if (!def) return null;
                       return (
                         <span key={r} className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
@@ -634,7 +645,7 @@ export default function HabitPage() {
           <div className="sheet-header-navy">{MOHO_LABELS.volitionTitle}</div>
           <div className="p-3 space-y-2.5">
             {roleStats.map(({ role, rate, count }) => (
-              <div key={role.key}>
+              <div key={role.id}>
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-[12px] font-semibold" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
                     {role.emoji} {role.label}
@@ -650,13 +661,22 @@ export default function HabitPage() {
       )}
 
       <div className="h-4" />
-      {showAdd && <HabitFormModal onClose={() => setShowAdd(false)} onSave={refresh} />}
+      {showAdd && (
+        <HabitFormModal
+          onClose={() => setShowAdd(false)} onSave={refresh}
+          availableRoles={lifeRoles} onManageRoles={() => setShowRoleManager(true)}
+        />
+      )}
       {editingHabit && (
         <HabitFormModal
           habit={editingHabit}
           onClose={() => setEditingHabit(null)}
           onSave={refresh}
+          availableRoles={lifeRoles} onManageRoles={() => setShowRoleManager(true)}
         />
+      )}
+      {showRoleManager && (
+        <RoleManager onClose={() => setShowRoleManager(false)} onChange={refreshRoles} />
       )}
     </div>
   );

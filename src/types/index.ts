@@ -12,8 +12,16 @@ export type MoodScore = 1 | 2 | 3 | 4 | 5;
 // MOHO — Volition: 삶의 역할 태그
 export type RoleTag = 'researcher' | 'clinician' | 'learner' | 'health' | 'social' | 'creator';
 
-// 업무 역할 태그 (삶의 정체성 역할) — 작업/참여 맥락 분류
-export type LifeRole = 'therapist' | 'leader' | 'researcher' | 'developer' | 'father' | 'believer';
+// 사용자 정의 삶의 역할 — 가입자마다 자유롭게 추가/수정/삭제 (life_roles 테이블)
+// habits.roles / tasks.roles / projects.roles 는 이 역할의 id(자유 텍스트)를 참조한다.
+export interface LifeRoleDef {
+  id: string;
+  label: string;
+  emoji: string;
+  color: string;
+  sortOrder: number;
+  createdAt: string;
+}
 
 // MOHO — Habituation: 루틴 시간대
 export type RoutineSlot = 'morning' | 'afternoon' | 'evening' | 'flexible';
@@ -32,8 +40,8 @@ export interface Habit {
   targetDaysPerWeek: number;
   createdAt: string; // ISO date string
   isArchived: boolean;
-  // 정체성 역할 태그 (업무와 공통)
-  roles: LifeRole[];
+  // 사용자 정의 역할 id 목록 (업무와 공통)
+  roles: string[];
   // MOHO — Habituation
   routineSlot: RoutineSlot;
 }
@@ -60,7 +68,7 @@ export interface Project {
   endDate: string;        // YYYY-MM-DD
   status: ProjectStatus;  // 'active' | 'done' | 'paused'
   color: string;
-  roles: LifeRole[];
+  roles: string[];
   createdAt: string;
 }
 
@@ -77,7 +85,7 @@ export interface Task {
   incompleteReason?: string;
   createdAt: string;
   projectId?: string; // 소속 프로젝트 (없으면 독립형)
-  roles: LifeRole[];  // 정체성 역할 태그 (선택, 0개 이상)
+  roles: string[];  // 사용자 정의 역할 id (선택, 0개 이상)
 }
 
 // ============================================================

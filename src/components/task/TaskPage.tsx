@@ -2,12 +2,13 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Plus, Check, Trash2, X, ChevronDown, ChevronUp, Folder, FolderPlus } from 'lucide-react';
 import { newId, taskStore, projectStore } from '@/lib/storage';
-import { Task, Priority, TimeSlot, Project, ProjectScope, LifeRole } from '@/types';
+import { Task, Priority, TimeSlot, Project, ProjectScope, LifeRoleDef } from '@/types';
 import { Button, EmptyState } from '@/components/ui';
 import { getToday, cn } from '@/lib/utils';
 import { useToday } from '@/lib/useToday';
 import { TASK_LABELS, getRateMessage } from '@/lib/strengthLanguage';
-import { LIFE_ROLES as ROLE_TAGS, LIFE_ROLE_MAP as ROLE_MAP, LifeRoleDef } from '@/lib/roles';
+import { useLifeRoles } from '@/lib/useLifeRoles';
+import RoleManager from '@/components/roles/RoleManager';
 
 const PRIORITY_ORDER: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
 
@@ -125,16 +126,16 @@ function AddProjectModal({ onClose, onAdd }: { onClose: () => void; onAdd: () =>
 
 // ── Add Task Modal ───────────────────────────────────────────
 function AddModal({
-  onClose, onAdd, projects,
-}: { onClose: () => void; onAdd: () => Promise<void>; projects: Project[] }) {
+  onClose, onAdd, projects, availableRoles, onManageRoles,
+}: { onClose: () => void; onAdd: () => Promise<void>; projects: Project[]; availableRoles: LifeRoleDef[]; onManageRoles: () => void }) {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
   const [timeSlot, setTimeSlot] = useState<TimeSlot>('morning');
   const [projectId, setProjectId] = useState<string>('');
-  const [roles, setRoles] = useState<LifeRole[]>([]);
+  const [roles, setRoles] = useState<string[]>([]);
 
-  const toggleRole = (key: LifeRole) =>
-    setRoles(prev => prev.includes(key) ? prev.filter(r => r !== key) : [...prev, key]);
+  const toggleRole = (id: string) =>
+    setRoles(prev => prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]);
 
   const submit = async () => {
     if (!title.trim()) return;
@@ -168,11 +169,16 @@ function AddModal({
             <label className="text-xs font-semibold mb-2 block" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
               역할 태그 <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(선택 · 복수 가능)</span>
             </label>
-            <div className="flex flex-wrap gap-1.5">
-              {ROLE_TAGS.map(role => (
-                <RoleTagChip key={role.key} role={role}
-                  selected={roles.includes(role.key)} onClick={() => toggleRole(role.key)} />
+            <div className="flex flex-wrap gap-1.5 items-center">
+              {availableRoles.map(role => (
+                <RoleTagChip key={role.id} role={role}
+                  selected={roles.includes(role.id)} onClick={() => toggleRole(role.id)} />
               ))}
+              <button type="button" onClick={onManageRoles}
+                className="px-2.5 py-1 rounded-full text-[11px] font-semibold border border-dashed"
+                style={{ color: 'var(--sage)', borderColor: 'var(--border)', fontFamily: 'Pretendard, sans-serif' }}>
+                + 역할 관리
+              </button>
             </div>
           </div>
 
@@ -357,7 +363,9 @@ export default function TaskPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [memos, setMemos] = useState<Record<string, string>>({});
+  const [showRoleManager, setShowRoleManager] = useState(false);
   const today = useToday();
+  const { roles: lifeRoles, roleMap, refresh: refreshRoles } = useLifeRoles();
 
   const refresh = useCallback(async () => {
     const [t, p] = await Promise.all([taskStore.getByDate(today), projectStore.getActive()]);
@@ -401,13 +409,13 @@ export default function TaskPage() {
 
   // 역할별 오늘 참여 통계 (역할 태그가 달린 업무만 집계)
   const roleStats = useMemo(() => {
-    return ROLE_TAGS.map(role => {
-      const roleTasks = tasks.filter(t => t.roles?.includes(role.key));
+    return lifeRoles.map(role => {
+      const roleTasks = tasks.filter(t => t.roles?.includes(role.id));
       if (!roleTasks.length) return null;
       const done = roleTasks.filter(t => t.completed).length;
       return { role, total: roleTasks.length, done, rate: Math.round((done / roleTasks.length) * 100) };
-    }).filter(Boolean) as { role: typeof ROLE_TAGS[number]; total: number; done: number; rate: number }[];
-  }, [tasks]);
+    }).filter(Boolean) as { role: LifeRoleDef; total: number; done: number; rate: number }[];
+  }, [tasks, lifeRoles]);
 
   return (
     <div className="page-enter space-y-4">
@@ -465,7 +473,7 @@ export default function TaskPage() {
           <div className="sheet-header-navy">역할별 오늘 참여</div>
           <div className="p-3 space-y-2.5">
             {roleStats.map(({ role, total, done, rate }) => (
-              <div key={role.key}>
+              <div key={role.id}>
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-[12px] font-semibold flex items-center gap-1" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
                     <span>{role.emoji}</span>{role.label}
@@ -549,7 +557,7 @@ export default function TaskPage() {
                                 )}
                                 <span>{task.title}</span>
                                 {task.roles?.map(rk => {
-                                  const r = ROLE_MAP[rk];
+                                  const r = roleMap[rk];
                                   if (!r) return null;
                                   return (
                                     <span key={rk} title={r.label}
@@ -616,7 +624,15 @@ export default function TaskPage() {
       )}
 
       <div className="h-4" />
-      {showAdd && <AddModal onClose={() => setShowAdd(false)} onAdd={refresh} projects={projects} />}
+      {showAdd && (
+        <AddModal
+          onClose={() => setShowAdd(false)} onAdd={refresh} projects={projects}
+          availableRoles={lifeRoles} onManageRoles={() => setShowRoleManager(true)}
+        />
+      )}
+      {showRoleManager && (
+        <RoleManager onClose={() => setShowRoleManager(false)} onChange={refreshRoles} />
+      )}
     </div>
   );
 }

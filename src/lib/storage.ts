@@ -3,7 +3,7 @@ import { showToast } from './toast';
 import { getCurrentUserId } from './auth';
 import {
   Habit, HabitLog, Task, MentalStateLog, ArchiveItem, MeaningfulMoment,
-  PerformanceScore, LifeRole, RoutineSlot, Priority, TimeSlot,
+  PerformanceScore, LifeRoleDef, RoutineSlot, Priority, TimeSlot,
   MoodScore, ArchiveCategory, GoalStatus,
   IdentityStatement, Goal, Quarter, MonthPlan, FinanceItem, FinanceCategory,
   Project, ProjectScope, ProjectStatus,
@@ -55,7 +55,7 @@ function mapHabit(r: Row): Habit {
     targetDaysPerWeek: (r.target_days_per_week as number) ?? 7,
     createdAt: r.created_at as string,
     isArchived: (r.is_archived as boolean) ?? false,
-    roles: ((r.roles as LifeRole[]) ?? []),
+    roles: ((r.roles as string[]) ?? []),
     routineSlot: ((r.routine_slot as RoutineSlot) ?? 'flexible'),
   };
 }
@@ -83,7 +83,7 @@ function mapTask(r: Row): Task {
     incompleteReason: r.incomplete_reason as string | undefined,
     createdAt: r.created_at as string,
     projectId: r.project_id as string | undefined,
-    roles: ((r.roles as LifeRole[]) ?? []),
+    roles: ((r.roles as string[]) ?? []),
   };
 }
 
@@ -96,7 +96,7 @@ function mapProject(r: Row): Project {
     endDate: r.end_date as string,
     status: ((r.status as ProjectStatus) ?? 'active'),
     color: (r.color as string) ?? '#4a7c59',
-    roles: ((r.roles as LifeRole[]) ?? []),
+    roles: ((r.roles as string[]) ?? []),
     createdAt: r.created_at as string,
   };
 }
@@ -500,5 +500,45 @@ export const projectStore = {
   async delete(id: string): Promise<Result> {
     const { error } = await supabase.from('projects').delete().eq('id', id);
     return error ? fail('projects.delete', error) : OK;
+  },
+};
+
+// ── 사용자 정의 역할 (life_roles) ───────────────────────────
+function mapLifeRole(r: Row): LifeRoleDef {
+  return {
+    id: r.id as string,
+    label: (r.label as string) ?? '',
+    emoji: (r.emoji as string) ?? '🏷️',
+    color: (r.color as string) ?? '#4a7c59',
+    sortOrder: (r.sort_order as number) ?? 0,
+    createdAt: (r.created_at as string) ?? '',
+  };
+}
+
+export const lifeRoleStore = {
+  async getAll(): Promise<LifeRoleDef[]> {
+    const { data, error } = await supabase.from('life_roles').select('*').order('sort_order');
+    if (error) { logError('life_roles.getAll', error); return []; }
+    return (data ?? []).map(mapLifeRole);
+  },
+  async add(role: LifeRoleDef): Promise<Result> {
+    const { error } = await supabase.from('life_roles').insert({
+      id: role.id, label: role.label, emoji: role.emoji, color: role.color,
+      sort_order: role.sortOrder, created_at: role.createdAt, user_id: getCurrentUserId(),
+    });
+    return error ? fail('life_roles.add', error) : OK;
+  },
+  async update(id: string, updates: Partial<LifeRoleDef>): Promise<Result> {
+    const row: Row = {};
+    if (updates.label !== undefined) row.label = updates.label;
+    if (updates.emoji !== undefined) row.emoji = updates.emoji;
+    if (updates.color !== undefined) row.color = updates.color;
+    if (updates.sortOrder !== undefined) row.sort_order = updates.sortOrder;
+    const { error } = await supabase.from('life_roles').update(row).eq('id', id);
+    return error ? fail('life_roles.update', error) : OK;
+  },
+  async delete(id: string): Promise<Result> {
+    const { error } = await supabase.from('life_roles').delete().eq('id', id);
+    return error ? fail('life_roles.delete', error) : OK;
   },
 };
