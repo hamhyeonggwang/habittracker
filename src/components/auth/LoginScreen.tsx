@@ -79,22 +79,7 @@ export default function LoginScreen() {
           {busy === 'google' ? '이동 중…' : 'Google로 계속하기'}
         </button>
 
-        <button
-          type="button"
-          onClick={() => signIn('kakao')}
-          disabled={busy !== null}
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-            height: '50px', borderRadius: '12px', border: 'none', background: '#FEE500',
-            color: '#191600', fontFamily: 'Pretendard, sans-serif', fontWeight: 700, fontSize: '15px',
-            cursor: busy ? 'default' : 'pointer', opacity: busy && busy !== 'kakao' ? 0.5 : 1,
-          }}
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-            <path fill="#191600" d="M9 1.5C4.86 1.5 1.5 4.1 1.5 7.3c0 2.07 1.4 3.89 3.5 4.92-.15.53-.56 1.96-.64 2.27-.1.38.14.38.29.27.12-.08 1.86-1.26 2.62-1.78.4.06.81.09 1.23.09 4.14 0 7.5-2.6 7.5-5.8S13.14 1.5 9 1.5z" />
-          </svg>
-          {busy === 'kakao' ? '이동 중…' : '카카오로 계속하기'}
-        </button>
+        {/* 카카오 로그인 — 비즈 앱 승인 후 노출 예정(추후). signIn('kakao')는 그대로 두어 재노출만 하면 됨. */}
       </div>
 
       <p

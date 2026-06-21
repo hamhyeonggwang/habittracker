@@ -332,7 +332,7 @@ export const mentalStore = {
       id: log.id, date: log.date,
       body: log.body, emotion: log.emotion, focus: log.focus, environment: log.environment,
       note: log.note, user_id: getCurrentUserId(),
-    }, { onConflict: 'date' });
+    }, { onConflict: 'user_id,date' });
     return error ? fail('mental_state_logs.save', error) : OK;
   },
 };
@@ -353,7 +353,7 @@ export const meaningfulStore = {
   async save(m: MeaningfulMoment): Promise<Result> {
     const { error } = await supabase.from('meaningful_moments').upsert({
       id: m.id, date: m.date, content: m.content, created_at: m.createdAt, user_id: getCurrentUserId(),
-    }, { onConflict: 'date' });
+    }, { onConflict: 'user_id,date' });
     return error ? fail('meaningful_moments.save', error) : OK;
   },
 };
@@ -443,7 +443,7 @@ export const monthPlanStore = {
     const uid = getCurrentUserId();
     const rows = items.map(m => ({ month: m.month, plan: m.plan, user_id: uid }));
     if (rows.length) {
-      const { error } = await supabase.from('month_plans').upsert(rows, { onConflict: 'month' });
+      const { error } = await supabase.from('month_plans').upsert(rows, { onConflict: 'user_id,month' });
       if (error) return fail('month_plans.save', error);
     }
     return OK;

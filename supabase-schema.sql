@@ -203,23 +203,23 @@ CREATE POLICY "owner_all" ON life_roles
   USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 -- ============================================================
--- P1 컷오버 (⚠️ 아직 적용하지 않음 — 인증 배포 + 데이터 백필 이후 한 번에)
--- 순서: ① 선생님 로그인으로 uuid 확보 → ② 아래 백필 → ③ 제약 교체 → ④ owner_all 추가 → ⑤ anon_all DROP
--- anon_all을 DROP하는 순간부터 비인증(anon) 접근이 전면 차단된다.
+-- P1 컷오버 진행 상황 (2026-06-21)
 -- ============================================================
--- -- ② 기존 데이터 백필 (선생님 uuid로):
--- UPDATE habits              SET user_id = '<UUID>' WHERE user_id IS NULL;
--- UPDATE habit_logs          SET user_id = '<UUID>' WHERE user_id IS NULL;
--- ... (12개 테이블 동일)
+-- ✅ 적용 완료 (라이브):
+--   - owner_all (authenticated) 정책 12개 테이블 — migration p1_add_owner_all_policies
+--   - 기존 데이터 백필: 전 테이블 user_id = '58f9c6d0-...813e'(소유자 본인)
+--   - 복합 유니크 추가(additive, 기존 제약 유지): migration p1_add_composite_unique_constraints
+--       mental_state_logs_user_date_key (user_id,date)
+--       meaningful_moments_user_date_key (user_id,date)
+--       month_plans_user_month_key (user_id,month)
+--   - 코드 upsert onConflict → 'user_id,date' / 'user_id,month'
 --
--- -- ③ 멀티테넌트 제약 교체:
--- ALTER TABLE mental_state_logs  DROP CONSTRAINT mental_state_logs_date_key,  ADD CONSTRAINT mental_state_logs_user_date_key  UNIQUE (user_id, date);
--- ALTER TABLE meaningful_moments DROP CONSTRAINT meaningful_moments_date_key, ADD CONSTRAINT meaningful_moments_user_date_key UNIQUE (user_id, date);
--- ALTER TABLE month_plans DROP CONSTRAINT month_plans_pkey, ADD PRIMARY KEY (user_id, month);
---
--- -- ④ owner_all (authenticated) 정책 추가 — 12개 테이블:
--- CREATE POLICY "owner_all" ON habits FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
--- ... (12개 테이블 동일)
---
--- -- ⑤ 마지막: anon 접근 차단 (되돌리기 어려움):
--- DROP POLICY "anon_all" ON habits;  ... (12개 테이블 동일)
+-- ⬜ 남은 최종 잠금 (배포 후, 되돌리기 어려움 — 신중히):
+--   -- (A) 단일 사용자용 구 제약 제거 → 멀티유저 완전 허용:
+--   -- ALTER TABLE mental_state_logs  DROP CONSTRAINT mental_state_logs_date_key;
+--   -- ALTER TABLE meaningful_moments DROP CONSTRAINT meaningful_moments_date_key;
+--   -- ALTER TABLE month_plans DROP CONSTRAINT month_plans_pkey, ADD PRIMARY KEY (user_id, month);
+--   --     (month_plans.user_id 를 NOT NULL 로 먼저 변경)
+--   -- (B) 비인증 접근 전면 차단 (12개 테이블):
+--   -- DROP POLICY "anon_all" ON habits;  ... (전 테이블 동일)
+--   -- (C) 잔존 ai_insights 테이블 제거: DROP TABLE IF EXISTS ai_insights;
