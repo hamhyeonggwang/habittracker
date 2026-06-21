@@ -9,7 +9,9 @@ import MentalPage from '@/components/mental/MentalPage';
 import ArchivePage from '@/components/archive/ArchivePage';
 import { Toaster } from '@/components/ui/Toast';
 import LoginScreen from '@/components/auth/LoginScreen';
+import Onboarding from '@/components/onboarding/Onboarding';
 import { useSession } from '@/lib/useSession';
+import { profileStore } from '@/lib/storage';
 
 type PageId = 'dashboard' | 'habit' | 'task' | 'mental' | 'archive';
 
@@ -105,6 +107,7 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [splashLeaving, setSplashLeaving] = useState(false);
   const { session, loading: sessionLoading } = useSession();
+  const [onboarding, setOnboarding] = useState<'unknown' | 'needed' | 'done'>('unknown');
   const [visited, setVisited] = useState<Record<PageId, boolean>>({
     dashboard: true, habit: false, task: false, mental: false, archive: false,
   });
@@ -118,14 +121,25 @@ export default function Home() {
     });
   }, []);
 
+  // 로그인되면 온보딩 완료 여부 확인 (프로필 없거나 미완료 → 온보딩)
+  const userId = session?.user.id;
+  useEffect(() => {
+    if (!userId) { setOnboarding('unknown'); return; }
+    let active = true;
+    profileStore.getMine().then(p => {
+      if (active) setOnboarding(p?.onboardingCompleted ? 'done' : 'needed');
+    });
+    return () => { active = false; };
+  }, [userId]);
+
   const handlePageChange = (id: string) => {
     const newPage = id as PageId;
     setPage(newPage);
     setVisited(prev => prev[newPage] ? prev : { ...prev, [newPage]: true });
   };
 
-  // 스플래시: 최소 표시시간(mounted) 또는 세션 복원(sessionLoading) 중에는 유지
-  const showSplash = !mounted || sessionLoading;
+  // 스플래시: 최소 표시시간·세션 복원·(로그인 시)온보딩 상태 확인 중에는 유지
+  const showSplash = !mounted || sessionLoading || (!!session && onboarding === 'unknown');
 
   return (
     <>
@@ -136,7 +150,13 @@ export default function Home() {
           <Toaster />
         </>
       )}
-      {!showSplash && session && (
+      {!showSplash && session && onboarding === 'needed' && (
+        <>
+          <Onboarding onDone={() => setOnboarding('done')} />
+          <Toaster />
+        </>
+      )}
+      {!showSplash && session && onboarding === 'done' && (
         <main
           className="min-h-screen bg-[#f8faf8]"
           style={{ paddingBottom: 'calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 0.5rem)' }}

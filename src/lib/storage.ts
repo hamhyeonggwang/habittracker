@@ -542,3 +542,19 @@ export const lifeRoleStore = {
     return error ? fail('life_roles.delete', error) : OK;
   },
 };
+
+// ── 프로필 (온보딩 1회성 플래그) ─────────────────────────────
+export const profileStore = {
+  // 본인 프로필 — RLS로 본인 행만 조회됨. 없으면 null(=온보딩 전).
+  async getMine(): Promise<{ onboardingCompleted: boolean } | null> {
+    const { data, error } = await supabase.from('profiles').select('onboarding_completed').maybeSingle();
+    if (error) { logError('profiles.getMine', error); return null; }
+    return data ? { onboardingCompleted: (data.onboarding_completed as boolean) ?? false } : null;
+  },
+  async completeOnboarding(): Promise<Result> {
+    const { error } = await supabase.from('profiles').upsert({
+      id: getCurrentUserId(), onboarding_completed: true,
+    }, { onConflict: 'id' });
+    return error ? fail('profiles.completeOnboarding', error) : OK;
+  },
+};
