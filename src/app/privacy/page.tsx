@@ -69,7 +69,7 @@ export default function PrivacyPage() {
 
       <Section title="6. 문의처">
         <p>
-          개인정보 관련 문의 및 삭제 요청: <a href="mailto:h2g0614@gmail.com" style={{ color: '#2c4a7c' }}>h2g0614@gmail.com</a>
+          개인정보 관련 문의 및 삭제 요청: <a href="mailto:otdevham@gmail.com" style={{ color: '#2c4a7c' }}>otdevham@gmail.com</a>
         </p>
       </Section>
 
