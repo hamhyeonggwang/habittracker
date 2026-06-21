@@ -11,7 +11,8 @@ import { useToday } from '@/lib/useToday';
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, subDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { Flame, TrendingUp, Zap, Sparkles, Target, Pencil, Check, X, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Flame, TrendingUp, Zap, Sparkles, Target, Pencil, Check, X, Plus, Trash2, ChevronDown, ChevronUp, Settings } from 'lucide-react';
+import SettingsSheet from '@/components/settings/SettingsSheet';
 import {
   DASH_LABELS, HABIT_LABELS, TASK_LABELS, MENTAL_LABELS,
   getRateMessage, getStreakMessage,
@@ -601,6 +602,7 @@ const EMPTY_DATA = {
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<'identity' | 'roadmap' | 'finance'>('identity');
   const [data, setData] = useState(EMPTY_DATA);
+  const [showSettings, setShowSettings] = useState(false);
   const today = useToday();
 
   const loadData = useCallback(async () => {
@@ -667,17 +669,24 @@ export default function DashboardPage() {
   return (
     <div className="page-enter space-y-4">
       {/* ── Header ── */}
-      <div className="pt-3 pb-1">
-        <p className="text-[11px] font-semibold tracking-widest uppercase mb-0.5"
-          style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
-          {formatDate(today, 'yyyy.MM.dd EEEE')}
-        </p>
-        <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Noto Serif KR, serif' }}>
-          Own The Day
-        </h1>
-        <p className="text-[12px] mt-1 font-medium" style={{ color: 'var(--sage)', fontFamily: 'Noto Sans KR, sans-serif' }}>
-          {getRateMessage(data.momentum)}
-        </p>
+      <div className="pt-3 pb-1 flex items-start justify-between">
+        <div>
+          <p className="text-[11px] font-semibold tracking-widest uppercase mb-0.5"
+            style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
+            {formatDate(today, 'yyyy.MM.dd EEEE')}
+          </p>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Noto Serif KR, serif' }}>
+            Own The Day
+          </h1>
+          <p className="text-[12px] mt-1 font-medium" style={{ color: 'var(--sage)', fontFamily: 'Noto Sans KR, sans-serif' }}>
+            {getRateMessage(data.momentum)}
+          </p>
+        </div>
+        <button type="button" onClick={() => setShowSettings(true)} aria-label="설정"
+          className="w-11 h-11 -mr-1.5 flex items-center justify-center flex-shrink-0"
+          style={{ color: 'var(--text-muted)' }}>
+          <Settings size={20} />
+        </button>
       </div>
 
       {/* ── MOMENTUM + GROWTH OPPORTUNITY ── */}
@@ -815,6 +824,8 @@ export default function DashboardPage() {
       )}
 
       <div className="h-4" />
+
+      {showSettings && <SettingsSheet onClose={() => setShowSettings(false)} />}
     </div>
   );
 }
