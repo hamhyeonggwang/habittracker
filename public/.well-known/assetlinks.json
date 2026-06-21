@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.otdevham.otd",
+      "sha256_cert_fingerprints": [
+        "00:D4:E9:B9:4E:D7:BF:91:BC:D7:D1:85:F3:7A:EE:BA:71:06:EC:79:3B:3B:9E:6D:E8:46:69:DF:59:D8:0F:AD"
+      ]
+    }
+  }
+]
