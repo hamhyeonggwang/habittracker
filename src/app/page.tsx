@@ -17,14 +17,6 @@ type PageId = 'dashboard' | 'habit' | 'task' | 'mental' | 'archive';
 
 const ALL_PAGES: PageId[] = ['dashboard', 'habit', 'task', 'mental', 'archive'];
 
-const PAGE_COMPONENTS: Record<PageId, React.ReactNode> = {
-  dashboard: <DashboardPage />,
-  habit: <HabitPage />,
-  task: <TaskPage />,
-  mental: <MentalPage />,
-  archive: <ArchivePage />,
-};
-
 function SplashScreen({ leaving }: { leaving: boolean }) {
   return (
     <div
@@ -138,6 +130,16 @@ export default function Home() {
     setVisited(prev => prev[newPage] ? prev : { ...prev, [newPage]: true });
   };
 
+  const renderPage = (id: PageId) => {
+    switch (id) {
+      case 'dashboard': return <DashboardPage onNavigate={handlePageChange} />;
+      case 'habit': return <HabitPage />;
+      case 'task': return <TaskPage />;
+      case 'mental': return <MentalPage />;
+      case 'archive': return <ArchivePage />;
+    }
+  };
+
   // 스플래시: 최소 표시시간·세션 복원·(로그인 시)온보딩 상태 확인 중에는 유지
   const showSplash = !mounted || sessionLoading || (!!session && onboarding === 'unknown');
 
@@ -164,7 +166,7 @@ export default function Home() {
           <div className="max-w-lg mx-auto px-4">
             {ALL_PAGES.map(p => (
               <div key={p} style={{ display: page === p ? 'block' : 'none' }}>
-                {visited[p] && PAGE_COMPONENTS[p]}
+                {visited[p] && renderPage(p)}
               </div>
             ))}
           </div>

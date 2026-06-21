@@ -5,7 +5,7 @@ import {
   Habit, HabitLog, Task, MentalStateLog, ArchiveItem, MeaningfulMoment,
   PerformanceScore, LifeRoleDef, RoutineSlot, Priority, TimeSlot,
   MoodScore, ArchiveCategory, GoalStatus,
-  IdentityStatement, Goal, Quarter, MonthPlan, FinanceItem, FinanceCategory,
+  IdentityStatement, Goal, Quarter, MonthPlan,
   Project, ProjectScope, ProjectStatus,
 } from '@/types';
 
@@ -163,15 +163,6 @@ function mapQuarter(r: Row): Quarter {
 
 function mapMonthPlan(r: Row): MonthPlan {
   return { month: r.month as number, plan: (r.plan as string) ?? '' };
-}
-
-function mapFinanceItem(r: Row): FinanceItem {
-  return {
-    id: r.id as string,
-    type: (r.type as string) ?? '',
-    amount: (r.amount as number) ?? 0,
-    category: ((r.category as FinanceCategory) ?? 'fixed'),
-  };
 }
 
 // ── 공통: 차등 저장 (upsert + 삭제된 행만 delete) ──────────
@@ -447,19 +438,6 @@ export const monthPlanStore = {
       if (error) return fail('month_plans.save', error);
     }
     return OK;
-  },
-};
-
-export const financeStore = {
-  async getAll(): Promise<FinanceItem[]> {
-    const { data, error } = await supabase.from('finance_items').select('*');
-    if (error) { logError('finance_items.getAll', error); return []; }
-    return (data ?? []).map(mapFinanceItem);
-  },
-  async save(items: FinanceItem[]): Promise<Result> {
-    return differentialSave('finance_items', items, i => ({
-      id: i.id, type: i.type, amount: i.amount, category: i.category,
-    }));
   },
 };
 

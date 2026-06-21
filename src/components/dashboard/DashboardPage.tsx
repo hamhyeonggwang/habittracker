@@ -2,24 +2,24 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   habitStore, habitLogStore, taskStore, mentalStore, archiveStore,
-  identityStatementStore, goalStore, quarterStore, monthPlanStore, financeStore,
+  identityStatementStore, goalStore, quarterStore, monthPlanStore,
   meaningfulStore, newId,
 } from '@/lib/storage';
-import { StatCard, Button } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { formatDate, getToday, cn } from '@/lib/utils';
 import { useToday } from '@/lib/useToday';
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, subDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { Flame, TrendingUp, Zap, Sparkles, Target, Pencil, Check, X, Plus, Trash2, ChevronDown, ChevronUp, Settings } from 'lucide-react';
-import SettingsSheet from '@/components/settings/SettingsSheet';
 import {
-  DASH_LABELS, HABIT_LABELS, TASK_LABELS, MENTAL_LABELS,
-  getRateMessage, getStreakMessage,
-} from '@/lib/strengthLanguage';
+  Activity, Archive, ArrowRight, BarChart3, Check, CheckCircle2, ChevronDown, ChevronUp,
+  ListTodo, Pencil, Plus, Repeat, Settings, Trash2, X,
+} from 'lucide-react';
+import SettingsSheet from '@/components/settings/SettingsSheet';
+import { getRateMessage } from '@/lib/strengthLanguage';
 import type {
   IdentityStatement, Goal, GoalStatus, Quarter, MonthPlan,
-  FinanceItem, FinanceCategory, MeaningfulMoment,
+  MeaningfulMoment,
 } from '@/types';
 
 // ── 상수 ─────────────────────────────────────────────────────
@@ -29,7 +29,7 @@ const nextStatus = (s: GoalStatus): GoalStatus =>
 const statusCls = (s: GoalStatus) =>
   s === '완료'   ? 'tag-navy' :
   s === '진행 중' ? 'tag-sage' :
-  'text-[10px] px-1.5 py-0.5 rounded font-semibold bg-gray-100 text-gray-500 border border-gray-200';
+  'text-xs px-2 py-1 rounded-full font-semibold bg-gray-100 text-gray-500 border border-gray-200';
 const MONTH_NAMES = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 
 // ── 공용 편집 컴포넌트 ────────────────────────────────────────
@@ -38,7 +38,7 @@ function EditInput({ value, onChange, placeholder, className }: {
 }) {
   return (
     <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-      className={cn('px-1.5 py-1 rounded border text-[12px] focus:outline-none focus:ring-1 focus:ring-green-400 w-full', className)}
+      className={cn('min-h-[44px] px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-green-400 w-full', className)}
       style={{ borderColor: 'var(--border)', fontFamily: 'Pretendard, sans-serif', background: 'white' }} />
   );
 }
@@ -50,21 +50,21 @@ function EditBar({ editing, onEdit, onSave, onCancel }: {
     <div className="flex justify-end gap-1.5 mb-2">
       {!editing ? (
         <button onClick={onEdit}
-          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all"
+          className="min-h-[36px] flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
           style={{ background: 'var(--sage-pale)', color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
-          <Pencil size={11} /> 편집
+          <Pencil size={14} /> 편집
         </button>
       ) : (
         <>
           <button onClick={onCancel}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold"
+            className="min-h-[36px] flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
             style={{ background: 'var(--sage-pale)', color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
-            <X size={11} /> 취소
+            <X size={14} /> 취소
           </button>
           <button onClick={onSave}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold text-white"
+            className="min-h-[36px] flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
             style={{ background: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
-            <Check size={11} /> 저장
+            <Check size={14} /> 저장
           </button>
         </>
       )}
@@ -75,9 +75,9 @@ function EditBar({ editing, onEdit, onSave, onCancel }: {
 function DeleteBtn({ onClick }: { onClick: () => void }) {
   return (
     <button type="button" onClick={onClick}
-      className="w-6 h-6 flex items-center justify-center rounded flex-shrink-0 hover:bg-red-50 transition-colors"
+      className="w-9 h-9 flex items-center justify-center rounded-lg flex-shrink-0 hover:bg-red-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
       style={{ color: 'var(--text-muted)' }}>
-      <Trash2 size={12} />
+      <Trash2 size={15} />
     </button>
   );
 }
@@ -127,10 +127,10 @@ function IdentityTab() {
 
       {/* I Will Statements */}
       <div>
-        <p className="text-[11px] font-bold uppercase tracking-wider mb-1"
+        <p className="text-xs font-bold uppercase tracking-wider mb-1"
           style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>I WILL · 되고 싶은 나</p>
-        <p className="text-[10px] mb-2 leading-relaxed"
-          style={{ color: 'var(--text-muted)', fontFamily: 'Noto Sans KR, sans-serif' }}>
+        <p className="text-sm mb-3 leading-relaxed"
+          style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
           내가 되고 싶은 사람의 모습을, 매일의 실천 한 문장으로 연결해보세요.
         </p>
         {editing ? (
@@ -139,33 +139,33 @@ function IdentityTab() {
               <div key={d.id} className="rounded-lg p-2.5 space-y-2"
                 style={{ background: 'var(--sage-pale)', border: '1px solid var(--border)' }}>
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider"
+                  <span className="text-xs font-bold uppercase tracking-wider"
                     style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>되고 싶은 모습</span>
                   <DeleteBtn onClick={() => removeS(i)} />
                 </div>
                 <EditInput value={d.keyword} onChange={v => updateS(i, 'keyword', v)}
                   placeholder="예: 좋은 아빠, 성장하는 치료사, 건강한 나" />
-                <span className="text-[10px] font-bold uppercase tracking-wider block"
+                <span className="text-xs font-bold uppercase tracking-wider block"
                   style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>실천 문장</span>
                 <EditInput value={d.statement} onChange={v => updateS(i, 'statement', v)}
                   placeholder="예: 나는 매일 아이와 30분 함께한다" />
               </div>
             ))}
             <button onClick={addS}
-              className="mt-1 flex items-center gap-1 text-[11px] font-semibold"
+              className="min-h-[36px] mt-1 flex items-center gap-1 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 rounded-lg"
               style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
-              <Plus size={12} /> 선언문 추가
+              <Plus size={14} /> 선언문 추가
             </button>
           </div>
         ) : (
-          <div className="space-y-0">
+          <div className="space-y-2">
             {dispS.map((d, i) => (
-              <div key={d.id} className="flex items-start gap-2 py-1.5 border-b last:border-0"
-                style={{ borderColor: 'var(--border-light)' }}>
-                <span className="text-[11px] font-bold w-14 flex-shrink-0 pt-0.5"
+              <div key={d.id} className="rounded-xl p-3"
+                style={{ background: 'var(--sage-pale)', border: '1px solid var(--border-light)' }}>
+                <span className="text-xs font-bold block mb-1"
                   style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>{d.keyword}</span>
-                <span className="text-[12px]"
-                  style={{ color: 'var(--text-secondary)', fontFamily: 'Noto Sans KR, sans-serif' }}>{d.statement}</span>
+                <span className="text-sm leading-relaxed"
+                  style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>{d.statement}</span>
               </div>
             ))}
           </div>
@@ -174,7 +174,7 @@ function IdentityTab() {
 
       {/* Goals */}
       <div>
-        <p className="text-[11px] font-bold uppercase tracking-wider mb-2"
+        <p className="text-xs font-bold uppercase tracking-wider mb-2"
           style={{ color: 'var(--navy)', fontFamily: 'Pretendard, sans-serif' }}>성장 목표</p>
         {editing ? (
           <div className="space-y-2">
@@ -194,7 +194,7 @@ function IdentityTab() {
                   { label: '지표', key: 'metric' as const, ph: '측정 기준 (예: 연봉 15% 인상)', val: g.metric },
                 ] as const).map(({ label, key, ph, val }) => (
                   <div key={key} className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold w-8 flex-shrink-0"
+                    <span className="text-xs font-bold w-9 flex-shrink-0"
                       style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>{label}</span>
                     <EditInput value={val} onChange={v => updateG(i, key, v)} placeholder={ph} />
                   </div>
@@ -202,25 +202,27 @@ function IdentityTab() {
               </div>
             ))}
             <button onClick={addG}
-              className="flex items-center gap-1 text-[11px] font-semibold"
+              className="min-h-[36px] flex items-center gap-1 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 rounded-lg"
               style={{ color: 'var(--navy)', fontFamily: 'Pretendard, sans-serif' }}>
-              <Plus size={12} /> 목표 추가
+              <Plus size={14} /> 목표 추가
             </button>
           </div>
         ) : (
-          <table className="sheet-table">
-            <thead><tr><th>분야</th><th>목표</th><th>측정지표</th><th>현재</th></tr></thead>
-            <tbody>
-              {dispG.map(g => (
-                <tr key={g.id}>
-                  <td className="font-semibold" style={{ color: 'var(--sage)' }}>{g.field}</td>
-                  <td>{g.goal}</td>
-                  <td style={{ color: 'var(--text-muted)' }}>{g.metric}</td>
-                  <td><span className={statusCls(g.status)}>{g.status}</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="space-y-2">
+            {dispG.map(g => (
+              <div key={g.id} className="rounded-xl p-3"
+                style={{ background: 'white', border: '1px solid var(--border)' }}>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="text-xs font-bold" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>{g.field}</span>
+                  <span className={statusCls(g.status)}>{g.status}</span>
+                </div>
+                <p className="text-sm font-semibold leading-relaxed" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>{g.goal}</p>
+                {g.metric && (
+                  <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>{g.metric}</p>
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>
@@ -263,13 +265,13 @@ function RoadmapTab() {
 
       {/* Quarters */}
       <div>
-        <p className="text-[11px] font-bold uppercase tracking-wider mb-2"
+        <p className="text-xs font-bold uppercase tracking-wider mb-2"
           style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>분기별 도전 과제</p>
         {editing ? (
           <div className="space-y-3">
             {dispQ.map((q, i) => (
               <div key={q.id}>
-                <p className="text-[11px] font-bold mb-1"
+                <p className="text-xs font-bold mb-1"
                   style={{ color: 'var(--navy)', fontFamily: 'Pretendard, sans-serif' }}>{q.label}</p>
                 <div className="flex gap-1.5">
                   <EditInput value={q.milestone} onChange={v => updateQ(i, 'milestone', v)} placeholder="핵심 도전" className="flex-1" />
@@ -279,40 +281,40 @@ function RoadmapTab() {
             ))}
           </div>
         ) : (
-          <table className="sheet-table">
-            <thead><tr><th>분기</th><th>핵심 도전</th><th>성공 기준</th></tr></thead>
-            <tbody>
-              {dispQ.map(q => (
-                <tr key={q.id}>
-                  <td className="font-semibold text-[11px]" style={{ color: 'var(--navy)' }}>{q.label}</td>
-                  <td>{q.milestone}</td>
-                  <td style={{ color: 'var(--text-muted)' }}>{q.criteria}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="space-y-2">
+            {dispQ.map(q => (
+              <div key={q.id} className="rounded-xl p-3"
+                style={{ background: 'white', border: '1px solid var(--border)' }}>
+                <p className="text-xs font-bold mb-1" style={{ color: 'var(--navy)', fontFamily: 'Pretendard, sans-serif' }}>{q.label}</p>
+                <p className="text-sm font-semibold leading-relaxed" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>{q.milestone}</p>
+                {q.criteria && (
+                  <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>{q.criteria}</p>
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
       {/* Monthly plans */}
       <div>
-        <p className="text-[11px] font-bold uppercase tracking-wider mb-2"
+        <p className="text-xs font-bold uppercase tracking-wider mb-2"
           style={{ color: 'var(--navy)', fontFamily: 'Pretendard, sans-serif' }}>월별 성장 계획</p>
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className="grid grid-cols-2 gap-2">
           {dispM.map(m => (
-            <div key={m.month} className="rounded-lg p-2"
+            <div key={m.month} className="rounded-xl p-3"
               style={{ background: 'var(--sage-pale)', border: '1px solid var(--border)' }}>
-              <p className="text-[11px] font-bold mb-1"
+              <p className="text-xs font-bold mb-1"
                 style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
                 {MONTH_NAMES[m.month - 1]}
               </p>
               {editing ? (
                 <input value={m.plan} onChange={e => updateM(m.month, e.target.value)}
                   placeholder="계획"
-                  className="w-full text-[10px] px-1 py-0.5 rounded border focus:outline-none focus:ring-1 focus:ring-green-400"
+                  className="w-full min-h-[40px] text-sm px-2.5 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-green-400"
                   style={{ borderColor: 'var(--border)', fontFamily: 'Pretendard, sans-serif', background: 'white' }} />
               ) : (
-                <p className="text-[10px]"
+                <p className="text-sm leading-relaxed"
                   style={{ color: m.plan ? 'var(--text-secondary)' : 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
                   {m.plan || '계획 중'}
                 </p>
@@ -321,161 +323,6 @@ function RoadmapTab() {
           ))}
         </div>
       </div>
-    </div>
-  );
-}
-
-// ── FINANCE 탭 ──────────────────────────────────────────────
-function FinanceTab() {
-  const [items, setItems] = useState<FinanceItem[]>([]);
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState<FinanceItem[]>([]);
-
-  useEffect(() => { financeStore.getAll().then(setItems); }, []);
-
-  const startEdit = () => { setDraft([...items]); setEditing(true); };
-  const cancel = () => setEditing(false);
-  const save = async () => {
-    const r = await financeStore.save(draft);
-    if (!r.ok) return; // 실패 시 편집 유지
-    setItems([...draft]); setEditing(false);
-  };
-
-  const disp = editing ? draft : items;
-  const income   = disp.filter(i => i.category === 'income');
-  const savingsItems = disp.filter(i => i.category === 'savings');
-  const fixed    = disp.filter(i => i.category === 'fixed');
-  const variable = disp.filter(i => i.category === 'variable');
-
-  const totalIncome = income.reduce((s, i) => s + i.amount, 0);
-  const totalSavings = savingsItems.reduce((s, i) => s + i.amount, 0);
-  const availableBudget = totalIncome - totalSavings;
-  const allocatedBudget = [...fixed, ...variable].reduce((s, i) => s + i.amount, 0);
-  const savingsRate = totalIncome > 0 ? Math.round((totalSavings / totalIncome) * 100) : 0;
-  const fmt = (n: number) => `₩${n.toLocaleString()}`;
-
-  const updateItem = (id: string, field: 'type' | 'amount', val: string) =>
-    setDraft(prev => prev.map(item =>
-      item.id === id
-        ? { ...item, [field]: field === 'amount' ? (Number(val.replace(/[^0-9]/g, '')) || 0) : val }
-        : item
-    ));
-  const removeItem = (id: string) => setDraft(prev => prev.filter(item => item.id !== id));
-  const addItem = (category: FinanceCategory) =>
-    setDraft(prev => [...prev, { id: newId(), type: '', amount: 0, category }]);
-
-  const sectionColor: Record<FinanceCategory, string> = {
-    income: 'var(--sage)',
-    savings: '#d97706',
-    fixed: 'var(--navy)',
-    variable: '#92400e',
-  };
-  const sectionLabel: Record<FinanceCategory, string> = {
-    income: '수입',
-    savings: '저축 및 투자',
-    fixed: '고정 지출',
-    variable: '변동 지출',
-  };
-
-  const renderSection = (category: FinanceCategory, sectionItems: FinanceItem[]) => {
-    const color = sectionColor[category];
-    return (
-      <div key={category} className="mb-3">
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[11px] font-bold" style={{ color, fontFamily: 'Pretendard, sans-serif' }}>
-            {sectionLabel[category]}
-          </span>
-          {editing && (
-            <button onClick={() => addItem(category)}
-              className="flex items-center gap-0.5 text-[10px] font-semibold"
-              style={{ color, fontFamily: 'Pretendard, sans-serif' }}>
-              <Plus size={10} /> 추가
-            </button>
-          )}
-        </div>
-        {sectionItems.map(item => (
-          <div key={item.id}
-            className={cn('flex items-center gap-2', editing ? 'mb-1.5' : 'py-1.5 border-b last:border-0')}
-            style={{ borderColor: 'var(--border-light)' }}>
-            {editing ? (
-              <>
-                <EditInput value={item.type} onChange={v => updateItem(item.id, 'type', v)}
-                  placeholder="항목명" className="flex-1" />
-                <div className="flex items-center gap-0.5 w-28 flex-shrink-0">
-                  <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>₩</span>
-                  <EditInput
-                    value={item.amount === 0 ? '' : String(item.amount)}
-                    onChange={v => updateItem(item.id, 'amount', v)}
-                    placeholder="0" className="flex-1" />
-                </div>
-                <DeleteBtn onClick={() => removeItem(item.id)} />
-              </>
-            ) : (
-              <>
-                <span className="text-[12px] flex-1"
-                  style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>{item.type}</span>
-                <span className="text-[12px] font-semibold"
-                  style={{ color, fontFamily: 'Pretendard, sans-serif' }}>{fmt(item.amount)}</span>
-              </>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  return (
-    <div className="p-3 space-y-3">
-      <EditBar editing={editing} onEdit={startEdit} onSave={save} onCancel={cancel} />
-
-      {/* Summary cards — 수입 → 저축 → 월 지출 가능 예산 */}
-      <div className="grid grid-cols-3 gap-2">
-        {([
-          ['수입', totalIncome, 'var(--sage)'],
-          ['저축', totalSavings, '#d97706'],
-          ['월 지출 가능 예산', availableBudget, 'var(--navy)'],
-        ] as const).map(
-          ([label, val, color]) => (
-            <div key={label} className="rounded-lg p-2 text-center"
-              style={{ background: 'var(--sage-pale)', border: '1px solid var(--border)' }}>
-              <p className="text-[10px] font-semibold mb-0.5"
-                style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>{label}</p>
-              <p className="text-[13px] font-bold"
-                style={{ color, fontFamily: 'Pretendard, sans-serif' }}>{fmt(val)}</p>
-            </div>
-          )
-        )}
-      </div>
-
-      {/* Savings rate bar */}
-      <div className="rounded-lg p-2.5" style={{ background: 'var(--sage-pale)', border: '1px solid var(--border)' }}>
-        <div className="flex justify-between items-center mb-1.5">
-          <span className="text-[11px] font-bold" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>저축률 달성</span>
-          <span className="text-[13px] font-bold" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>{savingsRate}%</span>
-        </div>
-        <div className="w-full rounded-full overflow-hidden" style={{ height: 6, background: 'var(--border)' }}>
-          <div className="h-full rounded-full transition-all duration-700"
-            style={{ width: `${Math.min(savingsRate, 100)}%`, background: 'var(--sage)' }} />
-        </div>
-        <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
-          {savingsRate >= 30 ? '목표 30% 달성! 🌱' : '목표 30% 달성을 향해 나아가는 중 🌱'}
-        </p>
-      </div>
-
-      {allocatedBudget > 0 && (
-        <p className="text-[10px] text-center" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
-          예산 배분 합계 {fmt(allocatedBudget)}
-          {availableBudget >= 0 && (
-            <> · 잔여 {fmt(availableBudget - allocatedBudget)}</>
-          )}
-        </p>
-      )}
-
-      {/* Sections — 수입 → 저축 → 예산 */}
-      {renderSection('income', income)}
-      {renderSection('savings', savingsItems)}
-      {renderSection('fixed', fixed)}
-      {renderSection('variable', variable)}
     </div>
   );
 }
@@ -520,25 +367,29 @@ function MeaningfulMomentCard() {
 
   return (
     <div className="card overflow-hidden">
-      <div className="sheet-header flex items-center justify-between">
-        <span>오늘 가장 의미 있었던 순간</span>
-        {monthCount > 0 && <span className="text-[10px] opacity-80">이달 {monthCount}개</span>}
+      <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--border-light)' }}>
+        <div className="flex items-center gap-2">
+          <Archive size={18} style={{ color: 'var(--sage)' }} />
+          <span className="text-base font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>오늘 가장 의미 있었던 순간</span>
+        </div>
+        {monthCount > 0 && <span className="text-xs font-semibold" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>이달 {monthCount}개</span>}
       </div>
-      <div className="p-3">
+      <div className="p-4">
         {existing && !editing ? (
           <>
             <div className="flex items-start gap-2">
-              <span className="text-base leading-none mt-0.5">🌿</span>
-              <p className="flex-1 text-[13px] leading-relaxed"
-                style={{ color: 'var(--text-primary)', fontFamily: 'Noto Sans KR, sans-serif' }}>
+              <p className="flex-1 text-sm leading-relaxed"
+                style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>
                 {existing.content}
               </p>
-              <button onClick={() => setEditing(true)} className="flex-shrink-0 mt-0.5" aria-label="수정"
+              <button onClick={() => setEditing(true)}
+                className="w-10 h-10 flex items-center justify-center rounded-lg flex-shrink-0 hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
+                aria-label="수정"
                 style={{ color: 'var(--text-muted)' }}>
-                <Pencil size={13} />
+                <Pencil size={16} />
               </button>
             </div>
-            <p className="text-[10px] mt-1.5" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
+            <p className="text-xs mt-2" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
               하루를 채운 한 가지 · 월말에 모아 돌아볼 수 있어요
             </p>
           </>
@@ -549,8 +400,8 @@ function MeaningfulMomentCard() {
               onChange={e => setText(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') save(); }}
               placeholder="예: 아이들과 물놀이 · 논문 작성 · 기도 시간"
-              className="flex-1 px-3 py-2 rounded-lg border text-[13px] focus:outline-none"
-              style={{ borderColor: 'var(--border)', fontFamily: 'Noto Sans KR, sans-serif' }} />
+              className="flex-1 min-h-[44px] px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+              style={{ borderColor: 'var(--border)', fontFamily: 'Pretendard, sans-serif' }} />
             <Button onClick={save} size="sm" disabled={!text.trim()}>
               {saved ? <Check size={14} /> : '저장'}
             </Button>
@@ -561,7 +412,7 @@ function MeaningfulMomentCard() {
         {monthCount > 0 && (
           <div className="mt-2.5 pt-2.5 border-t" style={{ borderColor: 'var(--border-light)' }}>
             <button onClick={() => setShowList(s => !s)}
-              className="flex items-center gap-1 text-[11px] font-semibold"
+              className="min-h-[36px] flex items-center gap-1 text-xs font-semibold rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
               style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
               {format(new Date(), 'M월', { locale: ko })} 모아보기 ({monthCount})
               {showList ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
@@ -570,12 +421,12 @@ function MeaningfulMomentCard() {
               <div className="mt-2 space-y-1.5">
                 {monthList.map(m => (
                   <div key={m.id} className="flex gap-2 items-start">
-                    <span className="text-[10px] font-bold flex-shrink-0 mt-0.5 text-right"
+                    <span className="text-xs font-bold flex-shrink-0 mt-0.5 text-right"
                       style={{ width: 30, color: m.date === todayDate ? 'var(--sage)' : 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
                       {format(new Date(m.date), 'M/d')}
                     </span>
-                    <p className="flex-1 text-[12px] leading-relaxed"
-                      style={{ color: 'var(--text-secondary)', fontFamily: 'Noto Sans KR, sans-serif' }}>
+                    <p className="flex-1 text-sm leading-relaxed"
+                      style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
                       {m.content}
                     </p>
                   </div>
@@ -599,8 +450,8 @@ const EMPTY_DATA = {
   completedTasks: [] as import('@/types').Task[], todayTasks: [] as import('@/types').Task[],
 };
 
-export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<'identity' | 'roadmap' | 'finance'>('identity');
+export default function DashboardPage({ onNavigate }: { onNavigate?: (id: string) => void }) {
+  const [activeTab, setActiveTab] = useState<'identity' | 'roadmap'>('identity');
   const [data, setData] = useState(EMPTY_DATA);
   const [showSettings, setShowSettings] = useState(false);
   const today = useToday();
@@ -663,105 +514,282 @@ export default function DashboardPage() {
   const TABS = [
     { id: 'identity', label: 'IDENTITY' },
     { id: 'roadmap', label: 'ROADMAP' },
-    { id: 'finance', label: 'FINANCE' },
   ] as const;
 
+  const incompleteHabits = Math.max(data.habits.length - data.completedHabits, 0);
+  const incompleteTasks = Math.max(data.todayTasks.length - data.completedTasks.length, 0);
+  const hasAnyDailyData = data.habits.length > 0 || data.todayTasks.length > 0 || data.mentalScore !== null;
+
+  const nextAction = (() => {
+    if (!hasAnyDailyData) {
+      return {
+        title: '첫 루틴부터 시작해볼까요?',
+        description: '작은 반복 하나가 오늘의 기준이 됩니다.',
+        cta: '루틴 만들기',
+        page: 'habit',
+        icon: Repeat,
+      };
+    }
+    if (data.mentalScore === null) {
+      return {
+        title: '오늘 컨디션을 먼저 확인하세요',
+        description: '신체, 정서, 집중, 환경 상태를 1분 안에 기록합니다.',
+        cta: '컨디션 기록',
+        page: 'mental',
+        icon: Activity,
+      };
+    }
+    if (incompleteHabits > 0) {
+      return {
+        title: `${incompleteHabits}개 루틴이 남아 있어요`,
+        description: '지금 할 수 있는 루틴 하나만 체크해도 흐름이 이어집니다.',
+        cta: '루틴 체크',
+        page: 'habit',
+        icon: CheckCircle2,
+      };
+    }
+    if (incompleteTasks > 0) {
+      return {
+        title: `${incompleteTasks}개 업무가 남아 있어요`,
+        description: '오늘 안에 끝낼 수 있는 한 가지를 먼저 정리하세요.',
+        cta: '업무 확인',
+        page: 'task',
+        icon: ListTodo,
+      };
+    }
+    return {
+      title: '오늘의 인사이트를 남겨보세요',
+      description: '완료한 하루에서 기억할 만한 한 줄을 저장합니다.',
+      cta: '기록 남기기',
+      page: 'archive',
+      icon: Archive,
+    };
+  })();
+
+  const NextIcon = nextAction.icon;
+
+  const summaryCards = [
+    {
+      label: '루틴',
+      value: `${data.completedHabits}/${data.habits.length}`,
+      sub: `${Math.round(data.habitRate)}% 참여`,
+      icon: Repeat,
+      color: 'var(--sage)',
+    },
+    {
+      label: '업무',
+      value: `${data.completedTasks.length}/${data.todayTasks.length}`,
+      sub: incompleteTasks > 0 ? `${incompleteTasks}개 남음` : '정리 완료',
+      icon: ListTodo,
+      color: 'var(--navy)',
+    },
+    {
+      label: '컨디션',
+      value: data.mentalScore === null ? '미기록' : `${data.mentalScore}/5`,
+      sub: data.mentalScore === null ? '오늘 상태 확인 필요' : '오늘 기록 완료',
+      icon: Activity,
+      color: data.mentalScore === null ? 'var(--text-muted)' : 'var(--sage)',
+    },
+  ];
+
+  const quickActions = [
+    { label: '루틴 체크', page: 'habit', icon: CheckCircle2 },
+    { label: '업무 추가', page: 'task', icon: ListTodo },
+    { label: '컨디션 기록', page: 'mental', icon: Activity },
+    { label: '인사이트 작성', page: 'archive', icon: Archive },
+  ];
+
   return (
-    <div className="page-enter space-y-4">
+    <div className="page-enter space-y-4" style={{ fontFamily: 'Pretendard, sans-serif' }}>
       {/* ── Header ── */}
-      <div className="pt-3 pb-1 flex items-start justify-between">
+      <div className="pt-4 pb-1 flex items-start justify-between">
         <div>
-          <p className="text-[11px] font-semibold tracking-widest uppercase mb-0.5"
+          <p className="text-xs font-semibold tracking-wide mb-1"
             style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
             {formatDate(today, 'yyyy.MM.dd EEEE')}
           </p>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Noto Serif KR, serif' }}>
+          <h1 className="text-[22px] font-bold leading-tight" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>
             Own The Day
           </h1>
-          <p className="text-[12px] mt-1 font-medium" style={{ color: 'var(--sage)', fontFamily: 'Noto Sans KR, sans-serif' }}>
-            {getRateMessage(data.momentum)}
+          <p className="text-sm mt-1 font-medium" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
+            오늘 필요한 한 가지를 먼저 정리하세요.
           </p>
         </div>
         <button type="button" onClick={() => setShowSettings(true)} aria-label="설정"
-          className="w-11 h-11 -mr-1.5 flex items-center justify-center flex-shrink-0"
+          className="w-11 h-11 -mr-1.5 flex items-center justify-center flex-shrink-0 rounded-xl transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
           style={{ color: 'var(--text-muted)' }}>
           <Settings size={20} />
         </button>
       </div>
 
-      {/* ── MOMENTUM + GROWTH OPPORTUNITY ── */}
-      <div className="card overflow-hidden">
-        <div className="grid grid-cols-2">
-          <div className="p-3 border-r" style={{ borderColor: 'var(--border)' }}>
-            <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5"
-              style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>{DASH_LABELS.integrityTitle}</p>
-            <p className="text-[10px] mb-2" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
-              {DASH_LABELS.integritySub}
+      {/* ── Today Hero ── */}
+      <section className="card p-4 overflow-hidden" style={{ background: 'linear-gradient(135deg, #ffffff 0%, var(--sage-pale) 100%)' }}>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-xs font-bold tracking-wide uppercase mb-2" style={{ color: 'var(--sage)' }}>
+              Today Score
             </p>
-            <div className="flex items-end gap-1.5 mb-2">
-              <span className="text-2xl font-bold" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>{data.momentum}</span>
-              <span className="text-xs mb-0.5" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>/ 100</span>
-            </div>
-            <div className="integrity-bar">
-              <div className="integrity-bar-fill" style={{ width: `${data.momentum}%` }} />
-            </div>
-            <p className="text-[10px] mt-1.5" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
-              {DASH_LABELS.integrityLevels(data.momentum)}
-            </p>
-          </div>
-          <div className="p-3" style={{ background: 'var(--sage-pale)' }}>
-            <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5"
-              style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>{HABIT_LABELS.topMissedTitle}</p>
-            <p className="text-[10px] mb-2" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
-              {HABIT_LABELS.topMissedSub}
-            </p>
-            <div className="flex items-center gap-1.5 mt-1">
-              <Sparkles size={13} style={{ color: 'var(--sage)' }} />
-              <span className="text-sm font-bold" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
-                {data.growthHabit || '-'}
+            <div className="flex items-end gap-2">
+              <span className="text-[34px] leading-none font-bold" style={{ color: 'var(--text-primary)' }}>
+                {data.momentum}
+              </span>
+              <span className="text-sm font-semibold mb-1" style={{ color: 'var(--text-muted)' }}>
+                /100
               </span>
             </div>
-            <p className="text-[10px] mt-1.5" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
-              {HABIT_LABELS.topMissedCta}
+            <p className="text-sm mt-2 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              {getRateMessage(data.momentum)}
+            </p>
+          </div>
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'var(--sage-light)', color: 'var(--sage)' }}>
+            <BarChart3 size={26} />
+          </div>
+        </div>
+        <div className="mt-4">
+          <div className="integrity-bar" style={{ height: 10 }}>
+            <div className="integrity-bar-fill" style={{ width: `${data.momentum}%` }} />
+          </div>
+        </div>
+        <button type="button" onClick={() => onNavigate?.(nextAction.page)}
+          className="mt-4 w-full min-h-[52px] rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
+          style={{ background: 'var(--sage)', color: 'white' }}>
+          {nextAction.cta}
+          <ArrowRight size={17} />
+        </button>
+      </section>
+
+      {/* ── Next Action ── */}
+      <section className="card p-4">
+        <div className="flex gap-3">
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'var(--sage-light)', color: 'var(--sage)' }}>
+            <NextIcon size={22} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold tracking-wide uppercase mb-1" style={{ color: 'var(--text-muted)' }}>
+              Next Action
+            </p>
+            <h2 className="text-lg font-bold leading-snug" style={{ color: 'var(--text-primary)' }}>
+              {nextAction.title}
+            </h2>
+            <p className="text-sm mt-1 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              {nextAction.description}
             </p>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* ── Stats 4 cards ── */}
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard label={DASH_LABELS.habitStatLabel} value={Math.round(data.habitRate)} unit="%"
-          sub={`${data.completedHabits}/${data.habits.length} 참여`} icon={<Target size={12} />} />
-        <StatCard label={DASH_LABELS.taskStatLabel} value={Math.round(data.taskRate)} unit="%"
-          sub={TASK_LABELS.summaryDone(data.completedTasks.length, data.todayTasks.length)} icon={<Zap size={12} />} />
-        <StatCard label={DASH_LABELS.mentalStatLabel} value={data.mentalScore ?? '-'}
-          unit={data.mentalScore ? '/5' : ''}
-          sub={data.mentalScore ? DASH_LABELS.mentalRecorded : DASH_LABELS.mentalNotYet}
-          icon={<span style={{ fontSize: 12 }}>✦</span>} />
-        <StatCard label={DASH_LABELS.streakStatLabel} value={data.streak} unit="일"
-          sub={getStreakMessage(data.streak)} icon={<Flame size={12} />} />
-      </div>
+      {/* ── Today Summary ── */}
+      <section>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>
+            오늘 요약
+          </h2>
+          <span className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>
+            {data.streak > 0 ? `${data.streak}일 연속 기록` : '오늘부터 시작'}
+          </span>
+        </div>
+        <div className="grid grid-cols-1 gap-2.5">
+          {summaryCards.map(card => {
+            const Icon = card.icon;
+            return (
+              <button key={card.label} type="button"
+                onClick={() => onNavigate?.(card.label === '루틴' ? 'habit' : card.label === '업무' ? 'task' : 'mental')}
+                className="card p-3.5 min-h-[72px] flex items-center gap-3 text-left transition-all active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400">
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'var(--sage-pale)', color: card.color }}>
+                  <Icon size={21} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{card.label}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>{card.sub}</p>
+                </div>
+                <span className="text-lg font-bold" style={{ color: card.color }}>{card.value}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ── Quick Actions ── */}
+      <section>
+        <h2 className="text-base font-bold mb-2" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>
+          바로가기
+        </h2>
+        <div className="grid grid-cols-2 gap-2.5">
+          {quickActions.map(action => {
+            const Icon = action.icon;
+            return (
+              <button key={action.label} type="button" onClick={() => onNavigate?.(action.page)}
+                className="card min-h-[56px] px-3 flex items-center gap-2.5 text-left transition-all active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400">
+                <Icon size={18} style={{ color: 'var(--sage)' }} />
+                <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{action.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
       {/* ── 오늘 가장 의미 있었던 순간 ── */}
       <MeaningfulMomentCard />
 
-      {/* ── GROWTH JOURNEY ── */}
-      <div className="card overflow-hidden">
-        <div className="sheet-header-navy flex items-center justify-between">
-          <span>{DASH_LABELS.yearChartTitle}</span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] opacity-80">{DASH_LABELS.yearChartSub}</span>
-            <TrendingUp size={13} />
+      {/* ── Recent Archive ── */}
+      {data.recentArchive.length > 0 && (
+        <section className="card overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--border-light)' }}>
+            <div className="flex items-center gap-2">
+              <Archive size={18} style={{ color: 'var(--sage)' }} />
+              <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>
+                최근 인사이트
+              </h2>
+            </div>
+            <button type="button" onClick={() => onNavigate?.('archive')}
+              className="min-h-[36px] px-2 rounded-lg text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
+              style={{ color: 'var(--sage)' }}>
+              전체 보기
+            </button>
           </div>
+          <div className="p-4 space-y-3">
+            {data.recentArchive.map(item => (
+              <button key={item.id} type="button" onClick={() => onNavigate?.('archive')}
+                className="w-full text-left rounded-xl p-3 transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
+                style={{ background: 'var(--sage-pale)' }}>
+                <p className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>
+                  {item.title}
+                </p>
+                <p className="text-sm leading-relaxed line-clamp-2" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
+                  {item.content}
+                </p>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Optional Analytics ── */}
+      <div className="card overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--border-light)' }}>
+          <div className="flex items-center gap-2">
+            <BarChart3 size={18} style={{ color: 'var(--navy)' }} />
+            <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>
+              최근 흐름
+            </h2>
+          </div>
+          {data.growthHabit && (
+            <span className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>
+              보완: {data.growthHabit}
+            </span>
+          )}
         </div>
-        <div className="p-3">
+        <div className="p-4">
           <div className="h-40">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={data.monthlyData} margin={{ top: 5, right: 5, left: -28, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" />
-                <XAxis dataKey="label" tick={{ fontSize: 10, fontFamily: 'Pretendard', fill: 'var(--text-muted)' }} />
-                <YAxis tick={{ fontSize: 9 }} domain={[0, 100]} />
-                <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--border)', fontFamily: 'Pretendard' }}
+                <XAxis dataKey="label" tick={{ fontSize: 11, fontFamily: 'Pretendard', fill: 'var(--text-muted)' }} />
+                <YAxis tick={{ fontSize: 11 }} domain={[0, 100]} />
+                <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid var(--border)', fontFamily: 'Pretendard' }}
                   formatter={(v: number) => [`${v}%`, '참여율']} />
                 <Bar dataKey="rate" fill="var(--sage)" radius={[3, 3, 0, 0]} opacity={0.85} />
                 <Line type="monotone" dataKey="rate" stroke="var(--navy)" strokeWidth={1.5}
@@ -772,20 +800,28 @@ export default function DashboardPage() {
           <div className="grid grid-cols-7 mt-1">
             {data.monthlyData.map(m => (
               <div key={m.label} className="text-center">
-                <p className="text-[9px] font-bold" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>{m.label}</p>
-                <p className="text-[9px]" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>{m.rate}%</p>
+                <p className="text-xs font-bold" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>{m.label}</p>
+                <p className="text-xs" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>{m.rate}%</p>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* ── IDENTITY / ROADMAP / FINANCE ── */}
+      {/* ── IDENTITY / ROADMAP ── */}
       <div className="card overflow-hidden">
-        <div className="flex border-b" style={{ borderColor: 'var(--border)' }}>
+        <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border-light)' }}>
+          <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>
+            생활 설계
+          </h2>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
+            정체성과 로드맵은 하단에서 필요할 때 정리하세요.
+          </p>
+        </div>
+        <div className="flex border-b" style={{ borderColor: 'var(--border-light)' }}>
           {TABS.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className="flex-1 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-all"
+              className="flex-1 min-h-[44px] py-2.5 text-xs font-bold uppercase tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
               style={{
                 fontFamily: 'Pretendard, sans-serif',
                 color: activeTab === tab.id ? 'var(--sage)' : 'var(--text-muted)',
@@ -799,29 +835,8 @@ export default function DashboardPage() {
         <div className="animate-fade-in">
           {activeTab === 'identity' && <IdentityTab />}
           {activeTab === 'roadmap'  && <RoadmapTab />}
-          {activeTab === 'finance'  && <FinanceTab />}
         </div>
       </div>
-
-      {/* ── Recent Archive ── */}
-      {data.recentArchive.length > 0 && (
-        <div className="card overflow-hidden">
-          <div className="sheet-header">{DASH_LABELS.archiveTitle}</div>
-          <div className="p-3 space-y-2">
-            {data.recentArchive.map(item => (
-              <div key={item.id} className="flex gap-2 items-start">
-                <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: 'var(--sage)' }} />
-                <div>
-                  <p className="text-[12px] font-semibold"
-                    style={{ color: 'var(--text-primary)', fontFamily: 'Noto Serif KR, serif' }}>{item.title}</p>
-                  <p className="text-[11px] mt-0.5 line-clamp-1"
-                    style={{ color: 'var(--text-muted)', fontFamily: 'Noto Sans KR, sans-serif' }}>{item.content}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div className="h-4" />
 

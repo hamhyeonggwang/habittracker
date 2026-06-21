@@ -17,7 +17,6 @@ const LS_KEYS = {
   GOALS: 'lhd_goals',
   QUARTERS: 'lhd_quarters',
   MONTH_PLANS: 'lhd_month_plans',
-  FINANCE: 'lhd_finance',
 };
 
 function readLS(key: string): unknown[] {
@@ -122,13 +121,6 @@ export async function migrateFromLocalStorage(): Promise<void> {
         monthPlans.map((m) => ({ month: m.month, plan: m.plan ?? '' })),
         { onConflict: 'month' }
       );
-    }
-
-    const finance = readLS(LS_KEYS.FINANCE) as Record<string, unknown>[];
-    if (finance.length) {
-      await supabase.from('finance_items').upsert(finance.map((f) => ({
-        id: f.id, type: f.type ?? '', amount: f.amount ?? 0, category: f.category ?? 'fixed',
-      })));
     }
 
     localStorage.setItem(MIGRATION_KEY, 'true');

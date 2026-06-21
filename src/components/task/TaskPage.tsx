@@ -19,7 +19,7 @@ function RoleTagChip({ role, selected, onClick }: {
 }) {
   return (
     <button type="button" onClick={onClick}
-      className="px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all border flex items-center gap-1"
+      className="min-h-[36px] px-2.5 py-1 rounded-full text-xs font-semibold transition-all border flex items-center gap-1"
       style={{
         fontFamily: 'Pretendard, sans-serif',
         background: selected ? role.color : 'var(--sage-pale)',
@@ -64,7 +64,7 @@ function AddProjectModal({ onClose, onAdd }: { onClose: () => void; onAdd: () =>
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-sheet" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold" style={{ fontFamily: 'Noto Serif KR, serif', color: 'var(--text-primary)' }}>
+          <h3 className="text-lg font-bold" style={{ fontFamily: 'Pretendard, sans-serif', color: 'var(--text-primary)' }}>
             프로젝트 추가
           </h3>
           <button onClick={onClose}><X size={18} style={{ color: 'var(--text-muted)' }} /></button>
@@ -153,7 +153,7 @@ function AddModal({
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-sheet" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold" style={{ fontFamily: 'Noto Serif KR, serif', color: 'var(--text-primary)' }}>오늘의 도전 추가</h3>
+          <h3 className="text-lg font-bold" style={{ fontFamily: 'Pretendard, sans-serif', color: 'var(--text-primary)' }}>오늘의 도전 추가</h3>
           <button onClick={onClose}><X size={18} style={{ color: 'var(--text-muted)' }} /></button>
         </div>
         <div className="space-y-4">
@@ -175,7 +175,7 @@ function AddModal({
                   selected={roles.includes(role.id)} onClick={() => toggleRole(role.id)} />
               ))}
               <button type="button" onClick={onManageRoles}
-                className="px-2.5 py-1 rounded-full text-[11px] font-semibold border border-dashed"
+                className="min-h-[36px] px-2.5 py-1 rounded-full text-xs font-semibold border border-dashed"
                 style={{ color: 'var(--sage)', borderColor: 'var(--border)', fontFamily: 'Pretendard, sans-serif' }}>
                 + 역할 관리
               </button>
@@ -270,7 +270,7 @@ function WeeklyProjectBanner({
             진행 중인 프로젝트가 없습니다
           </span>
           <button onClick={() => setShowAddProject(true)}
-            className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-all"
+            className="min-h-[36px] flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition-all"
             style={{ color: 'var(--navy)', background: 'var(--navy-light)', fontFamily: 'Pretendard, sans-serif' }}>
             <FolderPlus size={11} /> 추가
           </button>
@@ -288,11 +288,11 @@ function WeeklyProjectBanner({
           <span className="flex items-center gap-1.5">
             <Folder size={12} />
             프로젝트 현황
-            <span className="text-[10px] opacity-75">({projects.length})</span>
+            <span className="text-xs opacity-75">({projects.length})</span>
           </span>
           <div className="flex items-center gap-2">
             <button onClick={e => { e.stopPropagation(); setShowAddProject(true); }}
-              className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded transition-all"
+              className="min-h-[32px] flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-lg transition-all"
               style={{ color: 'white', background: 'rgba(255,255,255,0.2)' }}>
               <FolderPlus size={10} /> 추가
             </button>
@@ -312,22 +312,22 @@ function WeeklyProjectBanner({
                       <span className="text-[12px] font-semibold truncate" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>
                         {p.title}
                       </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold flex-shrink-0"
+                      <span className="text-xs px-2 py-1 rounded-full font-semibold flex-shrink-0"
                         style={{ background: 'var(--navy-light)', color: 'var(--navy)', fontFamily: 'Pretendard, sans-serif' }}>
                         {SCOPE_LABELS[p.scope]}
                       </span>
                     </div>
                     <div className="flex items-center gap-1 ml-2 flex-shrink-0">
-                      <span className="text-[11px] font-bold" style={{ color: p.color, fontFamily: 'Pretendard, sans-serif' }}>{progress}%</span>
+                      <span className="text-xs font-bold" style={{ color: p.color, fontFamily: 'Pretendard, sans-serif' }}>{progress}%</span>
                       {progress === 100 ? (
                         <button onClick={() => markDone(p)}
-                          className="text-[10px] px-1.5 py-0.5 rounded font-semibold"
+                          className="min-h-[32px] text-xs px-2 py-1 rounded-lg font-semibold"
                           style={{ background: 'var(--sage-light)', color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
                           완료 처리
                         </button>
                       ) : (
                         <button onClick={() => deleteProject(p)}
-                          className="w-5 h-5 flex items-center justify-center rounded opacity-40 hover:opacity-80"
+                          className="w-9 h-9 flex items-center justify-center rounded-lg opacity-60 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
                           style={{ color: 'var(--text-muted)' }}>
                           <Trash2 size={11} />
                         </button>
@@ -339,7 +339,7 @@ function WeeklyProjectBanner({
                     <div className="h-full rounded-full transition-all duration-700"
                       style={{ width: `${progress}%`, background: p.color }} />
                   </div>
-                  <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
                     {p.startDate} ~ {p.endDate}
                   </p>
                 </div>
@@ -418,18 +418,18 @@ export default function TaskPage() {
   }, [tasks, lifeRoles]);
 
   return (
-    <div className="page-enter space-y-4">
+    <div className="page-enter space-y-4" style={{ fontFamily: 'Pretendard, sans-serif' }}>
       {/* ── Header ── */}
       <div className="flex items-center justify-between pt-3">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Noto Serif KR, serif' }}>오늘의 업무</h1>
-          <p className="text-[12px] mt-0.5 font-medium" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
+          <h1 className="text-[22px] font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>오늘의 업무</h1>
+          <p className="text-sm mt-0.5 font-medium" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
             {tasks.length > 0
               ? TASK_LABELS.summaryDone(completedCount, tasks.length)
               : TASK_LABELS.noTasks}
           </p>
         </div>
-        <Button onClick={() => setShowAdd(true)} size="sm"><Plus size={13} className="inline mr-1" />추가</Button>
+        <Button onClick={() => setShowAdd(true)} size="sm" className="min-h-[40px]"><Plus size={15} className="inline mr-1" />추가</Button>
       </div>
 
       {/* ── 프로젝트 배너 ── */}
@@ -444,7 +444,7 @@ export default function TaskPage() {
         <div className="card overflow-hidden">
           <div className="sheet-header flex items-center justify-between">
             <span>DAILY TASK</span>
-            <span className="text-[11px] font-semibold opacity-90">{getRateMessage(rate)}</span>
+            <span className="text-xs font-semibold opacity-90">{getRateMessage(rate)}</span>
           </div>
           <div className="p-3">
             <div className="w-full rounded-full overflow-hidden mb-3" style={{ height: 8, background: 'var(--border)' }}>
@@ -458,7 +458,7 @@ export default function TaskPage() {
                 ['전체', tasks.length, 'var(--text-secondary)'],
               ].map(([label, val, color]) => (
                 <div key={label as string} className="rounded-lg p-2" style={{ background: 'var(--sage-pale)' }}>
-                  <p className="text-[10px] font-bold mb-0.5" style={{ color: color as string, fontFamily: 'Pretendard, sans-serif' }}>{label as string}</p>
+                  <p className="text-xs font-bold mb-0.5" style={{ color: color as string, fontFamily: 'Pretendard, sans-serif' }}>{label as string}</p>
                   <p className="text-[15px] font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>{val as number}</p>
                 </div>
               ))}
@@ -477,7 +477,7 @@ export default function TaskPage() {
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-[12px] font-semibold flex items-center gap-1" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
                     <span>{role.emoji}</span>{role.label}
-                    <span className="ml-0.5 font-normal text-[10px]" style={{ color: 'var(--text-muted)' }}>({done}/{total})</span>
+                    <span className="ml-0.5 font-normal text-xs" style={{ color: 'var(--text-muted)' }}>({done}/{total})</span>
                   </span>
                   <span className="text-[12px] font-bold" style={{ color: role.color, fontFamily: 'Pretendard, sans-serif' }}>{rate}%</span>
                 </div>
@@ -492,9 +492,9 @@ export default function TaskPage() {
       )}
 
       {tasks.length === 0 ? (
-        <EmptyState icon="🌱" title={TASK_LABELS.noTasks}
+        <EmptyState icon="" title={TASK_LABELS.noTasks}
           description={TASK_LABELS.addFirst}
-          action={<Button onClick={() => setShowAdd(true)} size="sm">오늘의 도전 시작하기 ✨</Button>} />
+          action={<Button onClick={() => setShowAdd(true)} size="sm">오늘의 도전 시작하기</Button>} />
       ) : (
         (['morning', 'afternoon', 'evening'] as TimeSlot[]).map(slot => {
           const slotTasks = bySlot[slot];
@@ -504,119 +504,117 @@ export default function TaskPage() {
             <div key={slot}>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-base">{TASK_LABELS.timeslotIcons[slot]}</span>
-                <span className="text-[12px] font-bold" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
+                <span className="text-sm font-bold" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
                   {TASK_LABELS.timeslots[slot]}
                 </span>
                 <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-                <span className="text-[11px]" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
+                <span className="text-xs font-semibold" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
                   {slotDone}/{slotTasks.length} 완료
                 </span>
               </div>
 
-              <div className="card overflow-hidden mb-3">
-                <table className="sheet-table w-full">
-                  <thead>
-                    <tr>
-                      <th style={{ width: 32 }}>✓</th>
-                      <th>업무</th>
-                      <th style={{ width: 64 }} className="whitespace-nowrap">집중도</th>
-                      <th style={{ width: 32 }}></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {slotTasks.map(task => {
-                      const proj = task.projectId ? projectMap[task.projectId] : undefined;
-                      return (
-                        <React.Fragment key={task.id}>
-                          <tr style={{ opacity: task.completed ? 0.55 : 1 }}>
-                            <td>
-                              <button onClick={() => toggle(task.id)}
-                                className="w-5 h-5 rounded flex items-center justify-center transition-all"
-                                style={{
-                                  background: task.completed ? 'var(--sage)' : 'white',
-                                  border: `1.5px solid ${task.completed ? 'var(--sage)' : 'var(--border)'}`,
-                                }}>
-                                {task.completed && <Check size={11} color="white" strokeWidth={3} />}
-                              </button>
-                            </td>
-                            <td style={{ fontFamily: 'Pretendard, sans-serif', fontSize: 12, color: 'var(--text-primary)' }}>
-                              <div className={cn('flex items-center gap-1.5', task.completed ? 'line-through' : '')}>
-                                {/* 프로젝트 컬러 배지 */}
-                                {proj && (
-                                  <span
-                                    className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-semibold flex-shrink-0"
-                                    style={{
-                                      background: proj.color + '22',
-                                      color: proj.color,
-                                      border: `1px solid ${proj.color}44`,
-                                      fontFamily: 'Pretendard, sans-serif',
-                                    }}>
-                                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: proj.color }} />
-                                    {proj.title.length > 6 ? proj.title.slice(0, 6) + '…' : proj.title}
-                                  </span>
-                                )}
-                                <span>{task.title}</span>
-                                {task.roles?.map(rk => {
-                                  const r = roleMap[rk];
-                                  if (!r) return null;
-                                  return (
-                                    <span key={rk} title={r.label}
-                                      className="text-[10px] flex-shrink-0">{r.emoji}</span>
-                                  );
-                                })}
-                              </div>
-                            </td>
-                            <td>
-                              <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold whitespace-nowrap"
-                                style={{
-                                  fontFamily: 'Pretendard, sans-serif',
-                                  background: task.priority === 'high' ? 'var(--sage-light)' : task.priority === 'medium' ? 'var(--navy-light)' : 'var(--border-light)',
-                                  color: task.priority === 'high' ? 'var(--sage)' : task.priority === 'medium' ? 'var(--navy)' : 'var(--text-muted)',
-                                }}>
-                                {TASK_LABELS.priorities[task.priority]}
-                              </span>
-                            </td>
-                            <td>
-                              <div className="flex gap-1 justify-end">
-                                {!task.completed && (
-                                  <button onClick={() => setExpandedId(expandedId === task.id ? null : task.id)}
-                                    className="w-5 h-5 rounded flex items-center justify-center"
-                                    style={{ color: 'var(--text-muted)' }}>
-                                    <ChevronDown size={12} className={cn('transition-transform', expandedId === task.id ? 'rotate-180' : '')} />
-                                  </button>
-                                )}
-                                <button onClick={() => remove(task.id)}
-                                  className="w-5 h-5 rounded flex items-center justify-center"
-                                  style={{ color: 'var(--text-muted)' }}>
-                                  <Trash2 size={11} />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
+              <div className="space-y-2.5 mb-3">
+                {slotTasks.map(task => {
+                  const proj = task.projectId ? projectMap[task.projectId] : undefined;
+                  const expanded = expandedId === task.id;
+                  const priorityStyle = {
+                    background: task.priority === 'high' ? 'var(--sage-light)' : task.priority === 'medium' ? 'var(--navy-light)' : 'var(--border-light)',
+                    color: task.priority === 'high' ? 'var(--sage)' : task.priority === 'medium' ? 'var(--navy)' : 'var(--text-muted)',
+                  };
 
-                          {expandedId === task.id && (
-                            <tr>
-                              <td colSpan={4} className="py-2 px-2" style={{ background: 'var(--sage-pale)' }}>
-                                <p className="text-[10px] mb-1.5 font-semibold" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
-                                  {TASK_LABELS.reasonLabel}
-                                </p>
-                                <div className="flex gap-2">
-                                  <input
-                                    value={memos[task.id] ?? task.incompleteReason ?? ''}
-                                    onChange={e => setMemos(m => ({ ...m, [task.id]: e.target.value }))}
-                                    placeholder={TASK_LABELS.reasonPlaceholder}
-                                    className="flex-1 px-2 py-1 rounded border text-[11px] focus:outline-none"
-                                    style={{ borderColor: 'var(--border)', fontFamily: 'Pretendard, sans-serif' }} />
-                                  <Button onClick={() => saveMemo(task.id)} size="sm" variant="secondary">저장</Button>
-                                </div>
-                              </td>
-                            </tr>
+                  return (
+                    <div key={task.id} className="card p-3.5" style={{ opacity: task.completed ? 0.65 : 1 }}>
+                      <div className="flex items-start gap-3">
+                        <button onClick={() => toggle(task.id)}
+                          aria-label={task.completed ? '업무 미완료로 변경' : '업무 완료'}
+                          className="w-11 h-11 rounded-xl flex items-center justify-center transition-all flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
+                          style={{
+                            background: task.completed ? 'var(--sage)' : 'white',
+                            border: `1.5px solid ${task.completed ? 'var(--sage)' : 'var(--border)'}`,
+                          }}>
+                          {task.completed && <Check size={18} color="white" strokeWidth={3} />}
+                        </button>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className={cn('text-sm font-bold leading-relaxed', task.completed ? 'line-through' : '')}
+                              style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>
+                              {task.title}
+                            </p>
+                            <span className="text-xs px-2.5 py-1 rounded-full font-semibold whitespace-nowrap flex-shrink-0"
+                              style={{ ...priorityStyle, fontFamily: 'Pretendard, sans-serif' }}>
+                              {TASK_LABELS.priorities[task.priority]}
+                            </span>
+                          </div>
+
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {proj && (
+                              <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-semibold"
+                                style={{
+                                  background: proj.color + '22',
+                                  color: proj.color,
+                                  border: `1px solid ${proj.color}44`,
+                                  fontFamily: 'Pretendard, sans-serif',
+                                }}>
+                                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: proj.color }} />
+                                {proj.title}
+                              </span>
+                            )}
+                            {task.roles?.map(rk => {
+                              const r = roleMap[rk];
+                              if (!r) return null;
+                              return (
+                                <span key={rk} className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-semibold"
+                                  style={{ background: 'var(--sage-pale)', color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
+                                  <span>{r.emoji}</span>{r.label}
+                                </span>
+                              );
+                            })}
+                          </div>
+
+                          {task.incompleteReason && !expanded && (
+                            <p className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
+                              {TASK_LABELS.reasonLabel}: {task.incompleteReason}
+                            </p>
                           )}
-                        </React.Fragment>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-1.5 mt-3 pt-3 border-t" style={{ borderColor: 'var(--border-light)' }}>
+                        {!task.completed && (
+                          <button onClick={() => setExpandedId(expanded ? null : task.id)}
+                            className="min-h-[40px] px-3 rounded-xl flex items-center gap-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
+                            style={{ color: 'var(--text-secondary)', background: 'var(--sage-pale)', fontFamily: 'Pretendard, sans-serif' }}>
+                            {TASK_LABELS.reasonLabel}
+                            <ChevronDown size={14} className={cn('transition-transform', expanded ? 'rotate-180' : '')} />
+                          </button>
+                        )}
+                        <button onClick={() => remove(task.id)}
+                          className="min-h-[40px] px-3 rounded-xl flex items-center gap-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
+                          style={{ color: '#b02a2a', background: '#fdf2f2', fontFamily: 'Pretendard, sans-serif' }}>
+                          <Trash2 size={14} /> 삭제
+                        </button>
+                      </div>
+
+                      {expanded && (
+                        <div className="mt-3 rounded-xl p-3" style={{ background: 'var(--sage-pale)', border: '1px solid var(--border-light)' }}>
+                          <p className="text-xs mb-2 font-semibold" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
+                            {TASK_LABELS.reasonLabel}
+                          </p>
+                          <div className="flex gap-2">
+                            <input
+                              value={memos[task.id] ?? task.incompleteReason ?? ''}
+                              onChange={e => setMemos(m => ({ ...m, [task.id]: e.target.value }))}
+                              placeholder={TASK_LABELS.reasonPlaceholder}
+                              className="flex-1 min-h-[44px] px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                              style={{ borderColor: 'var(--border)', fontFamily: 'Pretendard, sans-serif' }} />
+                            <Button onClick={() => saveMemo(task.id)} size="sm" variant="secondary" className="min-h-[44px]">저장</Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );

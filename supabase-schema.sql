@@ -100,16 +100,7 @@ CREATE TABLE IF NOT EXISTS month_plans (
 );
 ALTER TABLE month_plans DISABLE ROW LEVEL SECURITY;
 
--- 10. FINANCE_ITEMS
-CREATE TABLE IF NOT EXISTS finance_items (
-  id       text PRIMARY KEY,
-  type     text DEFAULT '',
-  amount   int  DEFAULT 0,
-  category text DEFAULT 'fixed'  -- income | savings | fixed | variable
-);
-ALTER TABLE finance_items DISABLE ROW LEVEL SECURITY;
-
--- 11. PROJECTS
+-- 10. PROJECTS
 CREATE TABLE IF NOT EXISTS projects (
   id         text PRIMARY KEY,
   title      text NOT NULL,
@@ -123,7 +114,7 @@ CREATE TABLE IF NOT EXISTS projects (
 );
 ALTER TABLE projects DISABLE ROW LEVEL SECURITY;
 
--- 12. MEANINGFUL_MOMENTS (오늘 가장 의미 있었던 순간 — 하루 1건)
+-- 11. MEANINGFUL_MOMENTS (오늘 가장 의미 있었던 순간 — 하루 1건)
 CREATE TABLE IF NOT EXISTS meaningful_moments (
   id         text PRIMARY KEY,
   date       text NOT NULL UNIQUE,
@@ -154,7 +145,6 @@ ALTER TABLE identity_statements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE goals               ENABLE ROW LEVEL SECURITY;
 ALTER TABLE quarters            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE month_plans         ENABLE ROW LEVEL SECURITY;
-ALTER TABLE finance_items       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE meaningful_moments  ENABLE ROW LEVEL SECURITY;
 
@@ -167,7 +157,6 @@ CREATE POLICY "anon_all" ON identity_statements FOR ALL TO anon USING (true) WIT
 CREATE POLICY "anon_all" ON goals               FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "anon_all" ON quarters            FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "anon_all" ON month_plans         FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "anon_all" ON finance_items       FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "anon_all" ON projects            FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "anon_all" ON meaningful_moments  FOR ALL TO anon USING (true) WITH CHECK (true);
 
@@ -185,7 +174,6 @@ ALTER TABLE identity_statements ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES
 ALTER TABLE goals               ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
 ALTER TABLE quarters            ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
 ALTER TABLE month_plans         ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
-ALTER TABLE finance_items       ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
 ALTER TABLE meaningful_moments  ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE;
 
 CREATE TABLE IF NOT EXISTS life_roles (

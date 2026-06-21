@@ -1,6 +1,6 @@
 'use client';
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Plus, X, Check, Sparkles, Pencil, Trash2 } from 'lucide-react';
+import { Activity, Plus, X, Check, Pencil, Trash2 } from 'lucide-react';
 import { habitStore, habitLogStore, newId } from '@/lib/storage';
 import { Habit, LifeRoleDef, RoutineSlot, PerformanceScore } from '@/types';
 import { Button, EmptyState, ProgressBar } from '@/components/ui';
@@ -21,7 +21,7 @@ const ALL_SLOTS: RoutineSlot[] = ['morning', 'afternoon', 'evening', 'flexible']
 function RoleChip({ role, selected, onClick }: { role: LifeRoleDef; selected: boolean; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick}
-      className="px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all border flex items-center gap-1"
+      className="min-h-[36px] px-2.5 py-1 rounded-full text-xs font-semibold transition-all border flex items-center gap-1"
       style={{
         fontFamily: 'Pretendard, sans-serif',
         background: selected ? role.color : 'var(--sage-pale)',
@@ -38,12 +38,12 @@ function HabitActionButtons({ onEdit, onDelete }: { onEdit: () => void; onDelete
   return (
     <div className="flex items-center gap-0.5 flex-shrink-0">
       <button type="button" onClick={onEdit} aria-label="루틴 수정"
-        className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-black/5"
+        className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
         style={{ color: 'var(--text-muted)' }}>
         <Pencil size={14} />
       </button>
       <button type="button" onClick={onDelete} aria-label="루틴 삭제"
-        className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-red-50"
+        className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
         style={{ color: 'var(--text-muted)' }}>
         <Trash2 size={14} />
       </button>
@@ -68,11 +68,11 @@ function PerformanceInput({ habitId, date, logs, onSave }: {
     label: string; value: number; onChange: (v: PerformanceScore) => void;
   }) => (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-[11px] font-semibold flex-shrink-0" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>{label}</span>
+      <span className="text-xs font-semibold flex-shrink-0" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>{label}</span>
       <div className="flex gap-1">
         {([1,2,3,4,5] as PerformanceScore[]).map(n => (
           <button key={n} type="button" onClick={() => onChange(n)}
-            className="w-7 h-7 rounded-full text-[11px] font-bold transition-all"
+            className="w-9 h-9 rounded-full text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
             style={{
               background: value === n ? 'var(--sage)' : 'var(--sage-pale)',
               color: value === n ? 'white' : 'var(--text-muted)',
@@ -86,15 +86,15 @@ function PerformanceInput({ habitId, date, logs, onSave }: {
   return (
     <div className="mt-2.5 pt-2.5 border-t space-y-2" style={{ borderColor: 'var(--border-light)' }}>
       <div className="flex items-center gap-1.5 mb-1">
-        <Sparkles size={11} style={{ color: 'var(--sage)' }} />
-        <span className="text-[11px] font-bold" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
+        <Activity size={14} style={{ color: 'var(--sage)' }} />
+        <span className="text-xs font-bold" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
           {MOHO_LABELS.performance.inputTitle}
         </span>
       </div>
       <ScoreRow label={MOHO_LABELS.performance.energy} value={energy} onChange={setEnergy} />
       <ScoreRow label={MOHO_LABELS.performance.satisfaction} value={satisfaction} onChange={setSatisfaction} />
       <button type="button" onClick={handleSave}
-        className="w-full py-1.5 rounded-lg text-[11px] font-bold transition-all"
+        className="w-full min-h-[40px] py-2 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
         style={{ background: 'var(--sage)', color: 'white', fontFamily: 'Pretendard, sans-serif' }}>
         {MOHO_LABELS.performance.savBtn}
       </button>
@@ -137,17 +137,20 @@ function HabitFormModal({ habit, onClose, onSave, availableRoles, onManageRoles 
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-sheet" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold" style={{ fontFamily: 'Noto Serif KR, serif', color: 'var(--text-primary)' }}>
+          <h3 className="text-lg font-bold" style={{ fontFamily: 'Pretendard, sans-serif', color: 'var(--text-primary)' }}>
             {isEdit ? '루틴 수정' : '새 루틴 추가'}
           </h3>
-          <button type="button" onClick={onClose}><X size={18} style={{ color: 'var(--text-muted)' }} /></button>
+          <button type="button" onClick={onClose} aria-label="닫기"
+            className="w-11 h-11 flex items-center justify-center rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400">
+            <X size={18} style={{ color: 'var(--text-muted)' }} />
+          </button>
         </div>
         <div className="space-y-4">
           {/* 습관명 */}
           <div>
             <label className="text-xs font-semibold mb-1.5 block" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>루틴 이름</label>
             <input value={name} onChange={e => setName(e.target.value)} placeholder="예: 매일 운동"
-              className="w-full px-3 py-2.5 rounded-lg border text-sm focus:outline-none"
+              className="w-full min-h-[44px] px-3 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
               style={{ borderColor: 'var(--border)', fontFamily: 'Pretendard, sans-serif' }} />
           </div>
 
@@ -157,7 +160,7 @@ function HabitFormModal({ habit, onClose, onSave, availableRoles, onManageRoles 
             <div className="flex flex-wrap gap-2">
               {ICONS.map(ic => (
                 <button key={ic} onClick={() => setIcon(ic)}
-                  className={cn('w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all', icon === ic ? 'ring-2 ring-offset-1' : '')}
+                  className={cn('w-11 h-11 rounded-lg text-lg flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400', icon === ic ? 'ring-2 ring-offset-1' : '')}
                   style={{ background: icon === ic ? 'var(--sage-light)' : 'var(--sage-pale)', outline: icon === ic ? `2px solid var(--sage)` : 'none' }}>
                   {ic}
                 </button>
@@ -171,7 +174,7 @@ function HabitFormModal({ habit, onClose, onSave, availableRoles, onManageRoles 
             <div className="flex gap-2">
               {COLORS.map(c => (
                 <button key={c} onClick={() => setColor(c)}
-                  className="w-7 h-7 rounded-full transition-transform hover:scale-110"
+                  className="w-10 h-10 rounded-full transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
                   style={{ backgroundColor: c, outline: color === c ? `3px solid ${c}` : 'none', outlineOffset: 2 }} />
               ))}
             </div>
@@ -194,7 +197,7 @@ function HabitFormModal({ habit, onClose, onSave, availableRoles, onManageRoles 
                 <RoleChip key={role.id} role={role} selected={roles.includes(role.id)} onClick={() => toggleRole(role.id)} />
               ))}
               <button type="button" onClick={onManageRoles}
-                className="px-2.5 py-1 rounded-full text-[11px] font-semibold border border-dashed"
+                className="min-h-[36px] px-2.5 py-1 rounded-full text-xs font-semibold border border-dashed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
                 style={{ color: 'var(--sage)', borderColor: 'var(--border)', fontFamily: 'Pretendard, sans-serif' }}>
                 + 역할 관리
               </button>
@@ -207,7 +210,7 @@ function HabitFormModal({ habit, onClose, onSave, availableRoles, onManageRoles 
             <div className="grid grid-cols-4 gap-1.5">
               {ALL_SLOTS.map(slot => (
                 <button key={slot} type="button" onClick={() => setRoutineSlot(slot)}
-                  className="py-2 rounded-lg text-[11px] font-semibold transition-all"
+                  className="min-h-[44px] py-2 rounded-lg text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
                   style={{
                     fontFamily: 'Pretendard, sans-serif',
                     background: routineSlot === slot ? 'var(--navy)' : 'var(--sage-pale)',
@@ -219,7 +222,7 @@ function HabitFormModal({ habit, onClose, onSave, availableRoles, onManageRoles 
             </div>
           </div>
 
-          <Button onClick={handleSubmit} className="w-full" size="lg">{isEdit ? '저장하기' : '추가하기'}</Button>
+          <Button onClick={handleSubmit} className="w-full min-h-[52px]" size="lg">{isEdit ? '저장하기' : '추가하기'}</Button>
         </div>
       </div>
     </div>
@@ -367,7 +370,7 @@ export default function HabitPage() {
     return (
       <div key={slot}>
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+          <span className="text-xs font-bold px-2.5 py-1 rounded-full"
             style={{ background: 'var(--navy)', color: 'white', fontFamily: 'Pretendard, sans-serif' }}>
             {MOHO_LABELS.routineSlots[slot]}
           </span>
@@ -390,17 +393,17 @@ export default function HabitPage() {
                           const def = roleMap[r];
                           if (!def) return null;
                           return (
-                            <span key={r} className="text-[10px] font-semibold" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
+                            <span key={r} className="text-xs font-semibold" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
                               {def.emoji} {def.label}
                             </span>
                           );
                         })}
                         {streak > 0 && (
-                          <span className="text-[10px] font-bold" style={{ color: 'var(--navy)', fontFamily: 'Pretendard, sans-serif' }}>
+                          <span className="text-xs font-bold" style={{ color: 'var(--navy)', fontFamily: 'Pretendard, sans-serif' }}>
                             {getStreakMessage(streak)}
                           </span>
                         )}
-                        <span className="text-[10px]" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
+                        <span className="text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
                           {HABIT_LABELS.monthlyRate} {rate}%
                         </span>
                       </div>
@@ -429,7 +432,7 @@ export default function HabitPage() {
                     <ProgressBar value={rate} />
                     <button type="button"
                       onClick={() => setOpenPerformance(habit.id)}
-                      className="mt-1.5 text-[10px] font-semibold"
+                      className="mt-1.5 min-h-[36px] rounded-lg text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
                       style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
                       + 수행 소감 기록하기
                     </button>
@@ -452,23 +455,23 @@ export default function HabitPage() {
   };
 
   return (
-    <div className="page-enter space-y-4">
+    <div className="page-enter space-y-4" style={{ fontFamily: 'Pretendard, sans-serif' }}>
       {/* ── Header ── */}
       <div className="flex items-center justify-between pt-3">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Noto Serif KR, serif' }}>참여 트래커</h1>
-          <p className="text-[12px] mt-0.5 font-medium" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
+          <h1 className="text-[22px] font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>참여 트래커</h1>
+          <p className="text-sm mt-0.5 font-medium" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
             {getRateMessage(todayRate)}
           </p>
         </div>
-        <Button onClick={() => setShowAdd(true)} size="sm"><Plus size={13} className="inline mr-1" />추가</Button>
+        <Button onClick={() => setShowAdd(true)} size="sm" className="min-h-[40px]"><Plus size={15} className="inline mr-1" />추가</Button>
       </div>
 
       {/* ── 오늘 참여율 요약 ── */}
       {habits.length > 0 && (
         <div className="card p-3.5">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-[12px] font-semibold" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
+            <span className="text-sm font-semibold" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
               오늘 {HABIT_LABELS.completionRate}
             </span>
             <span className="text-[14px] font-bold" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
@@ -483,7 +486,7 @@ export default function HabitPage() {
       <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
         {[['today', HABIT_LABELS.checkIn], ['month', HABIT_LABELS.calendar]].map(([v, label]) => (
           <button key={v} onClick={() => setView(v as 'today' | 'month')}
-            className="flex-1 py-2 text-[12px] font-semibold transition-all"
+            className="flex-1 min-h-[44px] py-2 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
             style={{
               fontFamily: 'Pretendard, sans-serif',
               background: view === v ? 'var(--sage)' : 'white',
@@ -493,9 +496,9 @@ export default function HabitPage() {
       </div>
 
       {habits.length === 0 ? (
-        <EmptyState icon="🌱" title="아직 등록된 루틴이 없어요"
+        <EmptyState icon="" title="아직 등록된 루틴이 없어요"
           description="작은 루틴 하나부터 시작해볼까요?"
-          action={<Button onClick={() => setShowAdd(true)} size="sm">첫 루틴 시작하기 🌱</Button>} />
+          action={<Button onClick={() => setShowAdd(true)} size="sm">첫 루틴 시작하기</Button>} />
       ) : view === 'today' ? (
         /* ── TODAY CHECK-IN VIEW (루틴 시간대 그룹핑) ── */
         <div className="space-y-4">
@@ -517,16 +520,16 @@ export default function HabitPage() {
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <button type="button" onClick={() => setEditingHabit(habit)} aria-label="루틴 수정"
-                      className="w-7 h-7 rounded-md flex items-center justify-center"
+                      className="w-10 h-10 rounded-md flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
                       style={{ background: 'rgba(255,255,255,0.15)', color: 'white' }}>
                       <Pencil size={13} />
                     </button>
                     <button type="button" onClick={() => removeHabit(habit)} aria-label="루틴 삭제"
-                      className="w-7 h-7 rounded-md flex items-center justify-center"
+                      className="w-10 h-10 rounded-md flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
                       style={{ background: 'rgba(255,255,255,0.15)', color: 'white' }}>
                       <Trash2 size={13} />
                     </button>
-                    <span className="text-[11px] font-bold" style={{ background: 'rgba(255,255,255,0.2)', padding: '1px 8px', borderRadius: 12 }}>
+                    <span className="text-xs font-bold" style={{ background: 'rgba(255,255,255,0.2)', padding: '4px 8px', borderRadius: 12 }}>
                       {HABIT_LABELS.monthlyRate}
                     </span>
                   </div>
@@ -538,13 +541,13 @@ export default function HabitPage() {
                       const def = roleMap[r];
                       if (!def) return null;
                       return (
-                        <span key={r} className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                        <span key={r} className="text-xs font-semibold px-2.5 py-1 rounded-full"
                           style={{ background: 'var(--sage-pale)', color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
                           {def.emoji} {def.label}
                         </span>
                       );
                     })}
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
                       style={{ background: 'rgba(30,58,138,0.08)', color: 'var(--navy)', fontFamily: 'Pretendard, sans-serif' }}>
                       {MOHO_LABELS.routineSlots[habit.routineSlot]}
                     </span>
@@ -554,7 +557,7 @@ export default function HabitPage() {
                   {/* 요일 헤더 */}
                   <div className="grid grid-cols-7 gap-1 mb-1.5">
                     {['일','월','화','수','목','금','토'].map(d => (
-                      <div key={d} className="text-center text-[9px] font-bold" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>{d}</div>
+                      <div key={d} className="text-center text-xs font-bold" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>{d}</div>
                     ))}
                   </div>
                   {/* 주차별 그리드 */}
@@ -563,13 +566,15 @@ export default function HabitPage() {
                       <div className="grid grid-cols-7 gap-1 mb-0.5">
                         {Array.from({ length: 7 }, (_, di) => {
                           const date = week[di];
-                          if (!date) return <div key={di} style={{ height: 26 }} />;
+                          if (!date) return <div key={di} style={{ height: 40 }} />;
                           const done = isCompleted(habit.id, date);
                           const isToday = date === today;
                           return (
                             <button key={date} onClick={() => toggle(habit.id, date)}
-                              className="habit-cell"
+                              className="habit-cell focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
                               style={{
+                                width: '100%',
+                                height: 40,
                                 background: done ? habit.color : 'var(--sage-pale)',
                                 color: done ? 'white' : 'var(--text-muted)',
                                 border: isToday ? `2px solid var(--navy)` : done ? `1px solid ${habit.color}` : '1px solid var(--border)',
@@ -585,7 +590,7 @@ export default function HabitPage() {
                   {/* 참여율 */}
                   <div className="mt-2 pt-2 border-t" style={{ borderColor: 'var(--border-light)' }}>
                     <ProgressBar value={rate} label={`이달 ${HABIT_LABELS.completionRate}`} />
-                    <p className="text-[10px] mt-1.5 text-center" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
+                    <p className="text-xs mt-1.5 text-center" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
                       {getRateMessage(rate)}
                     </p>
                   </div>
@@ -604,10 +609,10 @@ export default function HabitPage() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={weeklyData} margin={{ top: 0, right: 0, left: -28, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" />
-                <XAxis dataKey="label" tick={{ fontSize: 10, fontFamily: 'Pretendard', fill: 'var(--text-muted)' }} />
-                <YAxis tick={{ fontSize: 9 }} />
+                <XAxis dataKey="label" tick={{ fontSize: 12, fontFamily: 'Pretendard', fill: 'var(--text-muted)' }} />
+                <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip
-                  contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--border)', fontFamily: 'Pretendard' }}
+                  contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid var(--border)', fontFamily: 'Pretendard' }}
                   formatter={(v: number) => [`${v}개 참여`, '오늘 루틴']}
                 />
                 <Bar dataKey="참여" fill="var(--sage)" radius={[3,3,0,0]} />
@@ -625,12 +630,12 @@ export default function HabitPage() {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={performanceTrend} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" />
-                <XAxis dataKey="label" tick={{ fontSize: 10, fontFamily: 'Pretendard', fill: 'var(--text-muted)' }} />
-                <YAxis domain={[1, 5]} ticks={[1,2,3,4,5]} tick={{ fontSize: 9 }} />
+                <XAxis dataKey="label" tick={{ fontSize: 12, fontFamily: 'Pretendard', fill: 'var(--text-muted)' }} />
+                <YAxis domain={[1, 5]} ticks={[1,2,3,4,5]} tick={{ fontSize: 12 }} />
                 <Tooltip
-                  contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--border)', fontFamily: 'Pretendard' }}
+                  contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid var(--border)', fontFamily: 'Pretendard' }}
                 />
-                <Legend wrapperStyle={{ fontSize: 10, fontFamily: 'Pretendard' }} />
+                <Legend wrapperStyle={{ fontSize: 12, fontFamily: 'Pretendard' }} />
                 <Line type="monotone" dataKey="에너지" stroke="var(--sage)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
                 <Line type="monotone" dataKey="만족도" stroke="var(--navy)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
               </LineChart>
@@ -649,7 +654,7 @@ export default function HabitPage() {
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-[12px] font-semibold" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>
                     {role.emoji} {role.label}
-                    <span className="ml-1 font-normal text-[10px]" style={{ color: 'var(--text-muted)' }}>({count}개 루틴)</span>
+                    <span className="ml-1 font-normal text-xs" style={{ color: 'var(--text-muted)' }}>({count}개 루틴)</span>
                   </span>
                   <span className="text-[12px] font-bold" style={{ color: 'var(--navy)', fontFamily: 'Pretendard, sans-serif' }}>{rate}%</span>
                 </div>

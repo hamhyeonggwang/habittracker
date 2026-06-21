@@ -178,19 +178,6 @@ export interface MonthPlan {
   plan: string;
 }
 
-// ============================================================
-// DASHBOARD — FINANCE
-// ============================================================
-export type FinanceCategory = 'income' | 'savings' | 'fixed' | 'variable';
-
-export interface FinanceItem {
-  id: string;
-  type: string;
-  amount: number;
-  category: FinanceCategory;
-}
-
-// ============================================================
 // MOHO AGGREGATE (computed, not stored)
 // ============================================================
 export interface RoleStats {

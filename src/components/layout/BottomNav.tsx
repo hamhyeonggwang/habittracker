@@ -1,12 +1,12 @@
 'use client';
-import { LayoutDashboard, CheckSquare, ListTodo, Heart, BookMarked } from 'lucide-react';
+import { Activity, LayoutDashboard, CheckSquare, ListTodo, BookMarked } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: '홈', icon: LayoutDashboard },
   { id: 'habit', label: '참여', icon: CheckSquare },
   { id: 'task', label: '업무', icon: ListTodo },
-  { id: 'mental', label: '컨디션', icon: Heart },
+  { id: 'mental', label: '컨디션', icon: Activity },
   { id: 'archive', label: '아카이브', icon: BookMarked },
 ];
 
@@ -20,16 +20,16 @@ export default function BottomNav({ current, onChange }: {
           const active = current === id;
           return (
             <button key={id} onClick={() => onChange(id)}
-              className={cn('flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-200',
+              className={cn('min-h-[56px] min-w-[56px] flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400',
                 active ? '' : 'opacity-50 hover:opacity-75')}
               style={{ fontFamily: 'Pretendard, sans-serif' }}>
-              <div className={cn('w-8 h-8 flex items-center justify-center rounded-lg transition-all',
+              <div className={cn('w-9 h-9 flex items-center justify-center rounded-lg transition-all',
                 active ? '' : '')}
                 style={{ background: active ? 'var(--sage-light)' : 'transparent' }}>
                 <Icon size={18} strokeWidth={active ? 2.2 : 1.8}
                   style={{ color: active ? 'var(--sage)' : 'var(--text-muted)' }} />
               </div>
-              <span className="text-[10px] font-semibold"
+              <span className="text-xs font-semibold"
                 style={{ color: active ? 'var(--sage)' : 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>
                 {label}
               </span>
