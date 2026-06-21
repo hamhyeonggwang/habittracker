@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import RegisterSW from '@/components/pwa/RegisterSW';
 
 export const metadata: Metadata = {
   title: 'OTD — Own The Day',
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body>
+        <RegisterSW />
         {children}
       </body>
     </html>

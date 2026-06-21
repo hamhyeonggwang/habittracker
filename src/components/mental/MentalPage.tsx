@@ -11,11 +11,12 @@ import { ko } from 'date-fns/locale';
 import { Save, CheckCircle2 } from 'lucide-react';
 import { MENTAL_LABELS } from '@/lib/strengthLanguage';
 
+// 한글 라벨 우선(차트·레이더·행 제목) + 영문 임상 용어 부가(sub)
 const METRICS = [
-  { key: 'body'        as const, label: 'Physical Capacity',    sub: '신체 수행 에너지', color: '#22c55e', dot: '🟢' },
-  { key: 'emotion'     as const, label: 'Emotional State',      sub: '정서 참여 에너지', color: '#2c4a7c', dot: '🔵' },
-  { key: 'focus'       as const, label: 'Cognitive Capacity',   sub: '인지 집중·흐름',   color: '#7c3aed', dot: '🟣' },
-  { key: 'environment' as const, label: 'Environmental Support', sub: '환경 지원도',     color: '#ea580c', dot: '🟠' },
+  { key: 'body'        as const, label: '신체 에너지', sub: 'Physical Capacity',     color: '#22c55e', dot: '🟢' },
+  { key: 'emotion'     as const, label: '정서 에너지', sub: 'Emotional State',       color: '#2c4a7c', dot: '🔵' },
+  { key: 'focus'       as const, label: '인지 흐름',   sub: 'Cognitive Capacity',    color: '#7c3aed', dot: '🟣' },
+  { key: 'environment' as const, label: '환경 지원',   sub: 'Environmental Support', color: '#ea580c', dot: '🟠' },
 ];
 
 export default function MentalPage() {
