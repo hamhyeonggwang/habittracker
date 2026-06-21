@@ -673,7 +673,7 @@ export default function DashboardPage() {
           {formatDate(today, 'yyyy.MM.dd EEEE')}
         </p>
         <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Noto Serif KR, serif' }}>
-          Occupation Tracking Dashboard
+          Own The Day
         </h1>
         <p className="text-[12px] mt-1 font-medium" style={{ color: 'var(--sage)', fontFamily: 'Noto Sans KR, sans-serif' }}>
           {getRateMessage(data.momentum)}

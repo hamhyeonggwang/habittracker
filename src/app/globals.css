@@ -19,7 +19,7 @@
   --bg-card: #ffffff;
   --text-primary: #1a2310;
   --text-secondary: #4a5a42;
-  --text-muted: #8a9a82;
+  --text-muted: #6e7a65; /* WCAG AA: #fff 대비 ~4.5:1 (구 #8a9a82는 2.7:1로 미달) */
   --border: #d8e4d8;
   --border-light: #eaf2ea;
 
@@ -128,7 +128,7 @@ h1, h2, .font-headline {
 
 /* ─── 점수 버튼 ─── */
 .score-btn {
-  @apply w-10 h-10 rounded-lg flex items-center justify-center text-sm font-medium transition-all duration-200;
+  @apply w-11 h-11 rounded-lg flex items-center justify-center text-sm font-medium transition-all duration-200;
   font-family: 'Pretendard', sans-serif;
   border: 1px solid var(--border);
 }

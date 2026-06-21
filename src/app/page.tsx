@@ -54,19 +54,6 @@ function SplashScreen({ leaving }: { leaving: boolean }) {
           }}
         >
           <span>OTD</span>
-          <span
-            style={{
-              display: 'inline-block',
-              width: 'clamp(10px, 2.5vw, 14px)',
-              height: 'clamp(10px, 2.5vw, 14px)',
-              borderRadius: '50%',
-              background: '#2D58E0',
-              margin: '0 clamp(3px, 0.7vw, 5px)',
-              flexShrink: 0,
-              transform: 'translateY(6%)',
-            }}
-          />
-          <span>H</span>
         </div>
 
         {/* 태그라인 */}
@@ -82,7 +69,7 @@ function SplashScreen({ leaving }: { leaving: boolean }) {
             textTransform: 'uppercase',
           }}
         >
-          Occupational Therapist&apos;s Daily Hub
+          Own The Day
         </p>
       </div>
 

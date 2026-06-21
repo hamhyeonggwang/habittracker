@@ -412,7 +412,7 @@ export default function HabitPage() {
                       onDelete={() => removeHabit(habit)}
                     />
                     <button type="button" onClick={() => toggle(habit.id, getToday())}
-                      className="w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200"
+                      className="w-11 h-11 rounded-lg flex items-center justify-center transition-all duration-200"
                       style={{
                         background: done ? habit.color : 'var(--sage-pale)',
                         border: `2px solid ${done ? habit.color : 'var(--border)'}`,

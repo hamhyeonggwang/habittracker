@@ -1,12 +1,17 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'OTD·H — Occupation Tracking Dashboard',
-  description: '작업치료사의 루틴, 업무, 컨디션을 추적하고 성장을 시각화하는 대시보드',
+  title: 'OTD — Own The Day',
+  description: '작업치료사가 설계한 습관·컨디션 기록. 역할 중심으로 하루를 관리하세요.',
   manifest: '/manifest.json',
+};
+
+export const viewport: Viewport = {
   themeColor: '#22c55e',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
+  width: 'device-width',
+  initialScale: 1,
+  // maximumScale 미지정 — 확대 허용(접근성: 확대 차단 금지)
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -1,7 +1,7 @@
 {
-  "name": "OTD·H — Occupation Tracking Dashboard",
-  "short_name": "OTD·H",
-  "description": "작업치료사의 습관, 업무, 컨디션을 추적하고 성장을 시각화하는 대시보드",
+  "name": "OTD — Own The Day",
+  "short_name": "OTD",
+  "description": "작업치료사가 설계한 습관·컨디션 기록. 역할 중심으로 하루를 관리하세요.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f8faf8",
