@@ -214,12 +214,16 @@ CREATE POLICY "owner_all" ON life_roles
 --       month_plans_user_month_key (user_id,month)
 --   - 코드 upsert onConflict → 'user_id,date' / 'user_id,month'
 --
--- ⬜ 남은 최종 잠금 (배포 후, 되돌리기 어려움 — 신중히):
---   -- (A) 단일 사용자용 구 제약 제거 → 멀티유저 완전 허용:
---   -- ALTER TABLE mental_state_logs  DROP CONSTRAINT mental_state_logs_date_key;
---   -- ALTER TABLE meaningful_moments DROP CONSTRAINT meaningful_moments_date_key;
---   -- ALTER TABLE month_plans DROP CONSTRAINT month_plans_pkey, ADD PRIMARY KEY (user_id, month);
---   --     (month_plans.user_id 를 NOT NULL 로 먼저 변경)
---   -- (B) 비인증 접근 전면 차단 (12개 테이블):
---   -- DROP POLICY "anon_all" ON habits;  ... (전 테이블 동일)
---   -- (C) 잔존 ai_insights 테이블 제거: DROP TABLE IF EXISTS ai_insights;
+-- ✅ 최종 잠금 적용 완료 — migration p1_final_lockdown (배포 후):
+--   - anon_all 정책 12개 전부 DROP → 비인증 접근 차단(원 취약점 해소)
+--   - 구 제약 제거: mental_state_logs_date_key, meaningful_moments_date_key
+--   - month_plans: PK(month) → PK(user_id, month)
+--   - 전 테이블 user_id NOT NULL
+--   - ai_insights 테이블 DROP
+--
+-- 최종 상태: 전 테이블 RLS = owner_all(authenticated)만. anon은 행 0개.
+-- ⚠️ 위쪽 'RLS POLICIES — anon 롤 전체 허용' 및 각 CREATE TABLE의 초기 정의는
+--    역사적 기록일 뿐 현재 라이브와 다름. 권위 있는 이력은 Supabase migrations 참조.
+--
+-- 선택적 후속 하드닝: REVOKE SELECT ON <테이블> FROM anon
+--   (RLS가 이미 행을 막지만 GraphQL 스키마 노출 경고 제거용)
