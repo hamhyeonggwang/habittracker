@@ -114,39 +114,91 @@ export function ScoreSelector({ value, onChange, labels }: {
 
 // ── EMPTY STATE ───────────────────────────────────
 export function EmptyState({ icon, title, description, action }: {
-  icon: string; title: string; description?: string; action?: ReactNode;
+  icon?: ReactNode; title: string; description?: string; action?: ReactNode;
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="text-4xl mb-3">{icon}</div>
+      {icon && <div className="mb-3" style={{ color: 'var(--text-muted)' }}>{icon}</div>}
       <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--text-secondary)', fontFamily: 'Pretendard, sans-serif' }}>{title}</h3>
-      {description && <p className="text-xs mb-4" style={{ color: 'var(--text-muted)', fontFamily: 'Noto Sans KR, sans-serif' }}>{description}</p>}
+      {description && <p className="text-[13px] mb-4" style={{ color: 'var(--text-muted)', fontFamily: 'Noto Sans KR, sans-serif' }}>{description}</p>}
       {action}
     </div>
   );
 }
 
 // ── BUTTON ────────────────────────────────────────
-export function Button({ children, onClick, variant = 'primary', size = 'md', className, disabled }: {
+// design.md: 높이 sm 36 / md 44 / lg 52, radius 12, 폰트 14px+ 600~700, focus-visible:ring-2
+export function Button({ children, onClick, variant = 'primary', size = 'md', className, disabled, type = 'button', fullWidth }: {
   children: ReactNode; onClick?: () => void;
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'navy';
   size?: 'sm' | 'md' | 'lg'; className?: string; disabled?: boolean;
+  type?: 'button' | 'submit'; fullWidth?: boolean;
 }) {
   const variants: Record<string, string> = {
     primary: 'text-white shadow-sm',
-    secondary: 'bg-white border text-gray-700 hover:bg-gray-50',
+    secondary: 'bg-white border hover:bg-gray-50',
     ghost: 'hover:bg-gray-100',
-    danger: 'bg-red-50 text-red-600 hover:bg-red-100',
+    danger: 'hover:opacity-90',
     navy: 'text-white',
   };
-  const sizes = { sm: 'px-3 py-1.5 text-xs', md: 'px-4 py-2 text-sm', lg: 'px-5 py-2.5 text-sm' };
-  const bg = variant === 'primary' ? 'var(--sage)' : variant === 'navy' ? 'var(--navy)' : undefined;
+  const sizes = {
+    sm: 'min-h-9 px-3 text-sm',
+    md: 'min-h-11 px-4 text-sm',
+    lg: 'min-h-[52px] px-5 text-base',
+  };
+  const bg = variant === 'primary' ? 'var(--sage)' : variant === 'navy' ? 'var(--navy)' : variant === 'danger' ? '#fdf2f2' : undefined;
+  const color = variant === 'secondary' ? 'var(--text-secondary)' : variant === 'danger' ? '#b02a2a' : undefined;
   const border = variant === 'secondary' ? 'var(--border)' : undefined;
   return (
-    <button onClick={onClick} disabled={disabled}
-      className={cn('rounded-lg font-semibold transition-all duration-150 disabled:opacity-50', variants[variant], sizes[size], className)}
-      style={{ fontFamily: 'Pretendard, sans-serif', backgroundColor: bg, borderColor: border }}>
+    <button type={type} onClick={onClick} disabled={disabled}
+      className={cn(
+        'inline-flex items-center justify-center gap-1.5 rounded-xl font-semibold transition-all duration-150',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[#4a7c59]',
+        'disabled:opacity-50', fullWidth && 'w-full', variants[variant], sizes[size], className)}
+      style={{ fontFamily: 'Pretendard, sans-serif', backgroundColor: bg, color, borderColor: border }}>
       {children}
     </button>
+  );
+}
+
+// ── ICON BUTTON (아이콘 단독, 44x44, aria-label 필수) ──
+export function IconButton({ children, onClick, label, className, disabled }: {
+  children: ReactNode; onClick?: () => void; label: string; className?: string; disabled?: boolean;
+}) {
+  return (
+    <button type="button" onClick={onClick} aria-label={label} disabled={disabled}
+      className={cn('inline-flex items-center justify-center w-11 h-11 rounded-xl transition-colors',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[#4a7c59]',
+        'disabled:opacity-50 hover:bg-gray-100', className)}
+      style={{ color: 'var(--text-muted)' }}>
+      {children}
+    </button>
+  );
+}
+
+// ── INPUT / TEXTAREA (design.md: 높이 44px+, 14px+, focus-visible:ring-2) ──
+const fieldBase = 'w-full rounded-xl border bg-white text-sm transition-colors ' +
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[#4a7c59] ' +
+  'placeholder:text-[var(--text-muted)] disabled:opacity-50';
+
+export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  const { className, ...rest } = props;
+  return (
+    <input
+      {...rest}
+      className={cn(fieldBase, 'min-h-11 px-3.5', className)}
+      style={{ borderColor: 'var(--border)', color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif', ...props.style }}
+    />
+  );
+}
+
+export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const { className, ...rest } = props;
+  return (
+    <textarea
+      {...rest}
+      className={cn(fieldBase, 'min-h-[88px] py-2.5 px-3.5 leading-relaxed', className)}
+      style={{ borderColor: 'var(--border)', color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif', ...props.style }}
+    />
   );
 }

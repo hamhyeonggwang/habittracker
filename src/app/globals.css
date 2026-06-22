@@ -129,9 +129,11 @@ h1, h2, .font-headline {
 /* ─── 점수 버튼 ─── */
 .score-btn {
   @apply w-11 h-11 rounded-lg flex items-center justify-center text-sm font-medium transition-all duration-200;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1;
   font-family: 'Pretendard', sans-serif;
   border: 1px solid var(--border);
 }
+.score-btn:focus-visible { --tw-ring-color: var(--sage); }
 .score-btn.active { background: var(--sage); color: white; border-color: var(--sage); }
 .score-btn.inactive { background: white; color: var(--text-muted); }
 .score-btn.inactive:hover { background: var(--sage-light); color: var(--sage); border-color: var(--sage); }
