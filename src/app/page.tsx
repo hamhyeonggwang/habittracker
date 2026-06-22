@@ -8,6 +8,7 @@ import TaskPage from '@/components/task/TaskPage';
 import MentalPage from '@/components/mental/MentalPage';
 import ArchivePage from '@/components/archive/ArchivePage';
 import { Toaster } from '@/components/ui/Toast';
+import { ConfirmHost } from '@/components/ui/ConfirmDialog';
 import LoginScreen from '@/components/auth/LoginScreen';
 import Onboarding from '@/components/onboarding/Onboarding';
 import { useSession } from '@/lib/useSession';
@@ -145,6 +146,7 @@ export default function Home() {
 
   return (
     <>
+      <ConfirmHost />
       {showSplash && <SplashScreen leaving={splashLeaving && !sessionLoading} />}
       {!showSplash && !session && (
         <>

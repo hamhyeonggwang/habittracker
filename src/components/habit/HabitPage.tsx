@@ -6,6 +6,7 @@ import { Habit, LifeRoleDef, RoutineSlot, PerformanceScore } from '@/types';
 import { Button, EmptyState, ProgressBar } from '@/components/ui';
 import { getToday, formatDateShort, cn } from '@/lib/utils';
 import { useToday } from '@/lib/useToday';
+import { confirmDialog } from '@/lib/confirm';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
 import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval, getDaysInMonth } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -285,7 +286,12 @@ export default function HabitPage() {
   };
 
   const removeHabit = async (habit: Habit) => {
-    if (!confirm(`"${habit.name}" 루틴을 삭제할까요?\n참여 기록도 함께 삭제됩니다.`)) return;
+    const ok = await confirmDialog({
+      title: `"${habit.name}" 루틴을 삭제할까요?`,
+      message: '참여 기록도 함께 삭제됩니다. 되돌릴 수 없어요.',
+      confirmLabel: '삭제', danger: true,
+    });
+    if (!ok) return;
     await habitLogStore.deleteByHabitId(habit.id);
     await habitStore.delete(habit.id);
     await refresh();

@@ -6,6 +6,7 @@ import { Task, Priority, TimeSlot, Project, ProjectScope, LifeRoleDef } from '@/
 import { Button, EmptyState } from '@/components/ui';
 import { getToday, cn } from '@/lib/utils';
 import { useToday } from '@/lib/useToday';
+import { confirmDialog } from '@/lib/confirm';
 import { TASK_LABELS, getRateMessage } from '@/lib/strengthLanguage';
 import { useLifeRoles } from '@/lib/useLifeRoles';
 import RoleManager from '@/components/roles/RoleManager';
@@ -255,6 +256,12 @@ function WeeklyProjectBanner({
   };
 
   const deleteProject = async (p: Project) => {
+    const ok = await confirmDialog({
+      title: `"${p.title}" 프로젝트를 삭제할까요?`,
+      message: '프로젝트가 삭제됩니다. 연결된 업무는 남고 연결만 해제돼요.',
+      confirmLabel: '삭제', danger: true,
+    });
+    if (!ok) return;
     await projectStore.delete(p.id);
     await onRefreshProjects();
   };
@@ -382,7 +389,12 @@ export default function TaskPage() {
     const t = tasks.find(t => t.id === id);
     if (t) { await taskStore.update(id, { completed: !t.completed }); await refresh(); }
   };
-  const remove = async (id: string) => { await taskStore.delete(id); await refresh(); };
+  const remove = async (id: string) => {
+    const ok = await confirmDialog({ title: '이 업무를 삭제할까요?', confirmLabel: '삭제', danger: true });
+    if (!ok) return;
+    await taskStore.delete(id);
+    await refresh();
+  };
   const saveMemo = async (id: string) => {
     await taskStore.update(id, { incompleteReason: memos[id] });
     setExpandedId(null);

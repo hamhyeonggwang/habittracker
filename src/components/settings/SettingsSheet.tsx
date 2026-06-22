@@ -4,6 +4,7 @@ import { X, Tag, FileText, LogOut, Trash2 } from 'lucide-react';
 import { useSession } from '@/lib/useSession';
 import { signOut, deleteAccount } from '@/lib/auth';
 import { showToast } from '@/lib/toast';
+import { confirmDialog } from '@/lib/confirm';
 import RoleManager from '@/components/roles/RoleManager';
 
 export default function SettingsSheet({ onClose }: { onClose: () => void }) {
@@ -12,10 +13,12 @@ export default function SettingsSheet({ onClose }: { onClose: () => void }) {
   const [deleting, setDeleting] = useState(false);
 
   const handleDelete = async () => {
-    const ok1 = window.confirm('계정과 모든 데이터(습관·업무·컨디션·재무·역할 등)가 영구 삭제됩니다. 되돌릴 수 없습니다. 계속할까요?');
-    if (!ok1) return;
-    const ok2 = window.confirm('정말 삭제하시겠어요? 이 작업은 취소할 수 없습니다.');
-    if (!ok2) return;
+    const ok = await confirmDialog({
+      title: '계정과 모든 데이터를 삭제할까요?',
+      message: '습관·업무·컨디션·역할 등 모든 기록이 영구히 사라지며 되돌릴 수 없습니다.',
+      confirmLabel: '영구 삭제', danger: true,
+    });
+    if (!ok) return;
     setDeleting(true);
     const r = await deleteAccount();
     if (!r.ok) {

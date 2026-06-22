@@ -5,6 +5,7 @@ import { LifeRoleDef } from '@/types';
 import { lifeRoleStore, newId } from '@/lib/storage';
 import { ROLE_SUGGESTIONS, ROLE_EMOJIS, ROLE_COLORS } from '@/lib/roles';
 import { useLifeRoles } from '@/lib/useLifeRoles';
+import { confirmDialog } from '@/lib/confirm';
 import { getToday } from '@/lib/utils';
 
 export default function RoleManager({ onClose, onChange }: { onClose: () => void; onChange?: () => void }) {
@@ -51,7 +52,12 @@ export default function RoleManager({ onClose, onChange }: { onClose: () => void
   };
 
   const remove = async (id: string) => {
-    if (!window.confirm('이 역할을 삭제할까요? 연결된 습관·업무의 태그만 사라지고 기록은 유지됩니다.')) return;
+    const ok = await confirmDialog({
+      title: '이 역할을 삭제할까요?',
+      message: '연결된 습관·업무의 태그만 사라지고 기록은 유지됩니다.',
+      confirmLabel: '삭제', danger: true,
+    });
+    if (!ok) return;
     if ((await lifeRoleStore.delete(id)).ok) await reload();
   };
 
