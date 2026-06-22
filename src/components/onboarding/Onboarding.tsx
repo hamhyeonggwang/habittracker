@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { Home, Repeat, ListTodo, Activity, Archive } from 'lucide-react';
 import { LifeRoleDef } from '@/types';
 import { ROLE_SUGGESTIONS } from '@/lib/roles';
 import { lifeRoleStore, habitStore, profileStore, newId } from '@/lib/storage';
@@ -101,8 +102,8 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
 function Title({ children, sub }: { children: React.ReactNode; sub?: string }) {
   return (
     <div style={{ marginBottom: 20 }}>
-      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#1c1f2e', fontFamily: 'Noto Serif KR, serif', lineHeight: 1.35 }}>{children}</h2>
-      {sub && <p style={{ fontSize: 14, color: '#6e7a65', marginTop: 8, fontFamily: 'Noto Sans KR, sans-serif', lineHeight: 1.6 }}>{sub}</p>}
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: '#1c1f2e', fontFamily: 'Pretendard, sans-serif', lineHeight: 1.35 }}>{children}</h2>
+      {sub && <p style={{ fontSize: 14, color: '#6e7a65', marginTop: 8, fontFamily: 'Pretendard, sans-serif', lineHeight: 1.6 }}>{sub}</p>}
     </div>
   );
 }
@@ -185,22 +186,22 @@ function FirstHabit({ roles, name, setName, icon, setIcon, roleId, setRoleId }: 
 
 function TabGuide() {
   const items = [
-    { emoji: '🏠', t: '대시보드', d: '오늘의 참여·컨디션·의미 있었던 순간을 한눈에' },
-    { emoji: '🔁', t: '참여(습관)', d: '루틴을 체크하고 역할별 참여를 쌓아요' },
-    { emoji: '✅', t: '업무', d: '오늘 할 일을 역할·프로젝트와 함께 관리' },
-    { emoji: '💚', t: '컨디션', d: '신체·정서·인지·환경 4축으로 상태를 기록' },
-    { emoji: '📂', t: '아카이브', d: '메모·아이디어·기록을 모아두는 공간' },
+    { Icon: Home, t: '대시보드', d: '오늘의 참여·컨디션·의미 있었던 순간을 한눈에' },
+    { Icon: Repeat, t: '참여(습관)', d: '루틴을 체크하고 역할별 참여를 쌓아요' },
+    { Icon: ListTodo, t: '업무', d: '오늘 할 일을 역할·프로젝트와 함께 관리' },
+    { Icon: Activity, t: '컨디션', d: '신체·정서·인지·환경 4축으로 상태를 기록' },
+    { Icon: Archive, t: '아카이브', d: '메모·아이디어·기록을 모아두는 공간' },
   ];
   return (
     <div>
       <Title sub="아래 탭으로 하루를 기록해요. 천천히 둘러보세요.">준비 끝!<br />이렇게 쓰면 돼요</Title>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {items.map(it => (
-          <div key={it.t} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-            <span style={{ fontSize: 22, flexShrink: 0 }}>{it.emoji}</span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {items.map(({ Icon, t, d }) => (
+          <div key={t} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <span style={{ flexShrink: 0, color: '#4a7c59', marginTop: 1 }}><Icon size={20} /></span>
             <div>
-              <p style={{ fontSize: 15, fontWeight: 700, color: '#1c1f2e', fontFamily: 'Pretendard, sans-serif' }}>{it.t}</p>
-              <p style={{ fontSize: 13, color: '#6e7a65', fontFamily: 'Noto Sans KR, sans-serif', lineHeight: 1.5 }}>{it.d}</p>
+              <p style={{ fontSize: 15, fontWeight: 700, color: '#1c1f2e', fontFamily: 'Pretendard, sans-serif' }}>{t}</p>
+              <p style={{ fontSize: 13, color: '#6e7a65', fontFamily: 'Pretendard, sans-serif', lineHeight: 1.5 }}>{d}</p>
             </div>
           </div>
         ))}
