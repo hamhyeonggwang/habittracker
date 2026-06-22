@@ -30,3 +30,6 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# 민감 데이터 백업 (커밋 금지)
+finance_items_backup_*.sql
