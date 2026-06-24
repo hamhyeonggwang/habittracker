@@ -450,7 +450,7 @@ const EMPTY_DATA = {
   completedTasks: [] as import('@/types').Task[], todayTasks: [] as import('@/types').Task[],
 };
 
-export default function DashboardPage({ onNavigate }: { onNavigate?: (id: string) => void }) {
+export default function DashboardPage({ onNavigate, active = true }: { onNavigate?: (id: string) => void; active?: boolean }) {
   const [activeTab, setActiveTab] = useState<'identity' | 'roadmap'>('identity');
   const [data, setData] = useState(EMPTY_DATA);
   const [showSettings, setShowSettings] = useState(false);
@@ -509,7 +509,8 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (id: string
     setData({ taskRate, habitRate, mentalScore, completedHabits, habits: activeHabits, momentum, growthHabit, growthRate, monthlyData, streak, recentArchive, completedTasks, todayTasks });
   }, [today]);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  // 탭이 활성화될 때마다 재조회 — 다른 탭에서 체크/추가한 결과를 즉시 반영
+  useEffect(() => { if (active) loadData(); }, [active, loadData]);
 
   const TABS = [
     { id: 'identity', label: 'IDENTITY' },

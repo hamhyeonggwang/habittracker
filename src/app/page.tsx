@@ -133,7 +133,7 @@ export default function Home() {
 
   const renderPage = (id: PageId) => {
     switch (id) {
-      case 'dashboard': return <DashboardPage onNavigate={handlePageChange} />;
+      case 'dashboard': return <DashboardPage onNavigate={handlePageChange} active={page === 'dashboard'} />;
       case 'habit': return <HabitPage />;
       case 'task': return <TaskPage />;
       case 'mental': return <MentalPage />;
