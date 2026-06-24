@@ -370,7 +370,7 @@ function MeaningfulMomentCard() {
       <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--border-light)' }}>
         <div className="flex items-center gap-2">
           <Archive size={18} style={{ color: 'var(--sage)' }} />
-          <span className="text-base font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>오늘 가장 의미 있었던 순간</span>
+          <span className="text-base font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>오늘 나에게 가장 의미있는 순간</span>
         </div>
         {monthCount > 0 && <span className="text-xs font-semibold" style={{ color: 'var(--text-muted)', fontFamily: 'Pretendard, sans-serif' }}>이달 {monthCount}개</span>}
       </div>
@@ -622,9 +622,6 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (id: string
         </button>
       </div>
 
-      {/* ── 오늘 가장 의미 있었던 순간 ── */}
-      <MeaningfulMomentCard />
-
       {/* ── Today Hero ── */}
       <section className="card p-4 overflow-hidden" style={{ background: 'linear-gradient(135deg, #ffffff 0%, var(--sage-pale) 100%)' }}>
         <div className="flex items-start justify-between gap-4">
@@ -733,6 +730,9 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (id: string
           })}
         </div>
       </section>
+
+      {/* ── 오늘 나에게 가장 의미있는 순간 ── */}
+      <MeaningfulMomentCard />
 
       {/* ── Recent Archive ── */}
       {data.recentArchive.length > 0 && (
