@@ -622,6 +622,9 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (id: string
         </button>
       </div>
 
+      {/* ── 오늘 가장 의미 있었던 순간 ── */}
+      <MeaningfulMomentCard />
+
       {/* ── Today Hero ── */}
       <section className="card p-4 overflow-hidden" style={{ background: 'linear-gradient(135deg, #ffffff 0%, var(--sage-pale) 100%)' }}>
         <div className="flex items-start justify-between gap-4">
@@ -730,9 +733,6 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (id: string
           })}
         </div>
       </section>
-
-      {/* ── 오늘 가장 의미 있었던 순간 ── */}
-      <MeaningfulMomentCard />
 
       {/* ── Recent Archive ── */}
       {data.recentArchive.length > 0 && (

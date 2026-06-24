@@ -180,7 +180,7 @@ export default function MentalPage() {
               <YAxis domain={[0, 5]} tick={{ fontSize: 12 }} ticks={[1,2,3,4,5]} />
               <Tooltip
                 contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid var(--border)', fontFamily: 'Pretendard' }}
-                formatter={(v: number, name: string) => [getScoreMessage(Math.round(v)) + ` (${v})`, name]}
+                formatter={(v: number, name: string) => [`${getScoreMessage(Math.round(v))} (${v.toFixed(1)})`, name]}
               />
               {METRICS.map(m => (
                 <Line key={m.key} type="monotone" dataKey={m.label} stroke={m.color} strokeWidth={2} dot={false} />

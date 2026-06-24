@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>작업치료사 앱개발노트 카드뉴스</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    background: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    gap: 32px;
+  }
+  h1 {
+    color: #fff;
+    font-size: 15px;
+    letter-spacing: 2px;
+    opacity: 0.5;
+    margin-bottom: -16px;
+    font-weight: 300;
+  }
+
+  .slide {
+    width: 540px;
+    height: 960px;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  /* ── Slide 1: Hook ── */
+  .s1 {
+    background: #fdf6ec;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 50px;
+    text-align: center;
+  }
+  .s1 .tag {
+    background: #e8f5e9;
+    color: #388e3c;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 16px;
+    border-radius: 100px;
+    letter-spacing: 1.5px;
+    margin-bottom: 36px;
+  }
+  .s1 .emoji-big { font-size: 100px; margin-bottom: 28px; line-height: 1; }
+  .s1 .title {
+    font-size: 44px;
+    font-weight: 900;
+    line-height: 1.25;
+    color: #1a1a2e;
+    word-break: keep-all;
+    margin-bottom: 20px;
+  }
+  .s1 .title em { color: #2e7d32; font-style: normal; }
+  .s1 .sub {
+    font-size: 17px;
+    color: #555;
+    line-height: 1.7;
+    word-break: keep-all;
+  }
+  .s1 .sub strong { color: #2e7d32; font-weight: 700; }
+  .s1 .footnote {
+    position: absolute;
+    bottom: 36px;
+    font-size: 12px;
+    color: #aaa;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Slide 2: Problem ── */
+  .s2 {
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 52px;
+  }
+  .s2 .num { font-size: 13px; color: #bbb; font-weight: 700; letter-spacing: 2px; margin-bottom: 24px; }
+  .s2 .heading {
+    font-size: 38px;
+    font-weight: 900;
+    color: #1a1a2e;
+    line-height: 1.3;
+    word-break: keep-all;
+    margin-bottom: 36px;
+  }
+  .s2 .heading em { color: #2e7d32; font-style: normal; display: block; }
+  .s2 .items { display: flex; flex-direction: column; gap: 20px; }
+  .s2 .item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    background: #f8f9fa;
+    border-radius: 16px;
+    padding: 20px 22px;
+  }
+  .s2 .item-icon { font-size: 28px; flex-shrink: 0; margin-top: 2px; }
+  .s2 .item-text { }
+  .s2 .item-text strong {
+    display: block;
+    font-size: 16px;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+  }
+  .s2 .item-text span {
+    font-size: 14px;
+    color: #777;
+    line-height: 1.6;
+    word-break: keep-all;
+  }
+  .s2 .footnote {
+    position: absolute;
+    bottom: 36px;
+    font-size: 12px;
+    color: #aaa;
+  }
+
+  /* ── Slide 3: Solution ── */
+  .s3 {
+    background: linear-gradient(160deg, #1b5e20 0%, #2e7d32 45%, #388e3c 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 52px;
+    text-align: center;
+    color: #fff;
+  }
+  .s3 .bubble {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    padding: 36px 40px;
+    margin-bottom: 32px;
+  }
+  .s3 .bubble-icon { font-size: 52px; margin-bottom: 16px; }
+  .s3 .bubble-text {
+    font-size: 17px;
+    line-height: 1.75;
+    color: rgba(255,255,255,0.9);
+    word-break: keep-all;
+  }
+  .s3 .bubble-text strong { color: #a5d6a7; font-weight: 800; }
+  .s3 .arrow { font-size: 32px; margin-bottom: 28px; opacity: 0.7; }
+  .s3 .result {
+    font-size: 40px;
+    font-weight: 900;
+    line-height: 1.3;
+    word-break: keep-all;
+  }
+  .s3 .result span { color: #a5d6a7; }
+
+  /* ── Slide 4: Features ── */
+  .s4 {
+    background: #f5f7f5;
+    display: flex;
+    flex-direction: column;
+    padding: 60px 48px;
+  }
+  .s4 .label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #2e7d32;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+  .s4 .heading {
+    font-size: 36px;
+    font-weight: 900;
+    color: #1a1a2e;
+    line-height: 1.35;
+    margin-bottom: 36px;
+    word-break: keep-all;
+  }
+  .s4 .features {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    flex: 1;
+  }
+  .s4 .feat {
+    background: #fff;
+    border-radius: 18px;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1.5px solid #e8ede8;
+  }
+  .s4 .feat-icon { font-size: 36px; }
+  .s4 .feat-name {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1a1a2e;
+  }
+  .s4 .feat-desc {
+    font-size: 13px;
+    color: #777;
+    line-height: 1.6;
+    word-break: keep-all;
+  }
+  .s4 .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 100px;
+    margin-top: auto;
+  }
+
+  /* ── Slide 5: Process ── */
+  .s5 {
+    background: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 52px;
+    color: #fff;
+  }
+  .s5 .label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #66bb6a;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+  }
+  .s5 .heading {
+    font-size: 38px;
+    font-weight: 900;
+    line-height: 1.3;
+    margin-bottom: 44px;
+    word-break: keep-all;
+  }
+  .s5 .heading span { color: #66bb6a; }
+  .s5 .steps { display: flex; flex-direction: column; gap: 0; }
+  .s5 .step {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  .s5 .step-line {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 36px;
+  }
+  .s5 .step-dot {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #2e7d32;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .s5 .step-connector {
+    width: 2px;
+    height: 36px;
+    background: rgba(255,255,255,0.1);
+    margin: 4px 0;
+  }
+  .s5 .step-content { padding-top: 4px; padding-bottom: 8px; }
+  .s5 .step-title {
+    font-size: 17px;
+    font-weight: 800;
+    margin-bottom: 4px;
+    color: #fff;
+  }
+  .s5 .step-desc {
+    font-size: 14px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.6;
+    word-break: keep-all;
+  }
+  .s5 .callout {
+    margin-top: 40px;
+    background: rgba(46,125,50,0.2);
+    border: 1px solid rgba(46,125,50,0.5);
+    border-radius: 16px;
+    padding: 20px 22px;
+    font-size: 15px;
+    color: #a5d6a7;
+    line-height: 1.65;
+    word-break: keep-all;
+  }
+  .s5 .callout strong { color: #66bb6a; }
+
+  /* ── Slide 6: CTA ── */
+  .s6 {
+    background: #fdf6ec;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 50px;
+    text-align: center;
+  }
+  .s6 .emoji-row {
+    font-size: 48px;
+    margin-bottom: 28px;
+    letter-spacing: 8px;
+  }
+  .s6 .title {
+    font-size: 42px;
+    font-weight: 900;
+    color: #1a1a2e;
+    line-height: 1.3;
+    margin-bottom: 16px;
+    word-break: keep-all;
+  }
+  .s6 .title em { color: #2e7d32; font-style: normal; }
+  .s6 .sub {
+    font-size: 16px;
+    color: #666;
+    line-height: 1.75;
+    word-break: keep-all;
+    margin-bottom: 44px;
+  }
+  .s6 .divider {
+    width: 48px;
+    height: 3px;
+    background: #2e7d32;
+    border-radius: 2px;
+    margin: 0 auto 44px;
+  }
+  .s6 .badge-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 44px;
+    flex-wrap: wrap;
+  }
+  .s6 .badge {
+    background: #1a1a2e;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 20px;
+    border-radius: 100px;
+    letter-spacing: 0.5px;
+  }
+  .s6 .cta {
+    background: #2e7d32;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 800;
+    padding: 18px 40px;
+    border-radius: 100px;
+    letter-spacing: 0.5px;
+    display: inline-block;
+  }
+  .s6 .footnote {
+    position: absolute;
+    bottom: 36px;
+    font-size: 12px;
+    color: #aaa;
+  }
+
+  /* ── nav ── */
+  .nav {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .nav a {
+    color: rgba(255,255,255,0.5);
+    font-size: 12px;
+    text-decoration: none;
+    padding: 6px 14px;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 100px;
+    transition: all 0.2s;
+  }
+  .nav a:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+</style>
+</head>
+<body>
+
+<h1>CARD NEWS · 작업치료사 앱개발노트</h1>
+
+<nav class="nav">
+  <a href="#s1">01 Hook</a>
+  <a href="#s2">02 문제</a>
+  <a href="#s3">03 해결</a>
+  <a href="#s4">04 기능</a>
+  <a href="#s5">05 과정</a>
+  <a href="#s6">06 CTA</a>
+</nav>
+
+<!-- ── SLIDE 1 ── -->
+<div class="slide s1" id="s1">
+  <div class="tag">자급자족 앱개발노트</div>
+  <div class="emoji-big">🧑‍💻</div>
+  <h2 class="title"><em>작업치료사</em>가<br>앱을 만들었습니다</h2>
+  <p class="sub">코딩은 모르지만<br><strong>AI랑 같이</strong> 어떻게든 했습니다</p>
+  <p class="footnote">01 / 06</p>
+</div>
+
+<!-- ── SLIDE 2 ── -->
+<div class="slide s2" id="s2">
+  <p class="num">02 / 06</p>
+  <h2 class="heading">시중 앱들이<br><em>뭔가 아쉬웠어요</em></h2>
+  <div class="items">
+    <div class="item">
+      <div class="item-icon">😵</div>
+      <div class="item-text">
+        <strong>기능이 너무 많거나</strong>
+        <span>쓸 기능 찾다가 지치는 앱들<br>나한테 필요한 건 딱 3가지인데</span>
+      </div>
+    </div>
+    <div class="item">
+      <div class="item-icon">📦</div>
+      <div class="item-text">
+        <strong>따로따로 흩어진 툴들</strong>
+        <span>습관 앱, 메모 앱, 가계부 앱...<br>데이터가 다 다른 곳에 있는 느낌</span>
+      </div>
+    </div>
+    <div class="item">
+      <div class="item-icon">💡</div>
+      <div class="item-text">
+        <strong>OT로서 생각하는 건강이 달랐어요</strong>
+        <span>작업수행, 역할, 루틴이 핵심인데<br>그걸 담은 앱이 없더라고요</span>
+      </div>
+    </div>
+  </div>
+  <p class="footnote">02 / 06</p>
+</div>
+
+<!-- ── SLIDE 3 ── -->
+<div class="slide s3" id="s3">
+  <div class="bubble">
+    <div class="bubble-icon">🤖</div>
+    <p class="bubble-text">
+      "Claude야, 나 습관 트래커<br>만들어줄 수 있어?"<br><br>
+      <strong>→ 코드 뚝딱 나왔습니다 😳</strong>
+    </p>
+  </div>
+  <div class="arrow">↓</div>
+  <p class="result">그래서 그냥<br><span>직접 만들었습니다</span></p>
+</div>
+
+<!-- ── SLIDE 4 ── -->
+<div class="slide s4" id="s4">
+  <p class="label">현재 기능</p>
+  <h2 class="heading">이런 것들이<br>들어있어요</h2>
+  <div class="features">
+    <div class="feat">
+      <div class="feat-icon">🌿</div>
+      <div class="feat-name">습관 트래커</div>
+      <div class="feat-desc">MOHO 기반 역할·루틴·수행 기록</div>
+      <div class="chip">✓ 완성</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">✅</div>
+      <div class="feat-name">오늘의 과제</div>
+      <div class="feat-desc">하루 할 일을 가볍게 관리</div>
+      <div class="chip">✓ 완성</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🧠</div>
+      <div class="feat-name">멘탈 체크</div>
+      <div class="feat-desc">기분·에너지·수면을 숫자로 기록</div>
+      <div class="chip">✓ 완성</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">📚</div>
+      <div class="feat-name">지식 아카이브</div>
+      <div class="feat-desc">발견한 것들을 태그로 모아두기</div>
+      <div class="chip">✓ 완성</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SLIDE 5 ── -->
+<div class="slide s5" id="s5">
+  <p class="label">개발 과정</p>
+  <h2 class="heading">이렇게<br><span>만들었어요</span></h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-line">
+        <div class="step-dot">💬</div>
+        <div class="step-connector"></div>
+      </div>
+      <div class="step-content">
+        <p class="step-title">Claude에게 말로 설명했어요</p>
+        <p class="step-desc">"작업치료사 관점으로 습관을 기록하고 싶어"<br>개념 설명 → 코드 생성</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-line">
+        <div class="step-dot">🔧</div>
+        <div class="step-connector"></div>
+      </div>
+      <div class="step-content">
+        <p class="step-title">안 되면 다시 물어봤어요</p>
+        <p class="step-desc">에러가 나도 붙여넣으면 고쳐줌<br>코딩 몰라도 대화하듯 진행</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-line">
+        <div class="step-dot">🚀</div>
+      </div>
+      <div class="step-content">
+        <p class="step-title">Vercel로 배포까지 완료</p>
+        <p class="step-desc">내 폰에서 실제로 쓰고 있는 앱<br>Supabase로 데이터도 저장 중</p>
+      </div>
+    </div>
+  </div>
+  <div class="callout">
+    OT 지식 + AI = 내가 쓰고 싶은 앱<br>
+    <strong>기간: 약 2주 / 비용: 거의 0원</strong>
+  </div>
+</div>
+
+<!-- ── SLIDE 6 ── -->
+<div class="slide s6" id="s6">
+  <div class="emoji-row">🌿✍️📱</div>
+  <h2 class="title"><em>자급자족</em><br>앱개발노트</h2>
+  <div class="divider"></div>
+  <p class="sub">작업치료사가 AI와 함께<br>직접 앱을 만들어가는 기록<br>완성보다 <strong>과정</strong>에 집중합니다</p>
+  <div class="badge-row">
+    <div class="badge">#작업치료사</div>
+    <div class="badge">#AI코딩</div>
+    <div class="badge">#자급자족</div>
+  </div>
+  <div class="cta">계속 보고 싶다면 팔로우 👋</div>
+  <p class="footnote">06 / 06</p>
+</div>
+
+</body>
+</html>

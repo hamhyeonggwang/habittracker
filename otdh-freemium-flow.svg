@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 1240" font-family="'Pretendard','Noto Sans KR',-apple-system,system-ui,sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#6B6256"/>
+    </marker>
+    <marker id="arrTeal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#2A9D8F"/>
+    </marker>
+    <marker id="arrGold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#B5923F"/>
+    </marker>
+  </defs>
+
+  <rect width="780" height="1240" fill="#F5F0E8"/>
+
+  <!-- Title -->
+  <text x="40" y="58" font-size="27" font-weight="800" fill="#1A1A1A">OTD·H — 무료 / 유료(AI) 멤버십 플로우</text>
+  <text x="40" y="86" font-size="14" fill="#6B6256">로그인 → 등급 판정 → 기능 분기 → AI 서버 게이팅 → 결제 동기화 (end-to-end)</text>
+  <line x1="40" y1="104" x2="740" y2="104" stroke="#C9BFAE" stroke-width="1.5"/>
+
+  <!-- 1. App open -->
+  <rect x="300" y="130" width="180" height="50" rx="12" fill="#1A1A1A"/>
+  <text x="390" y="161" font-size="15" font-weight="700" fill="#F5F0E8" text-anchor="middle">앱 실행</text>
+  <line x1="390" y1="180" x2="390" y2="208" stroke="#6B6256" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- 2. Auth -->
+  <rect x="270" y="210" width="240" height="62" rx="12" fill="#FBF8F2" stroke="#C9BFAE" stroke-width="1.5"/>
+  <text x="390" y="237" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">회원가입 / 로그인</text>
+  <text x="390" y="258" font-size="12.5" fill="#6B6256" text-anchor="middle">Supabase Auth · 이메일 / Google / Apple</text>
+  <line x1="390" y1="272" x2="390" y2="300" stroke="#6B6256" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- 3. Session + tier -->
+  <rect x="258" y="302" width="264" height="62" rx="12" fill="#FBF8F2" stroke="#C9BFAE" stroke-width="1.5"/>
+  <text x="390" y="329" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">세션 확보 + 등급 조회</text>
+  <text x="390" y="350" font-size="12.5" fill="#6B6256" text-anchor="middle">profiles · subscriptions 테이블 (RLS)</text>
+
+  <!-- branch split lines -->
+  <path d="M390 364 L390 392 L190 392 L190 420" fill="none" stroke="#6B6256" stroke-width="2" marker-end="url(#arr)"/>
+  <path d="M390 364 L390 392 L590 392 L590 420" fill="none" stroke="#6B6256" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="390" y="386" font-size="12.5" font-weight="700" fill="#6B6256" text-anchor="middle">등급?</text>
+
+  <!-- FREE lane -->
+  <rect x="60" y="422" width="260" height="196" rx="14" fill="#F1ECE2" stroke="#9A9488" stroke-width="1.5"/>
+  <text x="190" y="450" font-size="16" font-weight="800" fill="#5C564B" text-anchor="middle">FREE</text>
+  <text x="190" y="470" font-size="12" fill="#8A8475" text-anchor="middle">로그인만 하면 누구나</text>
+  <rect x="82" y="484" width="216" height="44" rx="9" fill="#FBF8F2" stroke="#C9BFAE"/>
+  <text x="190" y="511" font-size="13" font-weight="600" fill="#1A1A1A" text-anchor="middle">✓ 추적 전체 (습관·업무·</text>
+  <rect x="82" y="484" width="216" height="44" rx="9" fill="none"/>
+  <text x="190" y="524" font-size="11.5" fill="#6B6256" text-anchor="middle">프로젝트·컨디션·아카이브·통계)</text>
+  <rect x="82" y="538" width="216" height="60" rx="9" fill="#EDE6D8" stroke="#C9BFAE" stroke-dasharray="4 3"/>
+  <text x="190" y="563" font-size="13" font-weight="700" fill="#9A8E76" text-anchor="middle">🔒 AI 분석 잠금</text>
+  <text x="190" y="583" font-size="11.5" fill="#9A8E76" text-anchor="middle">"Pro 기능" 안내 (업셀)</text>
+
+  <!-- PRO lane -->
+  <rect x="460" y="422" width="260" height="196" rx="14" fill="#FBF6EA" stroke="#C8A96A" stroke-width="2"/>
+  <text x="590" y="450" font-size="16" font-weight="800" fill="#B5923F" text-anchor="middle">PRO · 유료</text>
+  <text x="590" y="470" font-size="12" fill="#A88E55" text-anchor="middle">구독 활성 사용자</text>
+  <rect x="482" y="484" width="216" height="44" rx="9" fill="#FBF8F2" stroke="#E0CDA0"/>
+  <text x="590" y="511" font-size="13" font-weight="600" fill="#1A1A1A" text-anchor="middle">✓ 추적 전체</text>
+  <text x="590" y="524" font-size="11.5" fill="#6B6256" text-anchor="middle">(FREE 기능 동일 포함)</text>
+  <rect x="482" y="538" width="216" height="60" rx="9" fill="#EAF5F2" stroke="#2A9D8F"/>
+  <text x="590" y="563" font-size="13" font-weight="700" fill="#1F7A6E" text-anchor="middle">✦ AI 분석 활성</text>
+  <text x="590" y="583" font-size="11" fill="#1F7A6E" text-anchor="middle">일일요약·정체성·미완사유·아카이브연결</text>
+
+  <!-- AI request funnel from PRO -->
+  <line x1="590" y1="618" x2="590" y2="648" stroke="#2A9D8F" stroke-width="2" marker-end="url(#arrTeal)"/>
+  <rect x="470" y="650" width="240" height="50" rx="12" fill="#2A9D8F"/>
+  <text x="590" y="681" font-size="14" font-weight="700" fill="#FFFFFF" text-anchor="middle">AI 분석 요청 → /api/insight</text>
+
+  <!-- server re-verify (centered) -->
+  <path d="M590 700 L590 724 L390 724 L390 748" fill="none" stroke="#2A9D8F" stroke-width="2" marker-end="url(#arrTeal)"/>
+  <rect x="250" y="750" width="280" height="64" rx="12" fill="#1A1A1A"/>
+  <text x="390" y="777" font-size="14.5" font-weight="700" fill="#F5F0E8" text-anchor="middle">서버에서 재검증 (필수)</text>
+  <text x="390" y="799" font-size="12" fill="#C9BFAE" text-anchor="middle">세션 + 구독 entitlement 확인</text>
+  <text x="540" y="744" font-size="11" fill="#9A8E76" text-anchor="start">※ 클라 차단만으론 우회됨</text>
+
+  <!-- decision: entitled? -->
+  <path d="M390 814 L390 838 L210 838 L210 866" fill="none" stroke="#6B6256" stroke-width="2" marker-end="url(#arr)"/>
+  <path d="M390 814 L390 838 L560 838 L560 866" fill="none" stroke="#6B6256" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="318" y="832" font-size="12" font-weight="700" fill="#9A8E76" text-anchor="end">무료·만료</text>
+  <text x="462" y="832" font-size="12" font-weight="700" fill="#1F7A6E" text-anchor="start">유효</text>
+
+  <!-- reject -->
+  <rect x="90" y="868" width="240" height="54" rx="12" fill="#F1ECE2" stroke="#9A9488" stroke-width="1.5"/>
+  <text x="210" y="894" font-size="13.5" font-weight="700" fill="#5C564B" text-anchor="middle">403 + 업그레이드 안내</text>
+  <text x="210" y="913" font-size="11.5" fill="#8A8475" text-anchor="middle">AI 호출 안 함 (비용 0)</text>
+
+  <!-- quota -->
+  <rect x="440" y="868" width="240" height="54" rx="12" fill="#FBF8F2" stroke="#2A9D8F" stroke-width="1.5"/>
+  <text x="560" y="894" font-size="13.5" font-weight="700" fill="#1A1A1A" text-anchor="middle">일일 쿼터 확인</text>
+  <text x="560" y="913" font-size="11.5" fill="#6B6256" text-anchor="middle">ai_usage · 캐시 우선(hash)</text>
+  <line x1="560" y1="922" x2="560" y2="948" stroke="#2A9D8F" stroke-width="2" marker-end="url(#arrTeal)"/>
+
+  <!-- Claude call -->
+  <rect x="440" y="950" width="240" height="54" rx="12" fill="#2A9D8F"/>
+  <text x="560" y="976" font-size="14" font-weight="700" fill="#FFFFFF" text-anchor="middle">Claude 호출 → 캐시 저장</text>
+  <text x="560" y="995" font-size="11" fill="#D6EFE9" text-anchor="middle">서버 키(ANTHROPIC_API_KEY)로만</text>
+
+  <!-- Payment block (bottom, feeds tier) -->
+  <line x1="40" y1="1040" x2="740" y2="1040" stroke="#C9BFAE" stroke-width="1.5"/>
+  <text x="40" y="1072" font-size="17" font-weight="800" fill="#1A1A1A">결제 → 등급 동기화</text>
+
+  <rect x="60" y="1090" width="200" height="64" rx="12" fill="#FBF6EA" stroke="#C8A96A" stroke-width="2"/>
+  <text x="160" y="1116" font-size="13.5" font-weight="700" fill="#B5923F" text-anchor="middle">구독 결제</text>
+  <text x="160" y="1136" font-size="11" fill="#A88E55" text-anchor="middle">Google Play Billing</text>
+  <text x="160" y="1150" font-size="11" fill="#A88E55" text-anchor="middle">/ (KR) 웹 대안결제</text>
+  <line x1="260" y1="1122" x2="300" y2="1122" stroke="#B5923F" stroke-width="2" marker-end="url(#arrGold)"/>
+
+  <rect x="302" y="1090" width="190" height="64" rx="12" fill="#1A1A1A"/>
+  <text x="397" y="1116" font-size="13.5" font-weight="700" fill="#F5F0E8" text-anchor="middle">서버 영수증 검증</text>
+  <text x="397" y="1138" font-size="11" fill="#C9BFAE" text-anchor="middle">Play Developer API</text>
+  <line x1="492" y1="1122" x2="532" y2="1122" stroke="#B5923F" stroke-width="2" marker-end="url(#arrGold)"/>
+
+  <rect x="534" y="1090" width="200" height="64" rx="12" fill="#EAF5F2" stroke="#2A9D8F" stroke-width="1.5"/>
+  <text x="634" y="1116" font-size="13.5" font-weight="700" fill="#1F7A6E" text-anchor="middle">subscriptions 갱신</text>
+  <text x="634" y="1138" font-size="11" fill="#1F7A6E" text-anchor="middle">RTDN으로 취소·갱신 반영</text>
+
+  <!-- feedback arrow up to tier -->
+  <path d="M634 1090 L634 1030 L522 1030" fill="none" stroke="#2A9D8F" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arrTeal)"/>
+  <text x="648" y="1024" font-size="10.5" fill="#1F7A6E" text-anchor="start">→ 등급 조회에 반영</text>
+</svg>

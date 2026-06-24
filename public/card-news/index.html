@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=540">
+<title>Life Hacking Dashboard — Card News</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --sage:      #4a7c59;
+  --sage-dark: #3a6347;
+  --sage-pale: #e8f2ea;
+  --sage-mid:  #a8c8b0;
+  --navy:      #2c4a7c;
+  --navy-dark: #1e3460;
+  --navy-pale: #e8eef8;
+  --cream:     #fafaf7;
+  --dark:      #1a2030;
+}
+
+body {
+  background: #111827;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+/* ── 공통 카드 ─────────────────────────────── */
+.card {
+  width: 540px;
+  height: 960px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* 슬라이드 번호 */
+.slide-num {
+  position: absolute;
+  bottom: 36px;
+  right: 36px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  opacity: 0.45;
+  z-index: 10;
+}
+
+/* 앱 브랜드 */
+.brand {
+  position: absolute;
+  top: 36px;
+  left: 36px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  z-index: 10;
+}
+.brand-icon {
+  width: 30px;
+  height: 30px;
+  background: var(--sage);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  box-shadow: 0 2px 8px rgba(74,124,89,0.4);
+}
+.brand-name {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+/* 장식 원 */
+.deco-circle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════
+   SLIDE 1 — HOOK
+═══════════════════════════════════════════ */
+#s1 {
+  background: linear-gradient(145deg, #1a2f4a 0%, #2c4a7c 45%, #1e4a34 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 100px 52px 80px;
+  color: white;
+}
+#s1 .deco1 {
+  width: 380px; height: 380px;
+  background: radial-gradient(circle, rgba(74,124,89,0.25) 0%, transparent 70%);
+  top: -80px; right: -100px;
+}
+#s1 .deco2 {
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(44,74,124,0.3) 0%, transparent 70%);
+  bottom: 60px; left: -80px;
+}
+#s1 .deco3 {
+  width: 160px; height: 160px;
+  border: 1px solid rgba(255,255,255,0.06);
+  top: 200px; right: 60px;
+}
+#s1 .deco4 {
+  width: 80px; height: 80px;
+  border: 1px solid rgba(255,255,255,0.08);
+  bottom: 180px; right: 100px;
+}
+
+#s1 .tag {
+  display: inline-block;
+  background: rgba(74,124,89,0.35);
+  border: 1px solid rgba(74,124,89,0.5);
+  color: #a8d8b4;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: 100px;
+  margin-bottom: 36px;
+}
+#s1 .main-text {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 50px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 28px;
+  letter-spacing: -1px;
+}
+#s1 .main-text .accent { color: #7dc49a; }
+#s1 .sub-text {
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.65);
+  max-width: 340px;
+  margin-bottom: 56px;
+}
+#s1 .bottom-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+#s1 .app-badge {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 100px;
+  padding: 10px 22px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(10px);
+}
+#s1 .arrow-btn {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--sage);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+#s1 .slide-num { color: rgba(255,255,255,0.4); }
+#s1 .brand-name { color: rgba(255,255,255,0.5); }
+
+/* ═══════════════════════════════════════════
+   SLIDE 2 — PAIN POINTS
+═══════════════════════════════════════════ */
+#s2 {
+  background: var(--cream);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 100px 52px;
+}
+#s2 .deco1 {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(74,124,89,0.07) 0%, transparent 70%);
+  top: -60px; right: -60px;
+}
+#s2 .section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--sage);
+  margin-bottom: 20px;
+}
+#s2 .heading {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--dark);
+  margin-bottom: 52px;
+  letter-spacing: -0.5px;
+}
+#s2 .heading em {
+  color: var(--navy);
+  font-style: normal;
+}
+.pain-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 22px 24px;
+  border-radius: 18px;
+  margin-bottom: 14px;
+  background: white;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  border-left: 3px solid transparent;
+}
+.pain-item:nth-child(1) { border-left-color: #e87070; }
+.pain-item:nth-child(2) { border-left-color: #e8a440; }
+.pain-item:nth-child(3) { border-left-color: #7070e8; }
+.pain-item:nth-child(4) { border-left-color: var(--sage); }
+.pain-icon {
+  font-size: 26px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.pain-text {
+  font-size: 15px;
+  font-weight: 500;
+  color: #374151;
+  line-height: 1.55;
+}
+.pain-text strong {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 3px;
+}
+#s2 .slide-num { color: rgba(0,0,0,0.3); }
+#s2 .brand-name { color: rgba(0,0,0,0.4); }
+
+/* ═══════════════════════════════════════════
+   SLIDE 3 — SOLUTION
+═══════════════════════════════════════════ */
+#s3 {
+  background: var(--sage);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 100px 52px;
+  color: white;
+}
+#s3 .deco1 {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 65%);
+  top: -100px; right: -100px;
+}
+#s3 .deco2 {
+  width: 250px; height: 250px;
+  background: radial-gradient(circle, rgba(0,0,0,0.12) 0%, transparent 65%);
+  bottom: -50px; left: -60px;
+}
+#s3 .app-icon-big {
+  width: 100px; height: 100px;
+  background: rgba(255,255,255,0.2);
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 28px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 48px;
+  margin-bottom: 40px;
+  backdrop-filter: blur(10px);
+}
+#s3 .section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  opacity: 0.65;
+  margin-bottom: 20px;
+}
+#s3 .heading {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 20px;
+  letter-spacing: -0.5px;
+}
+#s3 .sub {
+  font-size: 16px;
+  font-weight: 300;
+  opacity: 0.8;
+  line-height: 1.7;
+  margin-bottom: 60px;
+  max-width: 360px;
+}
+.feature-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+.feature-pill {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 100px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  backdrop-filter: blur(5px);
+}
+#s3 .slide-num { color: rgba(255,255,255,0.4); }
+#s3 .brand-name { color: rgba(255,255,255,0.5); }
+
+/* ═══════════════════════════════════════════
+   SLIDE 4 — FEATURE: 습관 트래커
+═══════════════════════════════════════════ */
+#s4 {
+  background: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 100px 48px;
+}
+#s4 .deco1 {
+  width: 350px; height: 350px;
+  background: radial-gradient(circle, rgba(74,124,89,0.06) 0%, transparent 70%);
+  bottom: -60px; right: -60px;
+}
+#s4 .feat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--sage-pale);
+  border-radius: 100px;
+  padding: 8px 18px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sage);
+  letter-spacing: 0.5px;
+  margin-bottom: 24px;
+}
+#s4 .heading {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--dark);
+  line-height: 1.2;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+#s4 .heading .hl { color: var(--sage); }
+#s4 .sub {
+  font-size: 15px;
+  color: #6b7280;
+  line-height: 1.6;
+  margin-bottom: 48px;
+}
+/* Mock habit card */
+.mock-habit-wrap {
+  background: #f9faf9;
+  border-radius: 20px;
+  padding: 24px 26px;
+  margin-bottom: 16px;
+  border: 1px solid #e5ede7;
+}
+.mock-habit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.mock-habit-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.mock-icon { font-size: 28px; }
+.mock-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--dark);
+}
+.mock-tags {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+.mock-tag {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--sage);
+  background: var(--sage-pale);
+  padding: 2px 8px;
+  border-radius: 100px;
+}
+.mock-check-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--sage);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  color: white;
+  flex-shrink: 0;
+}
+.mock-progress-bar {
+  height: 6px;
+  background: #e5ede7;
+  border-radius: 100px;
+  overflow: hidden;
+}
+.mock-progress-fill {
+  height: 100%;
+  border-radius: 100px;
+  background: var(--sage);
+}
+.mock-dots-row {
+  display: flex;
+  gap: 5px;
+  margin-top: 12px;
+}
+.mock-dot {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  color: #9ca3af;
+}
+.mock-dot.done { background: var(--sage); color: white; }
+.mock-dot.today { border: 2px solid var(--sage); color: var(--sage); }
+.mock-dot.empty { background: #f3f4f6; }
+
+.feat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.feat-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+.feat-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--sage);
+  flex-shrink: 0;
+}
+#s4 .slide-num { color: rgba(0,0,0,0.3); }
+#s4 .brand-name { color: rgba(0,0,0,0.4); }
+
+/* ═══════════════════════════════════════════
+   SLIDE 5 — FEATURE: 업무 + 멘탈
+═══════════════════════════════════════════ */
+#s5 {
+  background: var(--navy);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 100px 48px;
+  color: white;
+}
+#s5 .deco1 {
+  width: 320px; height: 320px;
+  background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+  top: -60px; right: -60px;
+}
+#s5 .deco2 {
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(74,124,89,0.15) 0%, transparent 70%);
+  bottom: 80px; left: -40px;
+}
+#s5 .feat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 100px;
+  padding: 8px 18px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 24px;
+}
+#s5 .heading {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+#s5 .heading .hl { color: #7dc49a; }
+#s5 .sub {
+  font-size: 15px;
+  opacity: 0.65;
+  line-height: 1.6;
+  margin-bottom: 44px;
+}
+
+/* Two column mock */
+.mock-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.mock-panel {
+  border-radius: 18px;
+  padding: 20px 18px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.mock-panel-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.5;
+  margin-bottom: 14px;
+}
+.mock-task-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+.mock-task-check {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.mock-task-check.done { background: var(--sage); }
+.mock-task-check.pending {
+  border: 1.5px solid rgba(255,255,255,0.3);
+}
+.mock-task-label { opacity: 0.8; }
+.mock-task-label.done-label { opacity: 0.4; text-decoration: line-through; }
+
+.mock-score-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.mock-score-label { font-size: 11px; opacity: 0.7; }
+.mock-score-dots {
+  display: flex;
+  gap: 3px;
+}
+.mock-score-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+}
+.mock-score-dot.on { background: #7dc49a; }
+
+#s5 .feat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#s5 .feat-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.75);
+}
+#s5 .feat-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #7dc49a;
+  flex-shrink: 0;
+}
+#s5 .slide-num { color: rgba(255,255,255,0.35); }
+#s5 .brand-name { color: rgba(255,255,255,0.45); }
+
+/* ═══════════════════════════════════════════
+   SLIDE 6 — FEATURE: 대시보드
+═══════════════════════════════════════════ */
+#s6 {
+  background: var(--cream);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 100px 48px;
+}
+#s6 .deco1 {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(44,74,124,0.06) 0%, transparent 70%);
+  top: -50px; left: -50px;
+}
+#s6 .feat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--navy-pale);
+  border-radius: 100px;
+  padding: 8px 18px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: 0.5px;
+  margin-bottom: 24px;
+}
+#s6 .heading {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--dark);
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+#s6 .heading .hl { color: var(--navy); }
+#s6 .sub {
+  font-size: 15px;
+  color: #6b7280;
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+
+/* Mock stats grid */
+.mock-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.mock-stat {
+  background: white;
+  border-radius: 18px;
+  padding: 20px 20px 18px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.mock-stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin-bottom: 10px;
+}
+.mock-stat-value {
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.mock-stat-sub { font-size: 11px; color: #9ca3af; }
+.mock-momentum { color: var(--sage); }
+.mock-task-rate { color: var(--navy); }
+.mock-mental { color: #7c3aed; }
+.mock-streak { color: #d97706; }
+
+.mock-bar-card {
+  background: white;
+  border-radius: 18px;
+  padding: 18px 20px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.mock-bar-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin-bottom: 14px;
+}
+.mock-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 7px;
+  height: 50px;
+}
+.mock-bar {
+  flex: 1;
+  border-radius: 4px 4px 0 0;
+  background: var(--sage);
+  opacity: 0.7;
+}
+.mock-bar:nth-child(7) { opacity: 1; }
+.mock-bar-label-row {
+  display: flex;
+  gap: 7px;
+  margin-top: 6px;
+}
+.mock-bar-label {
+  flex: 1;
+  text-align: center;
+  font-size: 9px;
+  color: #9ca3af;
+}
+#s6 .slide-num { color: rgba(0,0,0,0.3); }
+#s6 .brand-name { color: rgba(0,0,0,0.4); }
+
+/* ═══════════════════════════════════════════
+   SLIDE 7 — CTA
+═══════════════════════════════════════════ */
+#s7 {
+  background: linear-gradient(155deg, #1e3a28 0%, #2c4a7c 55%, #1a2f4a 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 80px 52px;
+  color: white;
+}
+#s7 .deco1 {
+  width: 420px; height: 420px;
+  background: radial-gradient(circle, rgba(74,124,89,0.2) 0%, transparent 65%);
+  top: -120px; left: 50%; transform: translateX(-50%);
+}
+#s7 .deco2 {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(44,74,124,0.25) 0%, transparent 65%);
+  bottom: -80px; left: 50%; transform: translateX(-50%);
+}
+
+.cta-rings {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 500px;
+  height: 500px;
+  pointer-events: none;
+}
+.cta-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.05);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#s7 .app-icon-big {
+  width: 90px; height: 90px;
+  background: rgba(74,124,89,0.35);
+  border: 2px solid rgba(74,124,89,0.5);
+  border-radius: 26px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 42px;
+  margin: 0 auto 40px;
+  position: relative;
+  z-index: 2;
+}
+#s7 .tag {
+  display: inline-block;
+  background: rgba(74,124,89,0.3);
+  border: 1px solid rgba(74,124,89,0.45);
+  color: #a8d8b4;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 6px 16px;
+  border-radius: 100px;
+  margin-bottom: 28px;
+  position: relative;
+  z-index: 2;
+}
+#s7 .heading {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 2;
+}
+#s7 .heading .hl { color: #7dc49a; }
+#s7 .sub {
+  font-size: 16px;
+  font-weight: 300;
+  opacity: 0.65;
+  line-height: 1.7;
+  margin-bottom: 56px;
+  max-width: 340px;
+  position: relative;
+  z-index: 2;
+}
+
+.cta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 48px;
+  position: relative;
+  z-index: 2;
+}
+.cta-item {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 18px 16px;
+  text-align: left;
+}
+.cta-item-icon { font-size: 22px; margin-bottom: 8px; }
+.cta-item-label {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  opacity: 0.85;
+}
+
+.cta-btn {
+  background: var(--sage);
+  border-radius: 100px;
+  padding: 18px 48px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: white;
+  display: inline-block;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 4px 24px rgba(74,124,89,0.4);
+}
+.cta-handle {
+  font-size: 13px;
+  opacity: 0.4;
+  letter-spacing: 1px;
+  position: relative;
+  z-index: 2;
+}
+#s7 .slide-num { color: rgba(255,255,255,0.35); }
+#s7 .brand-name { color: rgba(255,255,255,0.45); }
+</style>
+</head>
+<body>
+
+<!-- ═══ SLIDE 1: HOOK ═══ -->
+<div class="card" id="s1">
+  <div class="deco-circle deco1"></div>
+  <div class="deco-circle deco2"></div>
+  <div class="deco-circle deco3"></div>
+  <div class="deco-circle deco4"></div>
+  <div class="brand">
+    <div class="brand-icon">🎯</div>
+    <div class="brand-name" style="color:rgba(255,255,255,0.5)">Life Hacking</div>
+  </div>
+  <div class="tag">Personal Dashboard</div>
+  <div class="main-text">
+    나를 성장시키는<br><span class="accent">가장 솔직한</span><br>기록의 방법
+  </div>
+  <div class="sub-text">
+    습관·업무·멘탈·재정을 하나의<br>대시보드에서 데이터로 관리하세요.
+  </div>
+  <div class="bottom-row">
+    <div class="app-badge">Life Hacking Dashboard</div>
+    <div class="arrow-btn">→</div>
+  </div>
+  <div class="slide-num">01 / 07</div>
+</div>
+
+<!-- ═══ SLIDE 2: PAIN POINTS ═══ -->
+<div class="card" id="s2">
+  <div class="deco-circle deco1"></div>
+  <div class="brand">
+    <div class="brand-icon">🎯</div>
+    <div class="brand-name" style="color:rgba(0,0,0,0.4)">Life Hacking</div>
+  </div>
+  <div class="section-label">혹시 이런 경험 있으신가요?</div>
+  <div class="heading">자기계발,<br>왜 <em>작심삼일</em>이<br>될까요?</div>
+
+  <div class="pain-item">
+    <div class="pain-icon">📂</div>
+    <div class="pain-text">
+      <strong>기록이 여기저기 흩어진다</strong>
+      노션, 캘린더, 메모앱… 데이터가 파편화
+    </div>
+  </div>
+  <div class="pain-item">
+    <div class="pain-icon">📉</div>
+    <div class="pain-text">
+      <strong>피드백 없이 반복만 한다</strong>
+      얼마나 성장했는지 숫자로 볼 수 없다
+    </div>
+  </div>
+  <div class="pain-item">
+    <div class="pain-icon">🧩</div>
+    <div class="pain-text">
+      <strong>앱이 너무 복잡하다</strong>
+      기능은 많지만 나한테 필요한 것만 없음
+    </div>
+  </div>
+  <div class="pain-item">
+    <div class="pain-icon">😶</div>
+    <div class="pain-text">
+      <strong>기분·에너지 변화를 모른다</strong>
+      몸 상태가 습관에 미치는 영향을 놓친다
+    </div>
+  </div>
+  <div class="slide-num">02 / 07</div>
+</div>
+
+<!-- ═══ SLIDE 3: SOLUTION ═══ -->
+<div class="card" id="s3">
+  <div class="deco-circle deco1"></div>
+  <div class="deco-circle deco2"></div>
+  <div class="brand">
+    <div class="brand-icon" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3)">🎯</div>
+    <div class="brand-name" style="color:rgba(255,255,255,0.5)">Life Hacking</div>
+  </div>
+  <div class="app-icon-big">🎯</div>
+  <div class="section-label">그래서 만들었습니다</div>
+  <div class="heading">
+    Life Hacking<br>Dashboard
+  </div>
+  <div class="sub">
+    바이브코딩으로 직접 개발한<br>나만을 위한 개인 성장 대시보드
+  </div>
+  <div class="feature-pills">
+    <div class="feature-pill">📊 통합 대시보드</div>
+    <div class="feature-pill">🏃 습관 트래커</div>
+    <div class="feature-pill">⚡ 업무 관리</div>
+    <div class="feature-pill">💚 멘탈 기록</div>
+    <div class="feature-pill">📚 인사이트 아카이브</div>
+    <div class="feature-pill">☁️ Supabase 클라우드</div>
+  </div>
+  <div class="slide-num">03 / 07</div>
+</div>
+
+<!-- ═══ SLIDE 4: HABIT TRACKER ═══ -->
+<div class="card" id="s4">
+  <div class="deco-circle deco1"></div>
+  <div class="brand">
+    <div class="brand-icon">🎯</div>
+    <div class="brand-name" style="color:rgba(0,0,0,0.4)">Life Hacking</div>
+  </div>
+  <div class="feat-badge">🏃 Feature 01</div>
+  <div class="heading">습관<br><span class="hl">트래커</span></div>
+  <div class="sub">MOHO 모델 기반으로 역할·루틴·퍼포먼스까지 한눈에</div>
+
+  <!-- Mock habit card -->
+  <div class="mock-habit-wrap">
+    <div class="mock-habit-row">
+      <div class="mock-habit-left">
+        <div class="mock-icon">🏃</div>
+        <div>
+          <div class="mock-name">매일 운동</div>
+          <div class="mock-tags">
+            <span class="mock-tag">건강</span>
+            <span class="mock-tag">아침</span>
+          </div>
+        </div>
+      </div>
+      <div class="mock-check-btn">✓</div>
+    </div>
+    <div class="mock-progress-bar">
+      <div class="mock-progress-fill" style="width:78%"></div>
+    </div>
+    <div class="mock-dots-row">
+      <div class="mock-dot done">월</div>
+      <div class="mock-dot done">화</div>
+      <div class="mock-dot done">수</div>
+      <div class="mock-dot empty">목</div>
+      <div class="mock-dot done">금</div>
+      <div class="mock-dot done">토</div>
+      <div class="mock-dot today">일</div>
+    </div>
+  </div>
+  <div class="mock-habit-wrap" style="opacity:0.6">
+    <div class="mock-habit-row">
+      <div class="mock-habit-left">
+        <div class="mock-icon">📚</div>
+        <div>
+          <div class="mock-name">독서 30분</div>
+          <div class="mock-tags">
+            <span class="mock-tag">학습</span>
+            <span class="mock-tag">저녁</span>
+          </div>
+        </div>
+      </div>
+      <div class="mock-check-btn" style="background:#e5ede7;color:#9ca3af">○</div>
+    </div>
+    <div class="mock-progress-bar">
+      <div class="mock-progress-fill" style="width:55%"></div>
+    </div>
+  </div>
+
+  <div class="feat-list" style="margin-top:20px">
+    <div class="feat-item"><div class="feat-dot"></div> 역할 태그로 삶의 영역 분류</div>
+    <div class="feat-item"><div class="feat-dot"></div> 연속 참여 스트릭 & 월별 달성률</div>
+    <div class="feat-item"><div class="feat-dot"></div> 에너지·만족도 퍼포먼스 기록</div>
+  </div>
+  <div class="slide-num">04 / 07</div>
+</div>
+
+<!-- ═══ SLIDE 5: TASK + MENTAL ═══ -->
+<div class="card" id="s5">
+  <div class="deco-circle deco1"></div>
+  <div class="deco-circle deco2"></div>
+  <div class="brand">
+    <div class="brand-icon" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2)">🎯</div>
+    <div class="brand-name" style="color:rgba(255,255,255,0.45)">Life Hacking</div>
+  </div>
+  <div class="feat-badge">⚡💚 Feature 02 + 03</div>
+  <div class="heading">업무 관리 +<br><span class="hl">멘탈 기록</span></div>
+  <div class="sub">오늘 할 일부터 마음 상태까지, 빠짐없이 데이터로</div>
+
+  <div class="mock-two-col">
+    <div class="mock-panel">
+      <div class="mock-panel-title">오늘의 업무</div>
+      <div class="mock-task-item">
+        <div class="mock-task-check done"></div>
+        <div class="mock-task-label done-label">논문 리뷰</div>
+      </div>
+      <div class="mock-task-item">
+        <div class="mock-task-check done"></div>
+        <div class="mock-task-label done-label">회의 준비</div>
+      </div>
+      <div class="mock-task-item">
+        <div class="mock-task-check pending"></div>
+        <div class="mock-task-label">케이스 기록</div>
+      </div>
+      <div class="mock-task-item">
+        <div class="mock-task-check pending"></div>
+        <div class="mock-task-label">콘텐츠 업로드</div>
+      </div>
+    </div>
+    <div class="mock-panel">
+      <div class="mock-panel-title">오늘의 에너지</div>
+      <div class="mock-score-row">
+        <div class="mock-score-label">기분</div>
+        <div class="mock-score-dots">
+          <div class="mock-score-dot on"></div>
+          <div class="mock-score-dot on"></div>
+          <div class="mock-score-dot on"></div>
+          <div class="mock-score-dot on"></div>
+          <div class="mock-score-dot"></div>
+        </div>
+      </div>
+      <div class="mock-score-row">
+        <div class="mock-score-label">에너지</div>
+        <div class="mock-score-dots">
+          <div class="mock-score-dot on"></div>
+          <div class="mock-score-dot on"></div>
+          <div class="mock-score-dot on"></div>
+          <div class="mock-score-dot"></div>
+          <div class="mock-score-dot"></div>
+        </div>
+      </div>
+      <div class="mock-score-row">
+        <div class="mock-score-label">스트레스</div>
+        <div class="mock-score-dots">
+          <div class="mock-score-dot on"></div>
+          <div class="mock-score-dot on"></div>
+          <div class="mock-score-dot"></div>
+          <div class="mock-score-dot"></div>
+          <div class="mock-score-dot"></div>
+        </div>
+      </div>
+      <div class="mock-score-row">
+        <div class="mock-score-label">수면</div>
+        <div class="mock-score-dots">
+          <div class="mock-score-dot on"></div>
+          <div class="mock-score-dot on"></div>
+          <div class="mock-score-dot on"></div>
+          <div class="mock-score-dot on"></div>
+          <div class="mock-score-dot"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="feat-list">
+    <div class="feat-item"><div class="feat-dot"></div> 시간대별(오전·오후·저녁) 업무 배치</div>
+    <div class="feat-item"><div class="feat-dot"></div> 완료율 실시간 집계 & 격려 메시지</div>
+    <div class="feat-item"><div class="feat-dot"></div> 기분·에너지·스트레스·수면 7일 트렌드</div>
+  </div>
+  <div class="slide-num">05 / 07</div>
+</div>
+
+<!-- ═══ SLIDE 6: DASHBOARD ═══ -->
+<div class="card" id="s6">
+  <div class="deco-circle deco1"></div>
+  <div class="brand">
+    <div class="brand-icon">🎯</div>
+    <div class="brand-name" style="color:rgba(0,0,0,0.4)">Life Hacking</div>
+  </div>
+  <div class="feat-badge">📊 Feature 04</div>
+  <div class="heading">통합<br><span class="hl">대시보드</span></div>
+  <div class="sub">모든 데이터가 한 화면에 — 나의 성장 모멘텀을 확인하세요</div>
+
+  <div class="mock-stats">
+    <div class="mock-stat">
+      <div class="mock-stat-label">Today's Momentum</div>
+      <div class="mock-stat-value mock-momentum">82</div>
+      <div class="mock-stat-sub">/ 100</div>
+    </div>
+    <div class="mock-stat">
+      <div class="mock-stat-label">업무 달성률</div>
+      <div class="mock-stat-value mock-task-rate">75<span style="font-size:18px">%</span></div>
+      <div class="mock-stat-sub">3/4개 완료</div>
+    </div>
+    <div class="mock-stat">
+      <div class="mock-stat-label">에너지 지수</div>
+      <div class="mock-stat-value mock-mental">3.8</div>
+      <div class="mock-stat-sub">/ 5.0</div>
+    </div>
+    <div class="mock-stat">
+      <div class="mock-stat-label">연속 참여</div>
+      <div class="mock-stat-value mock-streak">12<span style="font-size:18px">일</span></div>
+      <div class="mock-stat-sub">기록 갱신 중 🔥</div>
+    </div>
+  </div>
+
+  <div class="mock-bar-card">
+    <div class="mock-bar-title">Growth Journey — 월별 습관 참여율</div>
+    <div class="mock-bars">
+      <div class="mock-bar" style="height:40%"></div>
+      <div class="mock-bar" style="height:55%"></div>
+      <div class="mock-bar" style="height:48%"></div>
+      <div class="mock-bar" style="height:70%"></div>
+      <div class="mock-bar" style="height:62%"></div>
+      <div class="mock-bar" style="height:80%"></div>
+      <div class="mock-bar" style="height:90%"></div>
+    </div>
+    <div class="mock-bar-label-row">
+      <div class="mock-bar-label">11월</div>
+      <div class="mock-bar-label">12월</div>
+      <div class="mock-bar-label">1월</div>
+      <div class="mock-bar-label">2월</div>
+      <div class="mock-bar-label">3월</div>
+      <div class="mock-bar-label">4월</div>
+      <div class="mock-bar-label" style="color:var(--sage);font-weight:700">5월</div>
+    </div>
+  </div>
+  <div class="slide-num">06 / 07</div>
+</div>
+
+<!-- ═══ SLIDE 7: CTA ═══ -->
+<div class="card" id="s7">
+  <div class="deco-circle deco1"></div>
+  <div class="deco-circle deco2"></div>
+  <div class="cta-rings">
+    <div class="cta-ring" style="width:200px;height:200px;"></div>
+    <div class="cta-ring" style="width:340px;height:340px;"></div>
+    <div class="cta-ring" style="width:480px;height:480px;"></div>
+  </div>
+  <div class="brand">
+    <div class="brand-icon" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2)">🎯</div>
+    <div class="brand-name" style="color:rgba(255,255,255,0.45)">Life Hacking</div>
+  </div>
+  <div class="app-icon-big">🎯</div>
+  <div class="tag">바이브코딩으로 만든 개인 대시보드</div>
+  <div class="heading">
+    데이터로<br>성장하는<br><span class="hl">나</span>
+  </div>
+  <div class="sub">
+    습관·업무·멘탈·재정을 기록하고<br>진짜 성장을 확인하세요
+  </div>
+  <div class="cta-grid">
+    <div class="cta-item">
+      <div class="cta-item-icon">☁️</div>
+      <div class="cta-item-label">Supabase로<br>데이터 영구 저장</div>
+    </div>
+    <div class="cta-item">
+      <div class="cta-item-icon">📱</div>
+      <div class="cta-item-label">모바일 최적화<br>웹앱</div>
+    </div>
+    <div class="cta-item">
+      <div class="cta-item-icon">🔓</div>
+      <div class="cta-item-label">오픈소스<br>직접 커스텀 가능</div>
+    </div>
+    <div class="cta-item">
+      <div class="cta-item-icon">🤖</div>
+      <div class="cta-item-label">바이브코딩으로<br>Claude가 개발</div>
+    </div>
+  </div>
+  <div class="cta-btn">지금 시작하세요 →</div>
+  <div class="cta-handle">#라이프해킹대시보드 &nbsp;·&nbsp; #바이브코딩</div>
+  <div class="slide-num">07 / 07</div>
+</div>
+
+</body>
+</html>
