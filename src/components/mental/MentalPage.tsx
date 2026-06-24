@@ -13,10 +13,10 @@ import { MENTAL_LABELS } from '@/lib/strengthLanguage';
 
 // 한글 라벨 우선(차트·레이더·행 제목) + 영문 임상 용어 부가(sub)
 const METRICS = [
-  { key: 'body'        as const, label: '신체 에너지', sub: 'Physical Capacity',     color: '#22c55e', icon: Battery },
-  { key: 'emotion'     as const, label: '정서 에너지', sub: 'Emotional State',       color: '#2c4a7c', icon: Gauge },
-  { key: 'focus'       as const, label: '인지 흐름',   sub: 'Cognitive Capacity',    color: '#7c3aed', icon: Brain },
-  { key: 'environment' as const, label: '환경 지원',   sub: 'Environmental Support', color: '#ea580c', icon: Activity },
+  { key: 'body'        as const, label: '몸',       sub: 'Physical',      color: '#22c55e', icon: Battery },
+  { key: 'emotion'     as const, label: '기분',     sub: 'Emotional',     color: '#2c4a7c', icon: Gauge },
+  { key: 'focus'       as const, label: '집중',     sub: 'Cognitive',     color: '#7c3aed', icon: Brain },
+  { key: 'environment' as const, label: '환경 지원', sub: 'Environmental', color: '#ea580c', icon: Activity },
 ];
 
 export default function MentalPage() {
