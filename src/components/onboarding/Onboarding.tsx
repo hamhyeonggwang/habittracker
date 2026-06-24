@@ -186,11 +186,11 @@ function FirstHabit({ roles, name, setName, icon, setIcon, roleId, setRoleId }: 
 
 function TabGuide() {
   const items = [
-    { Icon: Home, t: '대시보드', d: '오늘의 참여·컨디션·의미 있었던 순간을 한눈에' },
-    { Icon: Repeat, t: '참여(습관)', d: '루틴을 체크하고 역할별 참여를 쌓아요' },
+    { Icon: Home, t: '홈', d: '오늘의 참여·컨디션·의미있는 순간을 한눈에' },
+    { Icon: Repeat, t: '루틴', d: '루틴을 체크하고 역할별 참여를 쌓아요' },
     { Icon: ListTodo, t: '업무', d: '오늘 할 일을 역할·프로젝트와 함께 관리' },
     { Icon: Activity, t: '컨디션', d: '신체·정서·인지·환경 4축으로 상태를 기록' },
-    { Icon: Archive, t: '아카이브', d: '메모·아이디어·기록을 모아두는 공간' },
+    { Icon: Archive, t: '기록', d: '메모·아이디어·기록을 모아두는 공간' },
   ];
   return (
     <div>

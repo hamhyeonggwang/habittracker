@@ -84,7 +84,7 @@ export const DASH_LABELS = {
   },
   yearChartTitle: 'GROWTH JOURNEY',      // ← "1 YEAR DASHBOARD"
   yearChartSub:   '나의 성장 여정',
-  archiveTitle:   'ARCHIVE — 쌓여가는 인사이트',
+  archiveTitle:   'ARCHIVE — 쌓여가는 기록',
   habitStatLabel:   '루틴 참여',          // ← "오늘 습관"
   taskStatLabel:    '업무 진행',          // ← "업무 완료"
   mentalStatLabel:  '에너지',            // ← "컨디션"
@@ -95,13 +95,13 @@ export const DASH_LABELS = {
 
 // ── 아카이브 관련 ─────────────────────────────────────────
 export const ARCHIVE_LABELS = {
-  pageTitle:    '인사이트 창고',          // ← "아카이브"
-  countSub:     (n: number) => `${n}개의 배움이 쌓였어요`,
+  pageTitle:    '기록 보관함',            // 탭 명칭 '기록'으로 통일
+  countSub:     (n: number) => `${n}개의 기록이 쌓였어요`,
   emptyTitle:   '아직 비어있어요',
   emptyDesc:    '매일의 배움과 발견을 여기에 기록해보세요',
-  searchPlaceholder: '배움 검색...',
+  searchPlaceholder: '기록 검색...',
   addBtn:       '기록하기',
-  modalTitle:   '오늘의 발견 기록',       // ← "인사이트 기록"
+  modalTitle:   '오늘의 기록',            // 탭 명칭 '기록'으로 통일
   contentPlaceholder: '오늘 배운 것, 느낀 것, 기억하고 싶은 것을 자유롭게 적어보세요...',
 } as const;
 

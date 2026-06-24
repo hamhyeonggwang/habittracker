@@ -5,7 +5,7 @@ import { MentalStateLog, MoodScore } from '@/types';
 import { ScoreSelector, Button } from '@/components/ui';
 import { getToday, getLast7Days, formatDate } from '@/lib/utils';
 import { useToday } from '@/lib/useToday';
-import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Activity, Battery, Brain, CheckCircle2, Gauge, Save } from 'lucide-react';
@@ -65,10 +65,10 @@ export default function MentalPage() {
     const log = allLogs.find(l => l.date === date);
     return {
       label: format(new Date(date), 'EEE', { locale: ko }),
-      [METRICS[0].label]: log?.body ?? 0,
-      [METRICS[1].label]: log?.emotion ?? 0,
-      [METRICS[2].label]: log?.focus ?? 0,
-      [METRICS[3].label]: log?.environment ?? 0,
+      [METRICS[0].label]: log?.body ?? null,
+      [METRICS[1].label]: log?.emotion ?? null,
+      [METRICS[2].label]: log?.focus ?? null,
+      [METRICS[3].label]: log?.environment ?? null,
     };
   }), [allLogs]);
 
@@ -107,6 +107,7 @@ export default function MentalPage() {
             <RadarChart data={radarData}>
               <PolarGrid stroke="var(--border)" />
               <PolarAngleAxis dataKey="metric" tick={{ fontSize: 12, fontFamily: 'Pretendard', fill: 'var(--text-muted)' }} />
+              <PolarRadiusAxis domain={[0, 5]} tickCount={6} tick={false} axisLine={false} />
               <Radar name="오늘" dataKey="value" stroke="var(--sage)" fill="var(--sage)" fillOpacity={0.2} strokeWidth={2} />
             </RadarChart>
           </ResponsiveContainer>
@@ -180,10 +181,10 @@ export default function MentalPage() {
               <YAxis domain={[0, 5]} tick={{ fontSize: 12 }} ticks={[1,2,3,4,5]} />
               <Tooltip
                 contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid var(--border)', fontFamily: 'Pretendard' }}
-                formatter={(v: number, name: string) => [`${getScoreMessage(Math.round(v))} (${v.toFixed(1)})`, name]}
+                formatter={(v: number, name: string) => [`${getScoreMessage(Math.round(v))} (${v})`, name]}
               />
               {METRICS.map(m => (
-                <Line key={m.key} type="monotone" dataKey={m.label} stroke={m.color} strokeWidth={2} dot={false} />
+                <Line key={m.key} type="monotone" dataKey={m.label} stroke={m.color} strokeWidth={2} dot={false} connectNulls />
               ))}
             </LineChart>
           </ResponsiveContainer>

@@ -465,7 +465,7 @@ export default function HabitPage() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between pt-3">
         <div>
-          <h1 className="text-[22px] font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>참여 트래커</h1>
+          <h1 className="text-[22px] font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>루틴 트래커</h1>
           <p className="text-sm mt-0.5 font-medium" style={{ color: 'var(--sage)', fontFamily: 'Pretendard, sans-serif' }}>
             {getRateMessage(todayRate)}
           </p>

@@ -7,7 +7,7 @@ const NAV_ITEMS = [
   { id: 'habit', label: '루틴', icon: CheckSquare },
   { id: 'task', label: '업무', icon: ListTodo },
   { id: 'mental', label: '컨디션', icon: Activity },
-  { id: 'archive', label: '아카이브', icon: BookMarked },
+  { id: 'archive', label: '기록', icon: BookMarked },
 ];
 
 export default function BottomNav({ current, onChange }: {

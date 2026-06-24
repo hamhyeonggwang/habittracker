@@ -306,7 +306,7 @@ export default function ArchivePage() {
         <EmptyState icon=""
           title={query ? '검색 결과가 없어요' : ARCHIVE_LABELS.emptyTitle}
           description={query ? '다른 키워드로 검색해볼까요?' : ARCHIVE_LABELS.emptyDesc}
-          action={!query ? <Button onClick={() => setShowAdd(true)} size="sm">첫 발견 기록하기</Button> : undefined} />
+          action={!query ? <Button onClick={() => setShowAdd(true)} size="sm">첫 기록 남기기</Button> : undefined} />
       ) : (
         <div className="card overflow-hidden">
           {filtered.map((item, idx) => {

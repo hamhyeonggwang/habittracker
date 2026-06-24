@@ -558,7 +558,7 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (id: string
       };
     }
     return {
-      title: '오늘의 인사이트를 남겨보세요',
+      title: '오늘의 기록을 남겨보세요',
       description: '완료한 하루에서 기억할 만한 한 줄을 저장합니다.',
       cta: '기록 남기기',
       page: 'archive',
@@ -596,7 +596,7 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (id: string
     { label: '루틴 체크', page: 'habit', icon: CheckCircle2 },
     { label: '업무 추가', page: 'task', icon: ListTodo },
     { label: '컨디션 기록', page: 'mental', icon: Activity },
-    { label: '인사이트 작성', page: 'archive', icon: Archive },
+    { label: '기록 작성', page: 'archive', icon: Archive },
   ];
 
   return (
@@ -741,7 +741,7 @@ export default function DashboardPage({ onNavigate }: { onNavigate?: (id: string
             <div className="flex items-center gap-2">
               <Archive size={18} style={{ color: 'var(--sage)' }} />
               <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'Pretendard, sans-serif' }}>
-                최근 인사이트
+                최근 기록
               </h2>
             </div>
             <button type="button" onClick={() => onNavigate?.('archive')}
