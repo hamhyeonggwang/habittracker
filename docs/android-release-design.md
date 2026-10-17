@@ -59,7 +59,8 @@
 
 | ID | 작업 | 변경 위치 | 완료 기준 |
 |---|---|---|---|
-| A1 | Next.js 14.2.35로 보안 패치 | `package.json` | `npm audit --omit=dev` 0건, build 통과 |
+| A1 | Next.js 14.2.35로 보안 패치 (14.x 최종) | `package.json` | build 통과. **남은 advisory 2건(next·postcss)은 15/16에서만 수정** → A1b |
+| A1b | 남은 advisory 대응: ① `output: 'export'` 정적 배포로 서버 표면 제거(전 라우트가 이미 정적, next/image·server actions·middleware 미사용) 또는 ② Next 15/16 + React 19 메이저 업그레이드 | `next.config.js` / 전체 | 결정 필요 |
 | A2 | 습관 체크 무결성: 진행 중 잠금 + 낙관적 업데이트 + 결과 확인 | `HabitPage.tsx`, `DashboardPage.tsx`(체크 지점) | 연타 시 행 1개만 생성 |
 | A2-DB | `habit_logs` 중복 정리 + `UNIQUE(user_id, habit_id, date)` | Supabase migration | **별도 결재**(중복 행 삭제는 비가역) |
 | A3 | 습관 삭제 단일화(`deleteByHabitId` 제거, FK CASCADE 활용) | `HabitPage.tsx`, `storage.ts` | 삭제 실패 시 기록 보존 |
