@@ -2,7 +2,7 @@
 
 - 작성일: 2026-10-17
 - 선행 문서: `otdh-launch-spec.md`(P0~P6), `otd-final-review.md`, QA 점검(2026-10-16, 본 문서 §4)
-- 상태: **초안** — §2 결정 항목 확정 전까지 구현 착수 보류 항목 있음
+- 상태: **초안** — D1 확정. D3·D4 확정 전까지 C 묶음 착수 보류
 
 ---
 
@@ -44,7 +44,7 @@
 
 | ID | 결정 | 가역성 | 권장안 | 상태 |
 |---|---|---|---|---|
-| D1 | 패키지명: `kr.othub.otd`(스펙) vs `com.otdevham.otd`(assetlinks) | **비가역** (Play 등록 후 변경 불가) | assetlinks에 이미 쓰인 `com.otdevham.otd` — 키스토어가 이미 생성됐을 가능성 | ⏳ 미확정 |
+| D1 | 패키지명 | **비가역** (Play 등록 후 변경 불가) | **`com.otdevham.otd`** (assetlinks와 일치). 스펙의 `kr.othub.otd`는 폐기 | ✅ 확정 (2026-10-17) |
 | D2 | 패키징 방식: TWA vs Capacitor | 중간 | **TWA 유지**. 근거: Google OAuth는 임베디드 WebView 로그인을 차단하므로 Capacitor로 가면 네이티브 로그인 플러그인 추가 작업 발생. TWA는 Chrome 기반이라 현재 OAuth 흐름이 그대로 동작 | 권장 |
 | D3 | 프로덕션 도메인 | 높음(TWA·assetlinks·OAuth redirect가 모두 묶임) | `*.vercel.app` 대신 커스텀 도메인 | ⏳ 확인 필요 |
 | D4 | Play 타깃 연령 | 높음(가족 정책 적용 여부) | 18세 이상(또는 13세 이상)으로 설정, 아동은 "보호자·치료사 동반 사용"으로 안내. 13세 미만 포함 시 Families 정책 요건 별도 검토 | ⏳ 미확정 |
@@ -85,7 +85,7 @@
 
 | ID | 작업 | 주의 |
 |---|---|---|
-| C1 | Bubblewrap(또는 PWABuilder)으로 TWA 생성 — D1 패키지명 | `twa-manifest.json`을 저장소 `android/`에 보관(키스토어는 **저장소 제외**) |
+| C1 | Bubblewrap(또는 PWABuilder)으로 TWA 생성 — 패키지명 `com.otdevham.otd` | `twa-manifest.json`을 저장소 `android/`에 보관(키스토어는 **저장소 제외**) |
 | C2 | 서명키 백업 + **Play App Signing 키 SHA-256을 assetlinks에 추가** | Play가 재서명하므로 업로드 키 지문만 있으면 주소창이 노출됨. 두 지문 모두 등록 |
 | C3 | assetlinks 검증 | Google Digital Asset Links API로 확인, 실기기에서 주소창 미노출 확인 |
 | C4 | 버전 규칙 | `versionName` = semver, `versionCode` = 정수 증가. 웹 배포만으로 반영되는 변경은 앱 업데이트 불필요 |

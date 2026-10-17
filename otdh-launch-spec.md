@@ -15,7 +15,7 @@
 | 확장 의미 | **Own The Day** — "하루를 내 것으로 만들다" |
 | 기원 스토리 (About/스토어 설명용) | 원래 작업치료사가 만든 "Occupation Tracking Dashboard"의 이니셜이었으나, 공개 버전에서 "Own The Day"로 의미 확장. 역할(Role)이 모여 하루가 되고, 하루를 내 것으로 만든다는 메시지로 일반 대중에게도 직관적으로 전달 |
 | 포지셔닝 | 작업치료사가 설계한 신뢰성 + MOHO(역할이 의지에 영향을 준다는 이론)를 기능 설명에 녹여서 전달. 이름 자체는 대중적·간결하게 |
-| 패키지명(가제) | `kr.othub.otd` — Claude Code 작업 착수 전 최종 확정 필요 (변경 불가 항목) |
+| 패키지명(확정) | **`com.otdevham.otd`** — 2026-10-17 확정 (변경 불가). 구 가제 `kr.othub.otd` 폐기 |
 | 구) 명칭 | OTD·H (Occupation Tracking Dashboard / Occupational Therapist's Daily Hub) — 개인용 당시 이름. 코드베이스 내 잔존 텍스트(README, layout.tsx metadata, manifest.json, 스플래시 화면 "OTD·H" 텍스트) 전수 교체 필요 → P3(PWA 마감) 작업 범위에 포함 |
 
 ---
@@ -218,7 +218,7 @@ P0는 기존 코드 신뢰성 수정이라 P1과 병행 가능하나, 온보딩(
 
 ### P5 — Android 패키징 (TWA)
 
-- 패키지명: **`kr.othub.otd`** (0-A에서 가결정 — 최종 확정 후 변경 불가하므로 착수 전 재확인)
+- 패키지명: **`com.otdevham.otd`** (2026-10-17 확정, `docs/android-release-design.md` D1)
 - PWABuilder(https://www.pwabuilder.com) 에 Vercel 프로덕션 URL 입력 → Android 패키지 생성
 - `/.well-known/assetlinks.json` 배포 (TWA가 브라우저 주소창 없이 풀스크린으로 뜨려면 필수 — Digital Asset Links 검증)
 - 서명 키 생성 및 안전 보관 (분실 시 업데이트 불가)
