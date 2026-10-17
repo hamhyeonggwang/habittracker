@@ -15,10 +15,14 @@
 | P2 AI 제거 | 완료 | `ai/`, `insight` 코드 없음 |
 | P3 PWA·접근성·리브랜딩 | 대부분 완료 | manifest PNG 아이콘, `sw.js`, `maximumScale` 미지정 |
 | P4 개인정보·계정삭제 | 완료 | `/privacy`, `delete-account` Edge Function |
-| P5 TWA 패키징 | **착수됨, 미완** | `assetlinks.json` 존재(패키지 `com.otdevham.otd`) |
-| P6 Play 제출 | 미착수 | — |
+| P5 TWA 패키징 | 완료 | `com.otdevham.otd`로 비공개 테스트 배포 중(2026-10-17 사용자 확인) |
+| P6 Play 제출 | **비공개 테스트 진행 중** | 프로덕션 신청 전 |
 
 ---
+
+### 배포 구조 메모
+TWA는 앱 껍데기(AAB)가 Vercel 프로덕션 URL을 띄우는 구조다. **웹 수정은 Vercel 프로덕션 배포 즉시 테스터 앱에 반영**되며, AAB 재업로드가 필요한 것은 패키지 수준 변경(네이티브 스플래시·상태바 색·versionCode·권한)뿐이다.
+→ 비공개 테스트 중에는 모든 변경을 Preview 배포에서 먼저 확인한 뒤 main에 병합한다.
 
 ## 1. Out / Exit (C4)
 
